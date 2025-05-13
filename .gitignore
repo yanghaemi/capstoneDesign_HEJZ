@@ -1,5 +1,6 @@
 # dependencies
 /node_modules
+npm-debug.log
 
 # testing
 /coverage
@@ -32,4 +33,13 @@ ios/DerivedData
 *.DS_Store
 
 # Expo
-.expo
+.expo/
+.expo-shared/
+
+# Xcode
+*.xcuserdata/
+*.xcworkspace/
+DerivedData/
+
+# Fastlane
+/vendor/

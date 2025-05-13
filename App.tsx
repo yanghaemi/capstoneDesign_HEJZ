@@ -14,6 +14,7 @@ import MyVideosScreen from './screens/MyViedoScreen';
 import StatsScreen from './screens/StatesScreen';
 import EditProfileScreen from './screens/EditProfileScreen';
 import MyCommentsScreen from './screens/MyCommentsScreen';
+import SignUpScreen from './screens/SignUpScreen'; 
 enableScreens(); 
 
 const Stack = createNativeStackNavigator();
@@ -33,7 +34,7 @@ const App = () => {
         <Stack.Screen name="States" component={StatsScreen} />
         <Stack.Screen name="EditProfile" component={EditProfileScreen} />
         <Stack.Screen name="MyComments" component={MyCommentsScreen} />
-
+        <Stack.Screen name="SignUp" component={SignUpScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
