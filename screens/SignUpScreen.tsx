@@ -1,34 +1,28 @@
-// screens/LoginScreen.tsx
-
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-type RootStackParamList = {
-  Login: undefined;
-  SignUp: undefined;
-  Main: undefined;
-};
-
-const LoginScreen = () => {
+const SignUpScreen = () => {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  const handleLogin = () => {
+  const handleSignUp = () => {
+    console.log('이름:', name);
     console.log('이메일:', email);
     console.log('비밀번호:', password);
-    // TODO: 로그인 API 연결 예정
-  };
-
-  const goToSignUp = () => {
-    navigation.navigate('SignUp');
+    // TODO: 회원가입 API 연결 예정
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>로그인</Text>
+      <Text style={styles.title}>회원가입</Text>
+
+      <TextInput
+        placeholder="이름을 입력하세요"
+        style={styles.input}
+        value={name}
+        onChangeText={setName}
+      />
 
       <TextInput
         placeholder="이메일을 입력하세요"
@@ -45,18 +39,14 @@ const LoginScreen = () => {
         onChangeText={setPassword}
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>로그인</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={goToSignUp}>
-        <Text style={styles.signupText}>계정이 없으신가요? <Text style={styles.signupLink}>회원가입</Text></Text>
+      <TouchableOpacity style={styles.button} onPress={handleSignUp}>
+        <Text style={styles.buttonText}>회원가입</Text>
       </TouchableOpacity>
     </View>
   );
 };
 
-export default LoginScreen;
+export default SignUpScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -82,19 +72,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#4B9DFE',
     padding: 14,
     borderRadius: 8,
-    marginBottom: 16,
   },
   buttonText: {
     color: '#fff',
     textAlign: 'center',
     fontWeight: '600',
-  },
-  signupText: {
-    textAlign: 'center',
-    color: '#555',
-  },
-  signupLink: {
-    color: '#4B9DFE',
-    fontWeight: 'bold',
   },
 });

@@ -12,7 +12,7 @@ const MainScreen = ({ navigation }: any) => {
     //   // style={styles.background}
     // >
       <View style={styles.container}>
-        <Button
+        {/* <Button
         title="🎵 노래 만들기 테스트"
         onPress={() => navigation.navigate('Song')}
         />
@@ -23,11 +23,14 @@ const MainScreen = ({ navigation }: any) => {
         <Button
         title="🎵 마이페이지 테스트"
         onPress={() => navigation.navigate('Feeds')}
-        />
-        <Image source={require('../assets/Logo.png')} style={styles.logo} />
+        /> */}
+        <Image source={require('../assets/Photo.png')} style={styles.logo} />
 
         <TouchableOpacity style={styles.button} onPress={handleLogin}>
           <Text style={styles.buttonText}>로그인하기</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.testButton} onPress={() => navigation.navigate('Select')} >
+          <Text style={styles.buttonText}>테스트화면</Text>
         </TouchableOpacity>
       </View>
   );
@@ -41,15 +44,15 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+    backgroundColor:'#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 24,
   },
   logo: {
-    width: 120, 
-    height: 120,
-    marginBottom: 30,
-    resizeMode: 'contain',
+    width: 400, 
+    height: 150,
+    marginBottom: 100,
   },
   title: {
     fontSize: 24,
@@ -68,4 +71,14 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
+  testButton: {
+  position: 'absolute',   // 📌 화면 위에 고정
+  bottom: 30,             // 하단에서 30px 띄우기
+  left: 20,               // 왼쪽에서 20px 띄우기
+  backgroundColor: '#A085FF',
+  paddingVertical: 10,
+  paddingHorizontal: 20,
+  borderRadius: 10,
+},
+
 });
