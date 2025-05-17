@@ -36,24 +36,30 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
+    paddingHorizontal: 24,
     backgroundColor: '#fff',
   },
   title: {
     fontSize: 28,
-    fontWeight: '600',
-    marginBottom: 40,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 32,
+    color: '#000', // 글자색 확실하게
   },
   button: {
-    backgroundColor: '#A085FF',
-    paddingVertical: 15,
-    paddingHorizontal: 40,
-    borderRadius: 12,
-    marginBottom: 20,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    paddingVertical: 14,
+    borderRadius: 8,
+    marginBottom: 16,
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 18,
+    color: '#000',
+    textAlign: 'center',
     fontWeight: '500',
+    fontSize: 16,
   },
 });
+
+

@@ -60,25 +60,33 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 40,
   },
-  button: {
-    backgroundColor: '#ffffffaa', // 흰색에 투명도
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderRadius: 25,
-  },
-  buttonText: {
-    color: '#333',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  testButton: {
-  position: 'absolute',   // 📌 화면 위에 고정
-  bottom: 30,             // 하단에서 30px 띄우기
-  left: 20,               // 왼쪽에서 20px 띄우기
-  backgroundColor: '#A085FF',
+ button: {
+  backgroundColor: '#fff',
+  borderWidth: 1,
+  borderColor: '#ccc',
+  paddingVertical: 12,
+  paddingHorizontal: 32,
+  borderRadius: 8,
+},
+
+buttonText: {
+  color: '#000',
+  fontSize: 16,
+  fontWeight: '500',
+  textAlign: 'center',
+},
+
+testButton: {
+  position: 'absolute',
+  bottom: 30,
+  left: 20,
+  backgroundColor: '#fff',
+  borderWidth: 1,
+  borderColor: '#ccc',
   paddingVertical: 10,
   paddingHorizontal: 20,
-  borderRadius: 10,
+  borderRadius: 8,
 },
+
 
 });
