@@ -1,0 +1,14 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : [],
+		"nodes" : []
+	},
+	"installers" : [],
+	"paths" : 
+	{
+		"build" : "RNImagePickerSpec_autolinked_build",
+		"source" : "C:/Users/ham/Desktop/capstoneDesign_HEJZ/HEJZ_front/node_modules/react-native-image-picker/android/build/generated/source/codegen/jni"
+	}
+}

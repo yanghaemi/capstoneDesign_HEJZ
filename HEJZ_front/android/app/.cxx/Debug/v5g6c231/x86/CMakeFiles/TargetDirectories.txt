@@ -1,0 +1,15 @@
+C:/Users/ham/Desktop/capstoneDesign_HEJZ/HEJZ_front/android/app/.cxx/Debug/v5g6c231/x86/CMakeFiles/appmodules.dir
+C:/Users/ham/Desktop/capstoneDesign_HEJZ/HEJZ_front/android/app/.cxx/Debug/v5g6c231/x86/CMakeFiles/edit_cache.dir
+C:/Users/ham/Desktop/capstoneDesign_HEJZ/HEJZ_front/android/app/.cxx/Debug/v5g6c231/x86/CMakeFiles/rebuild_cache.dir
+C:/Users/ham/Desktop/capstoneDesign_HEJZ/HEJZ_front/android/app/.cxx/Debug/v5g6c231/x86/RNImagePickerSpec_autolinked_build/CMakeFiles/react_codegen_RNImagePickerSpec.dir
+C:/Users/ham/Desktop/capstoneDesign_HEJZ/HEJZ_front/android/app/.cxx/Debug/v5g6c231/x86/RNImagePickerSpec_autolinked_build/CMakeFiles/edit_cache.dir
+C:/Users/ham/Desktop/capstoneDesign_HEJZ/HEJZ_front/android/app/.cxx/Debug/v5g6c231/x86/RNImagePickerSpec_autolinked_build/CMakeFiles/rebuild_cache.dir
+C:/Users/ham/Desktop/capstoneDesign_HEJZ/HEJZ_front/android/app/.cxx/Debug/v5g6c231/x86/safeareacontext_autolinked_build/CMakeFiles/react_codegen_safeareacontext.dir
+C:/Users/ham/Desktop/capstoneDesign_HEJZ/HEJZ_front/android/app/.cxx/Debug/v5g6c231/x86/safeareacontext_autolinked_build/CMakeFiles/edit_cache.dir
+C:/Users/ham/Desktop/capstoneDesign_HEJZ/HEJZ_front/android/app/.cxx/Debug/v5g6c231/x86/safeareacontext_autolinked_build/CMakeFiles/rebuild_cache.dir
+C:/Users/ham/Desktop/capstoneDesign_HEJZ/HEJZ_front/android/app/.cxx/Debug/v5g6c231/x86/rnscreens_autolinked_build/CMakeFiles/react_codegen_rnscreens.dir
+C:/Users/ham/Desktop/capstoneDesign_HEJZ/HEJZ_front/android/app/.cxx/Debug/v5g6c231/x86/rnscreens_autolinked_build/CMakeFiles/edit_cache.dir
+C:/Users/ham/Desktop/capstoneDesign_HEJZ/HEJZ_front/android/app/.cxx/Debug/v5g6c231/x86/rnscreens_autolinked_build/CMakeFiles/rebuild_cache.dir
+C:/Users/ham/Desktop/capstoneDesign_HEJZ/HEJZ_front/android/app/.cxx/Debug/v5g6c231/x86/RNVectorIconsSpec_autolinked_build/CMakeFiles/react_codegen_RNVectorIconsSpec.dir
+C:/Users/ham/Desktop/capstoneDesign_HEJZ/HEJZ_front/android/app/.cxx/Debug/v5g6c231/x86/RNVectorIconsSpec_autolinked_build/CMakeFiles/edit_cache.dir
+C:/Users/ham/Desktop/capstoneDesign_HEJZ/HEJZ_front/android/app/.cxx/Debug/v5g6c231/x86/RNVectorIconsSpec_autolinked_build/CMakeFiles/rebuild_cache.dir

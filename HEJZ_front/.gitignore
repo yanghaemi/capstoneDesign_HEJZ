@@ -43,3 +43,6 @@ DerivedData/
 
 # Fastlane
 /vendor/
+
+
+./android/app/.cxx/
