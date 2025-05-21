@@ -7,10 +7,10 @@ const MainScreen = ({ navigation }: any) => {
   };
 
   return (
-    // <ImageBackground
-    //   // source={require('../assets/background.png')}
-    //   // style={styles.background}
-    // >
+    <ImageBackground
+       source={require('../assets/background.png')}
+       style={styles.background}
+    >
       <View style={styles.container}>
         <Button
         title="🎵 노래 만들기 테스트"
@@ -30,6 +30,7 @@ const MainScreen = ({ navigation }: any) => {
           <Text style={styles.buttonText}>로그인하기</Text>
         </TouchableOpacity>
       </View>
+    </ImageBackground>
   );
 };
 export default MainScreen;

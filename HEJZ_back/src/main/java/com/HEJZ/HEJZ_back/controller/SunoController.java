@@ -11,12 +11,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 
 // 프론트에서 요청 받은 거 처리하는 곳
+
 @RestController
 @RequiredArgsConstructor    // 생성자 자동으로 주입하는 어노테이션
 @RequestMapping("api/suno")
 public class SunoController {
 
     private final SunoService sunoService;
+
+    // 호출 url : http://localhost:8080/api/suno/generate
     @PostMapping("/generate")
     public ResponseEntity<String> generateSong(@RequestBody SunoRequest request) {
         String response = sunoService.requestToSuno(request);

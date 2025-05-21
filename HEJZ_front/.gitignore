@@ -46,3 +46,4 @@ DerivedData/
 
 
 ./android/app/.cxx/
+.env
