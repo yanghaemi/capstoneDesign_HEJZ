@@ -6,6 +6,7 @@ import React, { createContext, useContext } from 'react';
 // 타입 정의
 interface ApiContextType {
   apiUrl: string;
+  apiKey: string;
 }
 
 // 기본값 (초기값은 임시용 빈 값, 실제 값은 Provider에서 설정됨)

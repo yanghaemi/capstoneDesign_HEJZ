@@ -7,18 +7,18 @@ const SongScreen = () => {
   const [loading, setLoading] = useState(false);
   const [songResult, setSongResult] = useState<string | null>(null);
 
-  const { apiUrl } = useApi();
+  const { apiUrl, apiKey } = useApi();
 
   // suno 서버에 보낼 요청 형식 ------------------------------------------------
   const [prompt, setPrompt] = useState("");             // 프롬포트
-  const [style, setStyle] = useState("");               // 곡 스타일 (장르 등) customMode가 false면 비워두기
+  const [style, setStyle] = useState("kpop");           // 곡 스타일 (장르 등) customMode가 false면 비워두기
   const [title, setTitle] = useState("");               // 제목
   const [customMode, setCustomMode] = useState(false);  // 가사 있음(false)<-default : instrumental 세팅에 상관없이 프롬포트만 필요 (프롬포트 길이 : 400자)
                                                         // 가사 없음 (ture) :
   const [instrumental, setInstrumental] = useState(false); // customMode가 false면 자동으로 false
   const [model, setModel] = useState("V3_5");               // 모델 별 프롬포트 길이 )
                                                         // V3_5 & V4: 3000 캐릭터, V4_5 : 5000 캐릭터
-  const [callBackUrl, setCallBackUrl] = useState("");   // 콜백 url
+  const [callBackUrl, setCallBackUrl] = useState("playground");   // 콜백 url
   // ------------------------------------------------------------------------
 
 
@@ -28,6 +28,8 @@ const SongScreen = () => {
     setLoading(true);
     setSongResult(null);
 
+    const headers = {}
+
     try {
         console.log(prompt);
         console.log(style);
@@ -36,9 +38,9 @@ const SongScreen = () => {
         console.log(instrumental);
         console.log(model);
         console.log(callBackUrl);
+        console.log(apiUrl);
 
-        const response = await axios.post(
-            `${apiUrl}/api/suno/generate`,
+        const response = await axios.post(`${apiUrl}/api/suno/generate`,
             {
                 "prompt": prompt,
                 "style": style,
@@ -48,7 +50,14 @@ const SongScreen = () => {
                 "model": model,
                 "callBackUrl": callBackUrl
             },
+            {
+                headers: {
+                  'Content-Type': 'application/json; charset=UTF-8',
+                  'Authorization': `Bearer ${apiKey}`,
+                },
+            }
         );
+
         console.log("프롬포트: ", prompt);
         console.log(response.data); // 곡 생성 요청 성공시 응답 데이터 로그
         setSongResult('노래 생성 요청 완료!');

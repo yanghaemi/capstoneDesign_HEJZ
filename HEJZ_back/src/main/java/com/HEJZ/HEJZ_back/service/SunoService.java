@@ -36,7 +36,7 @@ public class SunoService {
                     "\"customMode\": false,\n" +
                     "\"instrumental\": false,\n" +
                     "\"model\": \"" + request.getModel() + "\",\n" +
-                    "\"callBackUrl\": \"https://api.example.com/callback\"\n" +
+                    "\"callBackUrl\":\"" +request.getCallBackUrl() +"\",\n" +
                     "}";
 
 

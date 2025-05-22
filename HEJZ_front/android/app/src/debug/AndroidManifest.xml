@@ -6,4 +6,7 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="28"
         tools:ignore="GoogleAppIndexingWarning"/>
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
 </manifest>

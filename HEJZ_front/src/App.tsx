@@ -2,7 +2,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import { API_URL } from '@env';
+import { API_URL, API_SUNO_KEY } from '@env';
 import { ApiContext } from './context/ApiContext';
 
 import MainScreen from './screens/MainScreen';
@@ -24,7 +24,7 @@ const Stack = createNativeStackNavigator();
 
 const App = () => {
   return (
-      <ApiContext.Provider value={{ apiUrl: API_URL }}> // env에서 가져온 API_URL을 Context로 전달하여 하위 컴포넌트 어디서든 접근 가능하게 함
+      <ApiContext.Provider value={{ apiUrl: API_URL, apiKey: API_SUNO_KEY }}> // env에서 가져온 API_URL을 Context로 전달하여 하위 컴포넌트 어디서든 접근 가능하게 함
         <NavigationContainer>
           <Stack.Navigator initialRouteName="Main" screenOptions={{ headerShown: false }}>
             <Stack.Screen name="Main" component={MainScreen} />
