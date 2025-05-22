@@ -1,32 +1,42 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ImageBackground } from 'react-native';
 
 const SelectScreen = ({ navigation }: any) => {
   return (
-    <View style={styles.container}>
-      {/* <Text style={styles.title}>무엇을 할까</Text> */}
+    <ImageBackground 
+      source={require('../assets/mainbackground.png')} 
+      style={styles.background}
+      resizeMode="cover"
+    >
+      <View style={styles.container}>
+        {/* <Text style={styles.title}>무엇을 할까</Text> */}
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate('Song')}
-      >
-        <Text style={styles.buttonText}>노래 만들기</Text>
-      </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Song')}>
+          <ImageBackground
+            source={require('../assets/star.png')}
+            style={styles.imageButton}
+            imageStyle={{ borderRadius: 12 }} // ⬅ 둥글게 하고 싶으면 유지
+          >
+            <Text style={styles.imageButtonText}>노래 만들기</Text>
+          </ImageBackground>
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate('Dance')}
-      >
-        <Text style={styles.buttonText}>안무 추천</Text>
-      </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate('Community')}
-      >
-        <Text style={styles.buttonText}>둘러보기</Text>
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate('Dance')}
+        >
+          <Text style={styles.buttonText}>안무 추천</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate('Community')}
+        >
+          <Text style={styles.buttonText}>둘러보기</Text>
+        </TouchableOpacity>
+      </View>
+    </ImageBackground>
   );
 };
 
@@ -37,7 +47,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     paddingHorizontal: 24,
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
   },
   title: {
     fontSize: 28,
@@ -60,6 +70,26 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     fontSize: 16,
   },
+  background: {
+    flex: 1,
+    resizeMode: 'cover',
+  },
+  imageButton: {
+  width: 200,
+  height: 200,
+  justifyContent: 'center',
+  alignItems: 'center',
+  marginBottom: 20,
+},
+imageButtonText: {
+  color: '#333', 
+  fontSize: 18,
+  fontWeight: 'bold',
+  textAlign: 'center',
+  fontFamily: 'Ramche', 
+},
+
+
 });
 
 

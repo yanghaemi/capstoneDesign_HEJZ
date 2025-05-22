@@ -7,23 +7,12 @@ const MainScreen = ({ navigation }: any) => {
   };
 
   return (
-    // <ImageBackground
-    //   // source={require('../assets/background.png')}
-    //   // style={styles.background}
-    // >
+    <ImageBackground
+      source={require('../assets/background.png')} 
+      style={styles.background}
+      resizeMode="cover"
+    >
       <View style={styles.container}>
-        {/* <Button
-        title="🎵 노래 만들기 테스트"
-        onPress={() => navigation.navigate('Song')}
-        />
-        <Button
-        title="🎵 안무 만들기 테스트"
-        onPress={() => navigation.navigate('Dance')}
-        />
-        <Button
-        title="🎵 마이페이지 테스트"
-        onPress={() => navigation.navigate('Feeds')}
-        /> */}
         <Image source={require('../assets/Photo.png')} style={styles.logo} />
 
         <TouchableOpacity style={styles.button} onPress={handleLogin}>
@@ -33,6 +22,7 @@ const MainScreen = ({ navigation }: any) => {
           <Text style={styles.buttonText}>테스트화면</Text>
         </TouchableOpacity>
       </View>
+    </ImageBackground>
   );
 };
 export default MainScreen;
@@ -44,7 +34,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor:'#FFFFFF',
+    backgroundColor:'transparent',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 24,

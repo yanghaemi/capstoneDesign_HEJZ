@@ -71,15 +71,15 @@ const EditProfileScreen = () => {
 
       <View style={styles.extraButtons}>
         <TouchableOpacity style={styles.extraButton} onPress={handleChangePassword}>
-          <Text style={styles.extraButtonText}>🔒 비밀번호 수정</Text>
+          <Text style={styles.extraButtonText}> 비밀번호 수정</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.extraButton} onPress={() => Alert.alert('연결된 계정 관리 준비 중')}>
-          <Text style={styles.extraButtonText}>🔗 연결된 계정</Text>
+          <Text style={styles.extraButtonText}> 연결된 계정</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.extraButton} onPress={() => Alert.alert('알림 설정 준비 중')}>
-          <Text style={styles.extraButtonText}>🔔 알림 설정</Text>
+          <Text style={styles.extraButtonText}> 알림 설정</Text>
         </TouchableOpacity>
       </View>
     </View>
