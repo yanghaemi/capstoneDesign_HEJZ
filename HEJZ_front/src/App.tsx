@@ -18,30 +18,49 @@ import StatsScreen from './screens/StatesScreen';
 import EditProfileScreen from './screens/EditProfileScreen';
 import MyCommentsScreen from './screens/Community/MyCommentsScreen';
 import SignUpScreen from './screens/Community/SignUpScreen';
+import SelectScreen from './screens/SelectScreen';
 enableScreens(); 
 
 const Stack = createNativeStackNavigator();
 
 const App = () => {
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+
+  useEffect(() => {
+    Font.loadAsync({
+      Ramche: require('./assets/fonts/Ramche.ttf'),
+    }).then(() => setFontsLoaded(true));
+  }, []);
+
+  if (!fontsLoaded) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text>폰트 불러오는 중...</Text>
+      </View>
+    );
+  }
+
   return (
-      <ApiContext.Provider value={{ apiUrl: API_URL, apiKey: API_SUNO_KEY }}> // env에서 가져온 API_URL을 Context로 전달하여 하위 컴포넌트 어디서든 접근 가능하게 함
-        <NavigationContainer>
-          <Stack.Navigator initialRouteName="Main" screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="Main" component={MainScreen} />
-            <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="Song" component={SongScreen} />
-            <Stack.Screen name="Dance" component={DanceScreen} />
-            <Stack.Screen name="Feeds" component={FeedScreen} />
-            <Stack.Screen name="MyPageOptions" component={MyPageOptionsScreen} />
-            <Stack.Screen name="MySongs" component={MySongsScreen} />
-            <Stack.Screen name="MyVideos" component={MyVideosScreen} />
-            <Stack.Screen name="States" component={StatsScreen} />
-            <Stack.Screen name="EditProfile" component={EditProfileScreen} />
-            <Stack.Screen name="MyComments" component={MyCommentsScreen} />
-            <Stack.Screen name="SignUp" component={SignUpScreen} />
-          </Stack.Navigator>
-        </NavigationContainer>
-      </ApiContext.Provider>
+    <UserProvider>
+      <NavigationContainer>
+        <Stack.Navigator initialRouteName="Main" screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Main" component={MainScreen} />
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Song" component={SongScreen} />
+          <Stack.Screen name="Dance" component={DanceScreen} />
+          <Stack.Screen name="Feeds" component={FeedScreen} />
+          <Stack.Screen name="MyPageOptions" component={MyPageOptionsScreen} />
+          <Stack.Screen name="MySongs" component={MySongsScreen} />
+          <Stack.Screen name="MyVideos" component={MyVideosScreen} />
+          <Stack.Screen name="States" component={StatsScreen} />
+          <Stack.Screen name="comments" component={MyCommentsScreen} />
+          <Stack.Screen name="Select" component={SelectScreen} />
+          <Stack.Screen name="Community" component={CommunityScreen} />
+          <Stack.Screen name="Liked" component={LikedScreen} />
+          <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </UserProvider>
   );
 };
 

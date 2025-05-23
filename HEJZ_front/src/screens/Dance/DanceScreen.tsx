@@ -4,8 +4,8 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet, Button } from 'reac
 
 const dummySongs = [
   { id: '1', title: '나는야 장지혜야', prompt: '강렬하고 자유로운 느낌' },
-  { id: '2', title: '달달한 R&B', prompt: '로맨틱하고 부드럽게' },
-  { id: '3', title: '에너지 뿜뿜 EDM', prompt: '신나고 터지는 분위기' },
+  { id: '2', title: '아프잘 아프지마', prompt: '걱정하는 느낌' },
+  { id: '3', title: '영은아 young하게 살자', prompt: '신나고 터지는 분위기' },
 ];
 
 const DanceScreen = () => {
@@ -33,7 +33,7 @@ const DanceScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>노래를 선택해주세요 🎶</Text>
+      <Text style={styles.header}>노래를 선택해주세요 </Text>
 
       <FlatList
         data={dummySongs}
@@ -43,7 +43,7 @@ const DanceScreen = () => {
       />
 
       <Button
-        title="안무 추천받기 💃"
+        title="안무 추천받기"
         onPress={handleRecommend}
         disabled={!selectedSongId}
       />
