@@ -4,7 +4,7 @@ import { View, Text, TouchableOpacity, StyleSheet, ImageBackground } from 'react
 const SelectScreen = ({ navigation }: any) => {
   return (
     <ImageBackground
-      source={require('../../assets/mainbackground.png')}
+      source={require('../assets/background.png')}
       style={styles.background}
       resizeMode="cover"
     >
@@ -23,6 +23,7 @@ const SelectScreen = ({ navigation }: any) => {
 
 
         <TouchableOpacity
+          source={require('../assets/star.png')}
           style={styles.button}
           onPress={() => navigation.navigate('Dance')}
         >
@@ -30,6 +31,7 @@ const SelectScreen = ({ navigation }: any) => {
         </TouchableOpacity>
 
         <TouchableOpacity
+          source={require('../assets/star.png')}
           style={styles.button}
           onPress={() => navigation.navigate('Community')}
         >

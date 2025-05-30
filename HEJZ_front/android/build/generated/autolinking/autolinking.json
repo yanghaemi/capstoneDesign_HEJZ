@@ -594,7 +594,9 @@
     "ios": {},
     "android": {}
   },
-  "assets": [],
+  "assets": [
+    "./assets/font"
+  ],
   "project": {
     "ios": {
       "sourceDir": "C:\\Users\\ham\\Desktop\\capstoneDesign_HEJZ\\HEJZ_front\\ios",

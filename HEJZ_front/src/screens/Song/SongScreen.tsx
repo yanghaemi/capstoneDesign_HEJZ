@@ -4,10 +4,10 @@ import axios from 'axios';
 import { useApi } from "../../context/ApiContext";
 
 const SongScreen = () => {
+  const { apiUrl, apiKey } = useApi();
+
   const [loading, setLoading] = useState(false);
   const [songResult, setSongResult] = useState<string | null>(null);
-
-  const { apiUrl, apiKey } = useApi();
 
   // suno 서버에 보낼 요청 형식 ------------------------------------------------
   const [prompt, setPrompt] = useState("");             // 프롬포트

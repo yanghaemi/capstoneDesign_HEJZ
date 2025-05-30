@@ -26,7 +26,7 @@ const EditProfileScreen = () => {
   const handleChangeProfileImage = () => {
   // 실제 앱이라면 이미지 picker 열기
   // 여기선 더미 이미지로 고정
-    setUser({ ...user,  profileImage: require('../assets/cat.png') }); // 대체용 이미지 URL
+    setUser({ ...user,  profileImage: require("../assets/star.png") }); // 대체용 이미지 URL
     Alert.alert('프로필 이미지가 변경되었습니다!');
   };
 
@@ -41,7 +41,7 @@ const EditProfileScreen = () => {
 
       <TouchableOpacity onPress={handleChangeProfileImage} style={styles.profileContainer}>
         <Image
-          source={require('../assets/cat.png')} // 실제 이미지로 교체 가능
+          source={require("../assets/star.png")} // 실제 이미지로 교체 가능
           style={styles.profileImage}
         />
         <Text style={styles.changePhotoText}>프로필 사진 변경</Text>

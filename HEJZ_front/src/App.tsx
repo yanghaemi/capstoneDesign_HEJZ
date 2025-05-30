@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { View, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+// import * as Font from 'expo-font';
 
 import { API_URL, API_SUNO_KEY } from '@env';
 import { ApiContext } from './context/ApiContext';
+import { UserProvider } from './screens/UserContext';
 
 import MainScreen from './screens/MainScreen';
 import LoginScreen from './screens/Community/LoginScreen';
@@ -19,28 +22,32 @@ import EditProfileScreen from './screens/EditProfileScreen';
 import MyCommentsScreen from './screens/Community/MyCommentsScreen';
 import SignUpScreen from './screens/Community/SignUpScreen';
 import SelectScreen from './screens/SelectScreen';
+import CommunityScreen from './screens/Community/CommunityScreen';
+import LikedScreen from './screens/Community/LikedScreen';
+
 enableScreens(); 
 
 const Stack = createNativeStackNavigator();
 
 const App = () => {
-  const [fontsLoaded, setFontsLoaded] = useState(false);
-
-  useEffect(() => {
-    Font.loadAsync({
-      Ramche: require('./assets/fonts/Ramche.ttf'),
-    }).then(() => setFontsLoaded(true));
-  }, []);
-
-  if (!fontsLoaded) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>폰트 불러오는 중...</Text>
-      </View>
-    );
-  }
+//   const [fontsLoaded, setFontsLoaded] = useState(false);
+//
+//   useEffect(() => {
+//     Font.loadAsync({
+//       Ramche: require('./assets/Ramche.ttf'),
+//     }).then(() => setFontsLoaded(true));
+//   }, []);
+//
+//   if (!fontsLoaded) {
+//     return (
+//       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+//         <Text>폰트 불러오는 중...</Text>
+//       </View>
+//     );
+//   }
 
   return (
+  <ApiContext.Provider value={{ apiUrl: API_URL, apiKey: API_SUNO_KEY }}>
     <UserProvider>
       <NavigationContainer>
         <Stack.Navigator initialRouteName="Main" screenOptions={{ headerShown: false }}>
@@ -61,6 +68,7 @@ const App = () => {
         </Stack.Navigator>
       </NavigationContainer>
     </UserProvider>
+  </ApiContext.Provider>
   );
 };
 

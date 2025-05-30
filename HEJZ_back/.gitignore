@@ -35,4 +35,4 @@ out/
 
 ### VS Code ###
 .vscode/
-./src/main/resources/application.properties
+HEJZ_back/src/main/resources/*
