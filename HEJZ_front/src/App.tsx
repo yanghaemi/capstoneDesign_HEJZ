@@ -26,7 +26,7 @@ const App = () => {
   return (
       <ApiContext.Provider value={{ apiUrl: API_URL, apiKey: API_SUNO_KEY }}> // env에서 가져온 API_URL을 Context로 전달하여 하위 컴포넌트 어디서든 접근 가능하게 함
         <NavigationContainer>
-          <Stack.Navigator initialRouteName="Main" screenOptions={{ headerShown: false }}>
+          <Stack.Navigator id={undefined} initialRouteName="Main" screenOptions={{ headerShown: false }}>
             <Stack.Screen name="Main" component={MainScreen} />
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Song" component={SongScreen} />
