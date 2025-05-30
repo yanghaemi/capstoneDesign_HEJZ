@@ -18,7 +18,7 @@ const SongScreen = () => {
   const [instrumental, setInstrumental] = useState(false); // customMode가 false면 자동으로 false
   const [model, setModel] = useState("V3_5");               // 모델 별 프롬포트 길이 )
                                                         // V3_5 & V4: 3000 캐릭터, V4_5 : 5000 캐릭터
-  const [callBackUrl, setCallBackUrl] = useState("playground");   // 콜백 url
+  const [callBackUrl, setCallBackUrl] = useState(apiUrl+"/api/suno/callback");   // 콜백 url
   // ------------------------------------------------------------------------
 
 
