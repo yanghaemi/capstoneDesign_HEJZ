@@ -12,7 +12,7 @@ const StatsScreen = () => {
 
   return (
     <ImageBackground
-          source={require("../assets/background.png")}
+          source={require('../assets/mainbackground.png')}
           style={styles.background}
           resizeMode="cover"
         >

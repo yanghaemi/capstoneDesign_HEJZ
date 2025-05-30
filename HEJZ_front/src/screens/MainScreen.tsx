@@ -12,7 +12,7 @@ const MainScreen = ({ navigation }: any) => {
        style={styles.background}
     >
       <View style={styles.container}>
-          <Image source={require("../assets/Logo.png")} style={styles.logo} />
+          <Image source={require("../assets/Photo.png")} style={styles.logo} />
 
 
           <TouchableOpacity style={styles.button} onPress={handleLogin}>
