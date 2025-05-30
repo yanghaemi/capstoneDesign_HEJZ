@@ -47,6 +47,7 @@ const App = () => {
 //   }
 
   return (
+<<<<<<< HEAD
   <ApiContext.Provider value={{ apiUrl: API_URL, apiKey: API_SUNO_KEY }}>
     <UserProvider>
       <NavigationContainer>
@@ -69,6 +70,26 @@ const App = () => {
       </NavigationContainer>
     </UserProvider>
   </ApiContext.Provider>
+=======
+      <ApiContext.Provider value={{ apiUrl: API_URL, apiKey: API_SUNO_KEY }}> // env에서 가져온 API_URL을 Context로 전달하여 하위 컴포넌트 어디서든 접근 가능하게 함
+        <NavigationContainer>
+          <Stack.Navigator id={undefined} initialRouteName="Main" screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="Main" component={MainScreen} />
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Song" component={SongScreen} />
+            <Stack.Screen name="Dance" component={DanceScreen} />
+            <Stack.Screen name="Feeds" component={FeedScreen} />
+            <Stack.Screen name="MyPageOptions" component={MyPageOptionsScreen} />
+            <Stack.Screen name="MySongs" component={MySongsScreen} />
+            <Stack.Screen name="MyVideos" component={MyVideosScreen} />
+            <Stack.Screen name="States" component={StatsScreen} />
+            <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+            <Stack.Screen name="MyComments" component={MyCommentsScreen} />
+            <Stack.Screen name="SignUp" component={SignUpScreen} />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </ApiContext.Provider>
+>>>>>>> cb4ce62feacd9d9f20eea5554d4404622d201ada
   );
 };
 

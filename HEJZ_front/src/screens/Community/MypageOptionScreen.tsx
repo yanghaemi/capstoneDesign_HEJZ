@@ -24,7 +24,11 @@ const MyPageOptionsScreen = ({ navigation }: any) => {
       <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('States')}>
         <Text style={styles.buttonText}>내 콘텐츠 통계</Text>
       </TouchableOpacity>
+<<<<<<< HEAD
       
+=======
+
+>>>>>>> cb4ce62feacd9d9f20eea5554d4404622d201ada
     </ScrollView>
   );
 };
