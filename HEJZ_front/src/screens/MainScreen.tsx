@@ -13,8 +13,6 @@ const MainScreen = ({ navigation }: any) => {
     >
       <View style={styles.container}>
           <Image source={require("../assets/Photo.png")} style={styles.logo} />
-
-
           <TouchableOpacity style={styles.button} onPress={handleLogin}>
             <Text style={styles.buttonText}>로그인하기</Text>
           </TouchableOpacity>

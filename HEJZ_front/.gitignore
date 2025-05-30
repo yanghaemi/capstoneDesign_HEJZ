@@ -16,10 +16,11 @@ npm-debug.log
 npm-debug.log*
 
 # Android
-android/.gradle
-android/app/build
+android/.gradle/
+android/app/build/
 android/.idea
 android/local.properties
+android/.cxx/
 
 # iOS
 ios/Pods
@@ -35,6 +36,7 @@ ios/DerivedData
 # Expo
 .expo/
 .expo-shared/
+node_modules/
 
 # Xcode
 *.xcuserdata/
@@ -44,6 +46,15 @@ DerivedData/
 # Fastlane
 /vendor/
 
+# NDK/CMake 관련
+*.iml
+.cxx/
+.idea/
 
 ./android/app/.cxx/
-.env
+./android/build/
+
+# Gradle 캐시
+.gradle/
+build/
+
