@@ -9,6 +9,7 @@ type RootStackParamList = {
   Login: undefined;
   SignUp: undefined;
   Main: undefined;
+  Select: undefined; // Select ekrani qo'shildi
 };
 
 const LoginScreen = () => {
@@ -19,7 +20,8 @@ const LoginScreen = () => {
   const handleLogin = () => {
     console.log('이메일:', email);
     console.log('비밀번호:', password);
-    // TODO: 로그인 API 연결 예정
+    // Hech qanday ma'lumot kiritilmasa ham Select ekrani sifatida SelectScreen ga o'tadi
+    navigation.navigate('Select');
   };
 
   const goToSignUp = () => {
@@ -50,7 +52,9 @@ const LoginScreen = () => {
       </TouchableOpacity>
 
       <TouchableOpacity onPress={goToSignUp}>
-        <Text style={styles.signupText}>계정이 없으신가요? <Text style={styles.signupLink}>회원가입</Text></Text>
+        <Text style={styles.signupText}>
+          계정이 없으신가요? <Text style={styles.signupLink}>회원가입</Text>
+        </Text>
       </TouchableOpacity>
     </View>
   );

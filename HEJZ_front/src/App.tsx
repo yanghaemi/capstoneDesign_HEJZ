@@ -18,6 +18,7 @@ import StatsScreen from './screens/StatesScreen';
 import EditProfileScreen from './screens/EditProfileScreen';
 import MyCommentsScreen from './screens/Community/MyCommentsScreen';
 import SignUpScreen from './screens/Community/SignUpScreen';
+
 enableScreens(); 
 
 const Stack = createNativeStackNavigator();
@@ -39,10 +40,11 @@ const App = () => {
             <Stack.Screen name="EditProfile" component={EditProfileScreen} />
             <Stack.Screen name="MyComments" component={MyCommentsScreen} />
             <Stack.Screen name="SignUp" component={SignUpScreen} />
+            
           </Stack.Navigator>
         </NavigationContainer>
       </ApiContext.Provider>
   );
 };
 
-export default App;
+export default App;;
