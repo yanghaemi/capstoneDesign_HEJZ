@@ -11,7 +11,7 @@
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		8D65C6C0A2B59E61D0998723 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
-		E4DF115B1616DD2052587F72 /* libPods-ustarApp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6B1C5E72979EBFE0EB6D6E96 /* libPods-ustarApp.a */; };
+		FE2AB05CE60119B2CEF85148 /* libPods-ustarApp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B10AFDF0C5B1C0A81DB0ECC4 /* libPods-ustarApp.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -19,11 +19,11 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = ustarApp/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = ustarApp/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = ustarApp/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		1F93A7F5448B0F001AAAB0AC /* Pods-ustarApp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ustarApp.release.xcconfig"; path = "Target Support Files/Pods-ustarApp/Pods-ustarApp.release.xcconfig"; sourceTree = "<group>"; };
-		6B1C5E72979EBFE0EB6D6E96 /* libPods-ustarApp.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ustarApp.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		6DFB4617D7F788F6457064C8 /* Pods-ustarApp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ustarApp.debug.xcconfig"; path = "Target Support Files/Pods-ustarApp/Pods-ustarApp.debug.xcconfig"; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = ustarApp/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = ustarApp/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		9251363885988937B95C2A61 /* Pods-ustarApp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ustarApp.debug.xcconfig"; path = "Target Support Files/Pods-ustarApp/Pods-ustarApp.debug.xcconfig"; sourceTree = "<group>"; };
+		B10AFDF0C5B1C0A81DB0ECC4 /* libPods-ustarApp.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ustarApp.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		BCEFF3A485E1E37CD9E177DA /* Pods-ustarApp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ustarApp.release.xcconfig"; path = "Target Support Files/Pods-ustarApp/Pods-ustarApp.release.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -32,7 +32,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E4DF115B1616DD2052587F72 /* libPods-ustarApp.a in Frameworks */,
+				FE2AB05CE60119B2CEF85148 /* libPods-ustarApp.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -55,7 +55,7 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				6B1C5E72979EBFE0EB6D6E96 /* libPods-ustarApp.a */,
+				B10AFDF0C5B1C0A81DB0ECC4 /* libPods-ustarApp.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -92,8 +92,8 @@
 		BBD78D7AC51CEA395F1C20DB /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				6DFB4617D7F788F6457064C8 /* Pods-ustarApp.debug.xcconfig */,
-				1F93A7F5448B0F001AAAB0AC /* Pods-ustarApp.release.xcconfig */,
+				9251363885988937B95C2A61 /* Pods-ustarApp.debug.xcconfig */,
+				BCEFF3A485E1E37CD9E177DA /* Pods-ustarApp.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -105,13 +105,13 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "ustarApp" */;
 			buildPhases = (
-				45F9714800751C5624C5B91D /* [CP] Check Pods Manifest.lock */,
+				EF21A8A002DADA7CDBF3FCC3 /* [CP] Check Pods Manifest.lock */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
-				664F20EEF14999AF7BD69CE1 /* [CP] Embed Pods Frameworks */,
-				7797786EF69C2B59C9DC4F42 /* [CP] Copy Pods Resources */,
+				28087C2F9DCC3939BDAFCFE1 /* [CP] Embed Pods Frameworks */,
+				11D516456FCA48183FA39A72 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -183,7 +183,41 @@
 			shellPath = /bin/sh;
 			shellScript = "set -e\n\nWITH_ENVIRONMENT=\"$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"$REACT_NATIVE_PATH/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"\n";
 		};
-		45F9714800751C5624C5B91D /* [CP] Check Pods Manifest.lock */ = {
+		11D516456FCA48183FA39A72 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-ustarApp/Pods-ustarApp-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-ustarApp/Pods-ustarApp-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ustarApp/Pods-ustarApp-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		28087C2F9DCC3939BDAFCFE1 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-ustarApp/Pods-ustarApp-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-ustarApp/Pods-ustarApp-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ustarApp/Pods-ustarApp-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		EF21A8A002DADA7CDBF3FCC3 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -205,40 +239,6 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		664F20EEF14999AF7BD69CE1 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-ustarApp/Pods-ustarApp-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-ustarApp/Pods-ustarApp-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ustarApp/Pods-ustarApp-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		7797786EF69C2B59C9DC4F42 /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-ustarApp/Pods-ustarApp-resources-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Copy Pods Resources";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-ustarApp/Pods-ustarApp-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ustarApp/Pods-ustarApp-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -255,7 +255,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 6DFB4617D7F788F6457064C8 /* Pods-ustarApp.debug.xcconfig */;
+			baseConfigurationReference = 9251363885988937B95C2A61 /* Pods-ustarApp.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -283,7 +283,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 1F93A7F5448B0F001AAAB0AC /* Pods-ustarApp.release.xcconfig */;
+			baseConfigurationReference = BCEFF3A485E1E37CD9E177DA /* Pods-ustarApp.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
