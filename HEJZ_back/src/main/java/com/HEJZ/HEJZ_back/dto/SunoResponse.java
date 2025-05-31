@@ -1,24 +1,38 @@
 package com.HEJZ.HEJZ_back.dto;
 
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.List;
+
+@Getter @Setter
 public class SunoResponse {
     private int code;
     private String msg;
-    private SunoData data;
+    private CallbackData data;
 
-    public int getCode() { return code; }
-    public void setCode(int code) { this.code = code; }
+    @Getter @Setter
+    public static class CallbackData {
+        private String callbackType;
+        private String task_id;
+        private List<AudioData> data;
+    }
 
-    public String getMsg() { return msg; }
-    public void setMsg(String msg) { this.msg = msg; }
-
-    public SunoData getData() { return data; }
-    public void setData(SunoData data) { this.data = data; }
-
-    // 내부 클래스
-    public static class SunoData {
-        private String taskId;
-
-        public String getTaskId() { return taskId; }
-        public void setTaskId(String taskId) { this.taskId = taskId; }
+    @Getter
+    @Setter
+    public static class AudioData {
+        private String id;
+        private String audio_url;
+        private String source_audio_url;
+        private String stream_audio_url;
+        private String source_stream_audio_url;
+        private String image_url;
+        private String source_image_url;
+        private String prompt;
+        private String model_name;
+        private String title;
+        private String tags;
+        private String createTime;
+        private double duration;
     }
 }
