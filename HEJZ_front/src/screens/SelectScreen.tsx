@@ -9,16 +9,10 @@ const SelectScreen = ({ navigation }: any) => {
       resizeMode="cover"
     >
       <View style={styles.container}>
-        {/* <Text style={styles.title}>무엇을 할까</Text> */}
+        
 
-        <TouchableOpacity onPress={() => navigation.navigate('Song')}>
-          <ImageBackground
-            source={require('../assets/star.png')}
-            style={styles.imageButton}
-            imageStyle={{ borderRadius: 12 }} // ⬅ 둥글게 하고 싶으면 유지
-          >
-            <Text style={styles.imageButtonText}>노래 만들기</Text>
-          </ImageBackground>
+        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Song')}>
+            <Text style={styles.buttonText}>노래 만들기</Text>
         </TouchableOpacity>
 
 

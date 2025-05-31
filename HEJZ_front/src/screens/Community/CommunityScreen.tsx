@@ -13,7 +13,7 @@ type ShortsItem = {
   id: string;
   title: string;
   likes: number;
-  liked: boolean;
+  Bookmark:boolean;
   comments: string[];
 };
 
@@ -24,9 +24,9 @@ const CommunityScreen = ({ navigation }: any) => {
   // 더미 데이터 초기화
   useEffect(() => {
     const dummyData: ShortsItem[] = [
-      { id: '1', title: '감성 힙합 숏츠', likes: 24, liked: false, comments: [] },
-      { id: '2', title: '파워 댄스 숏츠', likes: 45, liked: false, comments: [] },
-      { id: '3', title: '감정 댄스 영상', likes: 12, liked: false, comments: [] },
+      { id: '1', title: '양해미의 만취쇼', likes: 24, bookmarked: false, comments: [] },
+      { id: '2', title: '송영은의 애교송', likes: 45, bookmarked: false, comments: [] },
+      { id: '3', title: '아프잘의 헬스쇼', likes: 12, bookmarked: false, comments: [] },
     ];
     setShorts(dummyData);
   }, []);
@@ -54,6 +54,13 @@ const CommunityScreen = ({ navigation }: any) => {
       )
     );
   };
+  const toggleBookmark = (id: string) => {
+    setShorts((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, bookmarked: !item.bookmarked } : item
+      )
+    );
+  };
 
   // 항목 렌더링
   const renderItem = ({ item }: { item: ShortsItem }) => (
@@ -62,9 +69,15 @@ const CommunityScreen = ({ navigation }: any) => {
       <Text style={styles.shortsTitle}>{item.title}</Text>
 
       <View style={styles.metaRow}>
-        <TouchableOpacity onPress={() => toggleLike(item.id)}>
-          <Text style={styles.metaText}>{item.liked ? '💖' : '🤍'} {item.likes}</Text>
-        </TouchableOpacity>
+        <View style={styles.likeBookmarkRow}>
+            <TouchableOpacity onPress={() => toggleLike(item.id)}>
+              <Text style={styles.metaText}>{item.liked ? '💖' : '🤍'} {item.likes}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => toggleBookmark(item.id)} style={{ marginLeft: 6 }}>
+              <Text style={styles.metaText}>{item.bookmarked ? '📑' : '🔖'}</Text>
+            </TouchableOpacity>
+         </View>
 
         <Text style={styles.metaText}>💬 {item.comments.length}</Text>
       </View>
@@ -101,7 +114,7 @@ const CommunityScreen = ({ navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>사람들이 올린 숏츠</Text>
+      <Text style={styles.title}>숏츠 게시판</Text>
 
       <FlatList
         data={shorts}
@@ -217,4 +230,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#4B9DFE',
   },
+  likeBookmarkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+
 });

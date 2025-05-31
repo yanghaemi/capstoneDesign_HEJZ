@@ -1,27 +1,31 @@
 import React from 'react';
 import { View, Text, FlatList, StyleSheet } from 'react-native';
 
-// 좋아요 누른 영상만 전달받는 구조라고 가정
-const LikedScreen = ({ route }: any) => {
-  const likedShorts = route?.params?.likedShorts ?? [];
+// 북마크된 숏츠 아이템 타입 (likes 제거)
+type ShortsItem = {
+  id: string;
+  title: string;
+};
+
+const BookmarkScreen = ({ route }: any) => {
+  const bookmarkedShorts: ShortsItem[] = route?.params?.bookmarkedShorts ?? [];
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>내가 좋아요 누른 숏츠</Text>
+      <Text style={styles.header}>북마크 목록</Text>
 
-      {likedShorts.length === 0 ? (
-        <Text style={styles.emptyText}>아직 좋아요 누른 숏츠가 없어요 💔</Text>
+      {bookmarkedShorts.length === 0 ? (
+        <Text style={styles.emptyText}>아직 북마크한 숏츠가 없어요 </Text>
       ) : (
         <FlatList
-          data={likedShorts}
+          data={bookmarkedShorts}
+          keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <View style={styles.shortsItem}>
               <View style={styles.thumbnail} />
               <Text style={styles.title}>{item.title}</Text>
-              <Text style={styles.meta}>💖 {item.likes}</Text>
             </View>
           )}
-          keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContainer}
         />
       )}
@@ -29,7 +33,7 @@ const LikedScreen = ({ route }: any) => {
   );
 };
 
-export default LikedScreen;
+export default BookmarkScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -66,18 +70,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 6,
     color: '#000',
   },
-  meta: {
-    fontSize: 14,
-    color: '#555',
-  },
   emptyText: {
-  fontSize: 16,
-  color: '#999',
-  textAlign: 'center',
-  marginTop: 100,
-},
-
+    fontSize: 16,
+    color: '#999',
+    textAlign: 'center',
+    marginTop: 100,
+  },
 });

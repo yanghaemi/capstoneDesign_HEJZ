@@ -1,43 +1,75 @@
-// screens/MySongsScreen.tsx
-import React from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  FlatList,
+  Alert,
+} from 'react-native';
+import SoundPlayer from 'react-native-sound-player';
 
-const mockSongs = [
-  {
-    id: 1,
-    title: '나는야 장지혜야야',
-    prompt: '자신감있는 장지혜',
-    url: 'https://example.com/song1.mp3',
-  },
-  {
-    id: 2,
-    title: '파티 댄스곡',
-    prompt: '신나는 파티 분위기',
-    url: 'https://example.com/song2.mp3',
-  },
-  {
-    id: 3,
-    title: '감성 발라드',
-    prompt: '이별 후의 감정',
-    url: 'https://example.com/song3.mp3',
-  },
+const songs = [
+  { id: '1', title: '나는야 장지혜야', file: 'song1' },
+  { id: '2', title: '영은아 YOUNG하게 살자', file: 'song2' },
+  { id: '3', title: '혜미가 아니라 해미라구요', file: 'song3' },
 ];
 
 const MySongsScreen = () => {
+  const [currentSong, setCurrentSong] = useState<string | null>(null);
+
+  const handlePlay = (file: string) => {
+    try {
+      SoundPlayer.playSoundFile(file, 'mp3');
+      setCurrentSong(file);
+    } catch (e) {
+      Alert.alert('재생 실패', '오디오 파일을 찾을 수 없어요.');
+      console.log('재생 에러:', e);
+    }
+  };
+
+  const handleStop = () => {
+    try {
+      SoundPlayer.stop();
+      setCurrentSong(null);
+    } catch (e) {
+      console.log('정지 에러:', e);
+    }
+  };
+
+  const renderItem = ({ item }: { item: (typeof songs)[0] }) => (
+    <View style={styles.songItem}>
+      <Text style={styles.songTitle}>{item.title}</Text>
+      <TouchableOpacity
+        style={styles.playButton}
+        onPress={() => handlePlay(item.file)}
+      >
+        <Text style={styles.playText}>▶ 재생</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>🎵 내가 만든 노래</Text>
+      <Text style={styles.title}>노래 목록</Text>
+
       <FlatList
-        data={mockSongs}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.songCard}>
-            <Text style={styles.title}>{item.title}</Text>
-            <Text style={styles.prompt}>프롬프트: {item.prompt}</Text>
-            <Text style={styles.url}>URL: {item.url}</Text>
-          </View>
-        )}
+        data={songs}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        style={{ marginBottom: 20 }}
       />
+
+      {currentSong && (
+        <View style={styles.nowPlaying}>
+          <Text style={styles.nowPlayingText}>
+            ⏱ 재생 중: {songs.find((s) => s.file === currentSong)?.title}
+          </Text>
+          <TouchableOpacity onPress={handleStop} style={styles.stopButton}>
+            <Text style={styles.stopText}>⏹ 정지</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 };
@@ -47,32 +79,54 @@ export default MySongsScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
     paddingTop: 60,
+    paddingHorizontal: 24,
     backgroundColor: '#fff',
   },
-  header: {
+  title: {
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 20,
   },
-  songCard: {
-    backgroundColor: '#f9f9f9',
-    padding: 16,
-    borderRadius: 10,
-    marginBottom: 12,
+  songItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderColor: '#ddd',
   },
-  title: {
-    fontSize: 18,
+  songTitle: {
+    fontSize: 16,
+  },
+  playButton: {
+    backgroundColor: '#4B9DFE',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+  },
+  playText: {
+    color: '#fff',
     fontWeight: 'bold',
   },
-  prompt: {
-    fontSize: 14,
-    marginTop: 4,
+  nowPlaying: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    backgroundColor: '#f2f2f2',
+    borderRadius: 8,
   },
-  url: {
-    fontSize: 12,
-    color: '#888',
-    marginTop: 4,
+  nowPlayingText: {
+    fontSize: 16,
+    marginBottom: 8,
+  },
+  stopButton: {
+    backgroundColor: '#FE4B4B',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+  },
+  stopText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
 });

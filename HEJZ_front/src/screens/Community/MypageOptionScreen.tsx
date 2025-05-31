@@ -14,8 +14,8 @@ const MyPageOptionsScreen = ({ navigation }: any) => {
         <Text style={styles.buttonText}>내가 만든 영상</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Liked')}>
-        <Text style={styles.buttonText}>좋아요 목록</Text>
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Bookmark')}>
+        <Text style={styles.buttonText}>북마크 목록</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('comments')}>
         <Text style={styles.buttonText}>내 댓글</Text>
