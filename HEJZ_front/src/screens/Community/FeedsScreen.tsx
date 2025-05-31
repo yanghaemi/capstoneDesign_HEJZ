@@ -6,7 +6,7 @@ import {
   FlatList,
   TouchableOpacity,
 } from 'react-native';
-import { useUser } from '../UserContext';
+import { useUser } from '../../context/UserContext';
 import { Image } from 'react-native'
 const dummyShorts = [
   { id: '1', title: ' 감성 힙합 숏츠' },
