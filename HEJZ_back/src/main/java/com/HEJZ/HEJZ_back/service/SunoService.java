@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -32,7 +33,7 @@ public class SunoService {
         try{
 
             conn = httpUtils.getHttpURLConnection(url, "POST", token);
-            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
             conn.setRequestProperty("Authorization", "Bearer " + token);
             conn.setDoInput(true); // post 요청 보낼 때 있어야 함
 
@@ -51,7 +52,7 @@ public class SunoService {
 
             // 1. 먼저 write 해야 함!
             try (DataOutputStream dataOutputStream = new DataOutputStream(conn.getOutputStream())) {
-                dataOutputStream.writeBytes(str);
+                dataOutputStream.write(str.getBytes(StandardCharsets.UTF_8)); // 한글 깨짐 방지 utf-8 붙임
                 dataOutputStream.flush();
             }
 

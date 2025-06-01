@@ -37,6 +37,7 @@ public class SunoController {
     // 호출 url : http://localhost:8080/api/suno/callback
     @PostMapping("/callback")
     public ResponseEntity<String> callbackSong(@RequestBody SunoResponse callback_res) {
+        System.out.println("✅ 콜백 성공! data size: " + callback_res.getData().getData().size());
         String result = sunoService.callbackFromSuno(callback_res);
         return ResponseEntity.ok(result);
     }
