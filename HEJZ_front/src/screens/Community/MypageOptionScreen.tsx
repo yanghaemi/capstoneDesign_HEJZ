@@ -7,11 +7,11 @@ const MyPageOptionsScreen = ({ navigation }: any) => {
       <Text style={styles.header}>설정</Text>
 
       <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('MySongs')}>
-        <Text style={styles.buttonText}>내가 만든 노래</Text>
+        <Text style={styles.buttonText}>노래 목록</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('MyVideos')}>
-        <Text style={styles.buttonText}>내가 만든 영상</Text>
+        <Text style={styles.buttonText}>영상 목록</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Bookmark')}>
@@ -24,6 +24,9 @@ const MyPageOptionsScreen = ({ navigation }: any) => {
       <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('States')}>
         <Text style={styles.buttonText}>내 콘텐츠 통계</Text>
       </TouchableOpacity>
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('BlockedUser')}>
+              <Text style={styles.buttonText}>차단 목록</Text>
+            </TouchableOpacity>
     </ScrollView>
   );
 };
