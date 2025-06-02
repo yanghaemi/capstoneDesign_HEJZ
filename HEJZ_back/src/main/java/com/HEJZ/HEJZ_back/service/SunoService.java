@@ -1,5 +1,6 @@
 package com.HEJZ.HEJZ_back.service;
 
+import com.HEJZ.HEJZ_back.dto.LyricsDTO;
 import com.HEJZ.HEJZ_back.dto.SunoRequest;
 import com.HEJZ.HEJZ_back.dto.SunoResponse;
 import com.HEJZ.HEJZ_back.util.HttpUtils;
@@ -23,7 +24,7 @@ public class SunoService {
 
     @Value("${suno.token}")
     private String token;
-    public String requestToSuno(SunoRequest request){
+    public String generateSong(SunoRequest request){
         // Suno API로 HTTP 요청 보내는 코드
         String url = "https://apibox.erweima.ai/api/v1/generate";
         HttpURLConnection conn = null;
@@ -84,7 +85,7 @@ public class SunoService {
             return "❌ 콜백에 오디오 데이터가 없음";
         }
 
-        Path saveDir = Paths.get("music");
+        Path saveDir = Paths.get("../music");
         try {
             if (!Files.exists(saveDir)) {
                 Files.createDirectories(saveDir);
@@ -110,6 +111,45 @@ public class SunoService {
             e.printStackTrace();
             return "❌ 전체 저장 중 예외 발생: " + e.getMessage();
         }
+
+
+
     }
+
+    // Get Timestamped Lyrics api 호출 함수
+//    public String getLyrics(LyricsDTO request){
+//
+//        String url = "https://apibox.erweima.ai/api/v1/generate/get-timestamped-lyrics";
+//
+//        HttpURLConnection conn = null;
+//
+//        HttpUtils httpUtils = new HttpUtils();
+//
+//        try{
+//
+//            conn = httpUtils.getHttpURLConnection(url, "POST", token);
+//            conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+//            conn.setRequestProperty("Authorization", "Bearer " + token);
+//            conn.setDoInput(true); // post 요청 보낼 때 있어야 함
+//
+//            // body string
+//            String str = "{\n" +
+//                    "\"taskId\": \"" + request.getTaskId() + "\",\n" +
+//                    "\"AudioId\": \"" + request.getAudioId() + "\",\n" +
+//                    "\"musicIndex\": \"" + request.getMusicIndex() + "\",\n" +
+//                    "}";
+//
+//            // 1. 먼저 write 해야 함!
+//            try (DataOutputStream dataOutputStream = new DataOutputStream(conn.getOutputStream())) {
+//                dataOutputStream.write(str.getBytes(StandardCharsets.UTF_8)); // 한글 깨짐 방지 utf-8 붙임
+//                dataOutputStream.flush();
+//            }
+//
+//        } finally{
+//            if(conn!=null) conn.disconnect();
+//        }
+//
+//        return "";
+//    }
 }
 

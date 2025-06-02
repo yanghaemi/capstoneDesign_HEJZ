@@ -1,5 +1,6 @@
 package com.HEJZ.HEJZ_back.controller;
 
+import com.HEJZ.HEJZ_back.dto.LyricsDTO;
 import com.HEJZ.HEJZ_back.dto.SunoRequest;
 import com.HEJZ.HEJZ_back.dto.SunoResponse;
 import com.HEJZ.HEJZ_back.service.SunoService;
@@ -28,17 +29,30 @@ public class SunoController {
     private final SunoService sunoService;
 
     // 호출 url : http://localhost:8080/api/suno/generate
+    // 곡 생성 api
+    // method: post
     @PostMapping("/generate")
     public ResponseEntity<String> generateSong(@RequestBody SunoRequest request) {
-        String response = sunoService.requestToSuno(request);
+        String response = sunoService.generateSong(request);
         return ResponseEntity.ok(response);
     }
 
     // 호출 url : http://localhost:8080/api/suno/callback
+    // 콜백 받는 url : 곡 생성시 callbackurl을 이 url로 사용해서 (ngrok으로 외부랑 연결해야 됨) 음악 url으로 음악 저장
+    // method: post
     @PostMapping("/callback")
     public ResponseEntity<String> callbackSong(@RequestBody SunoResponse callback_res) {
         System.out.println("✅ 콜백 성공! data size: " + callback_res.getData().getData().size());
         String result = sunoService.callbackFromSuno(callback_res);
         return ResponseEntity.ok(result);
     }
+
+    // 호출 url : http://localhost:8080/api/suno/lyrics
+    // 가사 호출 api
+    // method: post
+//    @PostMapping("/lyrics")
+//    public ResponseEntity<String> getLyrics(@RequestBody LyricsDTO request) {
+//        String result = sunoService.getLyrics(request);
+//        return ResponseEntity.ok(result);
+//    }
 }
