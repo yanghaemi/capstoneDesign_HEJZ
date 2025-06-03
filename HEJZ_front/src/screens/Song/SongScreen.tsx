@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, ActivityIndicator, ScrollView, ImageBackground } from 'react-native';
 import axios from 'axios';
 import { useApi } from "../../context/ApiContext";
 
@@ -70,29 +70,37 @@ const SongScreen = () => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>🎵 나만의 노래 만들기</Text>
+      <ImageBackground
+            source={require('../../assets/mainbackground.png')}
+            style={styles.background}
+            resizeMode="cover"
+       >
+        <ScrollView contentContainerStyle={styles.container}>
+          <Text style={styles.title}>원하는 분위기를 입력해보세요!</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="프롬프트를 입력하세요 (예: 여름밤 해변에서 춤추는 느낌)"
-        value={prompt}
-        onChangeText={setPrompt}
-      />
+          <TextInput
+            style={styles.input}
+            placeholder="프롬프트를 입력하세요 (예: 여름밤 해변에서 춤추는 느낌)"
+            value={prompt}
+            onChangeText={setPrompt}
+            multiline={true}             // ✅ 여러 줄 입력 허용
+            numberOfLines={4}            // ✅ 기본 4줄 정도로 보여줘
+            textAlignVertical="top"      // ✅ 텍스트 위에서부터 입력되게
+          />
 
-      <Button title="노래 생성하기" onPress={handleGenerateSong} disabled={!prompt || loading} />
+          <Button title="노래 생성하기" onPress={handleGenerateSong} disabled={!prompt || loading} />
 
-      {loading && <ActivityIndicator size="large" color="#888" style={{ marginTop: 20 }} />}
+          {loading && <ActivityIndicator size="large" color="#888" style={{ marginTop: 20 }} />}
 
-      {songResult && (
-        <View style={styles.resultContainer}>
-          <Text style={styles.resultLabel}>생성된 노래: </Text>
-          <Text style={styles.resultText}>{songResult}</Text>
-          {/* 나중에: 오디오 플레이어나 공유 버튼 연결 */}
-        </View>
-      )}
-    </ScrollView>
-
+          {songResult && (
+            <View style={styles.resultContainer}>
+              <Text style={styles.resultLabel}>생성된 노래: </Text>
+              <Text style={styles.resultText}>{songResult}</Text>
+              {/* 나중에: 오디오 플레이어나 공유 버튼 연결 */}
+            </View>
+          )}
+        </ScrollView>
+      </ImageBackground>
   );
 };
 
@@ -102,7 +110,6 @@ const styles = StyleSheet.create({
   container: {
     padding: 24,
     paddingTop: 60,
-    backgroundColor: '#fff',
     flexGrow: 1,
   },
   title: {
@@ -115,9 +122,12 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderWidth: 1,
     padding: 12,
-    borderRadius: 8,
+    borderRadius: 12,
     marginBottom: 20,
     fontSize: 16,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    height: 120,
+    width: '100%',
   },
   resultContainer: {
     marginTop: 30,
@@ -133,4 +143,8 @@ const styles = StyleSheet.create({
   resultText: {
     color: '#333',
   },
+   background: {
+       flex: 1,
+      resizeMode: 'cover',
+    },
 });

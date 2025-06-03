@@ -3,7 +3,6 @@ import { View, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 // import * as Font from 'expo-font';
-
 import { API_URL, API_SUNO_KEY } from '@env';
 import { ApiContext } from './context/ApiContext';
 import { UserProvider } from './context/UserContext';
@@ -24,6 +23,8 @@ import SignUpScreen from './screens/Community/SignUpScreen';
 import SelectScreen from './screens/SelectScreen';
 import CommunityScreen from './screens/Community/CommunityScreen';
 import BookmarkScreen from './screens/Community/BookmarkScreen';
+import BlockedUserScreen from './screens/Community/BlockedUserScreen';
+
 
 enableScreens(); 
 
@@ -47,29 +48,30 @@ const App = () => {
 //   }
 
   return (
-  <ApiContext.Provider value={{ apiUrl: API_URL, apiKey: API_SUNO_KEY }}>
-    <UserProvider>
-      <NavigationContainer>
-        <Stack.Navigator id={undefined} initialRouteName="Main" screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="Main" component={MainScreen} />
-          <Stack.Screen name="Login" component={LoginScreen} />
-          <Stack.Screen name="Song" component={SongScreen} />
-          <Stack.Screen name="Dance" component={DanceScreen} />
-          <Stack.Screen name="Feeds" component={FeedScreen} />
-          <Stack.Screen name="MyPageOptions" component={MyPageOptionsScreen} />
-          <Stack.Screen name="MySongs" component={MySongsScreen} />
-          <Stack.Screen name="MyVideos" component={MyVideosScreen} />
-          <Stack.Screen name="States" component={StatsScreen} />
-          <Stack.Screen name="comments" component={MyCommentsScreen} />
-          <Stack.Screen name="Select" component={SelectScreen} />
-          <Stack.Screen name="Community" component={CommunityScreen} />
-          <Stack.Screen name="Bookmark" component={BookmarkScreen} />
-          <Stack.Screen name="SignUp" component={SignUpScreen} />
-          <Stack.Screen name="EditProfile" component={EditProfileScreen} />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </UserProvider>
-  </ApiContext.Provider>
+          <ApiContext.Provider value={{ apiUrl: API_URL, apiKey: API_SUNO_KEY }}>
+            <UserProvider>
+              <NavigationContainer>
+                <Stack.Navigator id={undefined} initialRouteName="Main" screenOptions={{ headerShown: false }}>
+                  <Stack.Screen name="Main" component={MainScreen} />
+                  <Stack.Screen name="Login" component={LoginScreen} />
+                  <Stack.Screen name="Song" component={SongScreen} />
+                  <Stack.Screen name="Dance" component={DanceScreen} />
+                  <Stack.Screen name="Feeds" component={FeedScreen} />
+                  <Stack.Screen name="MyPageOptions" component={MyPageOptionsScreen} />
+                  <Stack.Screen name="MySongs" component={MySongsScreen} />
+                  <Stack.Screen name="MyVideos" component={MyVideosScreen} />
+                  <Stack.Screen name="States" component={StatsScreen} />
+                  <Stack.Screen name="comments" component={MyCommentsScreen} />
+                  <Stack.Screen name="Select" component={SelectScreen} />
+                  <Stack.Screen name="Community" component={CommunityScreen} />
+                  <Stack.Screen name="Bookmark" component={BookmarkScreen} />
+                  <Stack.Screen name="SignUp" component={SignUpScreen} />
+                  <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+                  <Stack.Screen name="BlockedUser" component={BlockedUserScreen} />
+                </Stack.Navigator>
+              </NavigationContainer>
+            </UserProvider>
+          </ApiContext.Provider>
   );
 };
 
