@@ -9,6 +9,8 @@ spring:
     password: ${MYSQL_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -23,6 +25,9 @@ spring:
     user:
       name: none
       password: none
+
+song:
+  apikey: ${API_SUNO_KEY}
 
 #app:
 #  jwt:
