@@ -9,9 +9,10 @@ const dummySongs = [
   { id: '4', title: '혜미가 아니라 해미라구요', prompt: '이름을 잘못불러서 분노에 가득참' },
 ];
 
-const DanceScreen = () => {
+const DanceScreen = ({ navigation }: any) => {
   const [selectedSongId, setSelectedSongId] = useState<string | null>(null);
   const [recommendation, setRecommendation] = useState<string | null>(null);
+  const [title, setTitle] = useState("");
 
   const handleRecommend = () => {
     if (!selectedSongId) return;
@@ -25,7 +26,10 @@ const DanceScreen = () => {
         styles.item,
         item.id === selectedSongId && styles.selectedItem,
       ]}
-      onPress={() => setSelectedSongId(item.id)}
+      onPress={() => {
+        setSelectedSongId(item.id);
+        setTitle(item.title);
+      }}
     >
       <Text style={styles.title}>{item.title}</Text>
       <Text style={styles.prompt}>{item.prompt}</Text>
@@ -50,7 +54,7 @@ const DanceScreen = () => {
 
           <Button
             title="안무 추천받기"
-            onPress={handleRecommend}
+            onPress={() => navigation.navigate('DanceRecommendScreen', {title: title})}
             disabled={!selectedSongId}
           />
 
