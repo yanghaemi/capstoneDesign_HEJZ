@@ -21,7 +21,7 @@ const SignUpScreen = () => {
 
   return (
     <ImageBackground
-      source={require('../../assets/background.png')}
+      source={require('../assets/background.png')}
       style={styles.background}
     >
       <View style={styles.overlay}>

@@ -139,7 +139,7 @@ const MySongsScreen = () => {
           />
 
           <Text style={styles.timeText}>
-            {Math.floor(currentTime)} / {Math.floor(duration)} 초
+              {Math.floor((Math.floor(currentTime)/60))}:{Math.floor(currentTime)%60} / {Math.floor((Math.floor(duration)/60))}:{Math.floor(duration)%60} 초
           </Text>
 
           <TouchableOpacity onPress={handleStop} style={styles.stopButton}>
