@@ -26,7 +26,6 @@ export const CommunityNavigator = () => (
     <Stack.Screen name="Comments" component={MyCommentsScreen} />
     <Stack.Screen name="Login" component={LoginScreen} />
     <Stack.Screen name="BlockedUser" component={BlockedUserScreen} />
-    <Stack.Screen name="SignUp" component={SignUpScreen} />
     <Stack.Screen name="MyVideos" component={MyVideoScreen} />
     <Stack.Screen name="MySongs" component={MySongScreen} />
     <Stack.Screen name="MyPageOptions" component={MyPageOptionsScreen} />
