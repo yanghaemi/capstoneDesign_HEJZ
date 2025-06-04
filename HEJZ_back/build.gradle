@@ -19,16 +19,31 @@ repositories {
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-	compileOnly 'org.projectlombok:lombok'
-	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-	implementation 'org.apache.httpcomponents:httpclient:4.5.14'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	runtimeOnly 'com.mysql:mysql-connector-j'
 
+	// Lombok
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+
+	// Jakarta
+	implementation 'jakarta.annotation:jakarta.annotation-api:2.1.1'
+
+	// 테스트
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	// 기타
 	implementation 'com.h2database:h2'
-	testImplementation 'com.h2database:h2'
+	implementation 'com.fasterxml.jackson.core:jackson-databind'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	// 통일된 최신버전으로 변경 (Spring Boot 3.4.x 호환)
+	implementation 'org.apache.httpcomponents.client5:httpclient5:5.4.1'
+	implementation 'org.apache.httpcomponents.client5:httpclient5-fluent:5.4.1'
+	implementation 'org.apache.httpcomponents.client5:httpclient5-cache:5.4.1'
 
 }
 
