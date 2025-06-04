@@ -22,6 +22,7 @@ android/.idea
 android/local.properties
 android/.cxx/
 
+
 # iOS
 ios/Pods
 ios/build
@@ -38,6 +39,7 @@ ios/DerivedData
 .expo-shared/
 node_modules/
 
+
 # Xcode
 *.xcuserdata/
 *.xcworkspace/
@@ -46,6 +48,7 @@ DerivedData/
 # Fastlane
 /vendor/
 
+<<<<<<< HEAD
 # NDK/CMake 관련
 *.iml
 .cxx/
@@ -57,4 +60,6 @@ DerivedData/
 # Gradle 캐시
 .gradle/
 build/
+
+
 
