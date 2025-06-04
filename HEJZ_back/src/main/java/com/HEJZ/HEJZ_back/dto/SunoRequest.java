@@ -13,4 +13,5 @@ public class SunoRequest {
     private boolean instrumental;
     private String model;
     private String callBackUrl;
+
 }
