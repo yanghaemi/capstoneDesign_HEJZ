@@ -1,4 +1,4 @@
-package com.HEJZ.HEJZ_back.dto;
+package com.HEJZ.HEJZ_back.domain.music.dto;
 
 public class SunoRequest {
     private String prompt;

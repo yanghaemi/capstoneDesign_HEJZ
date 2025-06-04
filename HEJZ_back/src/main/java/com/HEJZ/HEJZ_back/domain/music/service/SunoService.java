@@ -1,8 +1,8 @@
-package com.HEJZ.HEJZ_back.service;
+package com.HEJZ.HEJZ_back.domain.music.service;
 
-import com.HEJZ.HEJZ_back.dto.SunoRequest;
-import com.HEJZ.HEJZ_back.dto.SunoResponse;
-import com.HEJZ.HEJZ_back.util.HttpUtils;
+import com.HEJZ.HEJZ_back.domain.music.dto.SunoRequest;
+import com.HEJZ.HEJZ_back.domain.music.dto.SunoResponse;
+import com.HEJZ.HEJZ_back.global.util.HttpUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 

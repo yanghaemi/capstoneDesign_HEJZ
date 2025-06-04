@@ -1,21 +1,14 @@
-package com.HEJZ.HEJZ_back.controller;
+package com.HEJZ.HEJZ_back.domain.music.controller;
 
-import com.HEJZ.HEJZ_back.dto.SunoRequest;
-import com.HEJZ.HEJZ_back.dto.SunoResponse;
-import com.HEJZ.HEJZ_back.service.SunoService;
+import com.HEJZ.HEJZ_back.domain.music.dto.SunoRequest;
+import com.HEJZ.HEJZ_back.domain.music.dto.SunoResponse;
+import com.HEJZ.HEJZ_back.domain.music.service.SunoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 
 
 // 프론트에서 요청 받은 거 처리하는 곳
