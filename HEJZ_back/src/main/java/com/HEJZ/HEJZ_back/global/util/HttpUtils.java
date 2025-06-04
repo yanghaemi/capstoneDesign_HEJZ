@@ -1,4 +1,4 @@
-package com.HEJZ.HEJZ_back.util;
+package com.HEJZ.HEJZ_back.global.util;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;

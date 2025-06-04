@@ -1,11 +1,17 @@
-package com.HEJZ.HEJZ_back.controller;
+package com.HEJZ.HEJZ_back.domain.music.controller;
 
+<<<<<<< HEAD:HEJZ_back/src/main/java/com/HEJZ/HEJZ_back/controller/SunoController.java
 
 import com.HEJZ.HEJZ_back.dto.LyricsDTO;
 import com.HEJZ.HEJZ_back.dto.SunoRequest;
 import com.HEJZ.HEJZ_back.dto.SunoResponse;
 
 import com.HEJZ.HEJZ_back.service.SunoService;
+=======
+import com.HEJZ.HEJZ_back.domain.music.dto.SunoRequest;
+import com.HEJZ.HEJZ_back.domain.music.dto.SunoResponse;
+import com.HEJZ.HEJZ_back.domain.music.service.SunoService;
+>>>>>>> cb3ba3749e69d5e390125c4a7abe84a6690a41b5:HEJZ_back/src/main/java/com/HEJZ/HEJZ_back/domain/music/controller/SunoController.java
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,8 +19,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+<<<<<<< HEAD:HEJZ_back/src/main/java/com/HEJZ/HEJZ_back/controller/SunoController.java
 
 
+=======
+>>>>>>> cb3ba3749e69d5e390125c4a7abe84a6690a41b5:HEJZ_back/src/main/java/com/HEJZ/HEJZ_back/domain/music/controller/SunoController.java
 
 // 프론트에서 요청 받은 거 처리하는 곳
 
