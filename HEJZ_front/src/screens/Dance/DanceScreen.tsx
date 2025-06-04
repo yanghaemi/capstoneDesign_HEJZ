@@ -3,22 +3,23 @@ import React, { useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Button, ImageBackground } from 'react-native';
 
 const dummySongs = [
-  { id: '1', title: '나는야 장지혜야', prompt: '강렬하고 자유로운 느낌' },
+  { id: '1', title: '나는야 장지혜야', prompt: '강렬하고 자유로운 느낌' , filepath: '../../assets/songs/song1.mp3'},
   { id: '2', title: '아프잘 아프지마', prompt: '걱정하는 느낌' },
   { id: '3', title: '영은아 young하게 살자', prompt: '신나고 터지는 분위기' },
   { id: '4', title: '혜미가 아니라 해미라구요', prompt: '이름을 잘못불러서 분노에 가득참' },
 ];
 
 const DanceScreen = ({ navigation }: any) => {
-  const [selectedSongId, setSelectedSongId] = useState<string | null>(null);
-  const [recommendation, setRecommendation] = useState<string | null>(null);
-  const [title, setTitle] = useState("");
+  const [selectedSongId, setSelectedSongId] = useState("");
+  const [selectedSongTitle, setSelectedSongTitle] = useState("");
+  const [selectedSongFilepath, setSelectedSongFilepath] = useState("");
+  const [recommendation, setRecommendation] = useState("");
 
-  const handleRecommend = () => {
-    if (!selectedSongId) return;
-    // 여기에 백엔드 연결 시 API 호출 (selectedSongId 기반)
-    setRecommendation('추천된 안무: aist_003_bounce_tutorial'); // 임시값
-  };
+//   const handleRecommend = () => {
+//     if (!selectedSongId) return;
+//     // 여기에 백엔드 연결 시 API 호출 (selectedSongId 기반)
+//     setRecommendation('추천된 안무: aist_003_bounce_tutorial'); // 임시값
+//   };
 
   const renderItem = ({ item }: any) => (
     <TouchableOpacity
@@ -28,7 +29,8 @@ const DanceScreen = ({ navigation }: any) => {
       ]}
       onPress={() => {
         setSelectedSongId(item.id);
-        setTitle(item.title);
+        setSelectedSongTitle(item.title);
+        setSelectedSongFilepath(item.filepath)
       }}
     >
       <Text style={styles.title}>{item.title}</Text>
@@ -54,7 +56,10 @@ const DanceScreen = ({ navigation }: any) => {
 
           <Button
             title="안무 추천받기"
-            onPress={() => navigation.navigate('DanceRecommendScreen', {title: title})}
+            onPress={() => navigation.navigate('DanceRecommendScreen', {
+                p_id: selectedSongId,
+                p_title: selectedSongTitle,
+                p_filepath: selectedSongFilepath})}
             disabled={!selectedSongId}
           />
 

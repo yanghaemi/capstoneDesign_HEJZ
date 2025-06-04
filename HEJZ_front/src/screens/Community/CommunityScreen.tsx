@@ -157,7 +157,7 @@ const CommunityScreen = () => {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('Feeds')}>
+        <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('MyRoom')}>
           <Image source={require('../../assets/cat.png')} style={{ width: 50, height: 50, borderRadius: 25 }} />
         </TouchableOpacity>
       </View>

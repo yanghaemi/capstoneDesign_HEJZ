@@ -49,7 +49,9 @@ const App = () => {
                   <Stack.Screen name="Music" component={SongScreen} />
                   <Stack.Screen name="Dance" component={DanceNavigator} />
                   <Stack.Screen name="Community" component={CommunityNavigator} />
+
                 </Stack.Navigator>
+
               </NavigationContainer>
             </UserProvider>
           </ApiContext.Provider>
