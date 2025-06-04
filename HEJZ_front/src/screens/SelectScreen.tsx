@@ -7,59 +7,69 @@ import {
   ImageBackground,
   Image,
 } from 'react-native';
+import BottomBar from './BottomBar';
 
 const SelectScreen = ({ navigation }: any) => {
   return (
-    <ImageBackground
-      source={require('../assets/selectbackground.png')}
-      style={styles.background}
-      resizeMode="cover"
-    >
-      <View style={styles.container}>
-        {/* 상단 이미지 버튼 두 개 */}
-        <View style={styles.row}>
+    <View style={styles.screen}>
+      <ImageBackground
+        source={require('../assets/selectbackground.png')}
+        style={styles.background}
+        resizeMode="cover"
+      >
+        <View style={styles.container}>
+          {/* 상단 이미지 버튼 두 개 */}
+          <View style={styles.row}>
+            <TouchableOpacity
+              style={styles.iconWrapper}
+              onPress={() => navigation.navigate('Music')}
+            >
+              <Image
+                source={require('../assets/MusicTown.png')}
+                style={styles.icon}
+              />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.iconWrapper}
+              onPress={() =>
+                navigation.navigate('Dance', { screen: 'DanceScreen' })
+              }
+            >
+              <Image
+                source={require('../assets/DanceTown.png')}
+                style={styles.icon}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* 하단 커뮤니티 아이콘 */}
           <TouchableOpacity
-            style={styles.iconWrapper}
-            onPress={() => navigation.navigate('Music')}
+            style={styles.communityButton}
+            onPress={() => navigation.navigate('Community')}
           >
             <Image
-              source={require('../assets/MusicTown.png')}
-              style={styles.icon}
+              source={require('../assets/communityTown.png')}
+              style={styles.communityIcon}
+              resizeMode="contain"
             />
-
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.iconWrapper}
-            onPress={() => navigation.navigate('Dance')}
-          >
-            <Image
-              source={require('../assets/DanceTown.png')}
-              style={styles.icon}
-            />
-
           </TouchableOpacity>
         </View>
+      </ImageBackground>
 
-        {/* 하단 커뮤니티 아이콘 */}
-        <TouchableOpacity
-          style={styles.communityButton}
-          onPress={() => navigation.navigate('Community')}
-        >
-          <Image
-            source={require('../assets/communityTown.png')}
-            style={styles.communityIcon}
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
-      </View>
-    </ImageBackground>
+      {/* ✅ 하단 바 추가 */}
+      <BottomBar />
+    </View>
   );
 };
 
 export default SelectScreen;
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
   background: {
     flex: 1,
   },
@@ -84,19 +94,9 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     resizeMode: 'contain',
   },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    borderRadius: 6,
-    overflow: 'hidden',
-  },
   communityButton: {
     position: 'absolute',
-    bottom: -50, // 화면 아래에서 얼마나 띄울지 (원하면 더 높이 올리기)
+    bottom: -50,
     alignSelf: 'center',
   },
   communityIcon: {

@@ -16,6 +16,7 @@ import StatsScreen from './screens/StatesScreen';
 import SelectScreen from './screens/SelectScreen';
 
 
+
 enableScreens(); 
 
 const Stack = createNativeStackNavigator();
@@ -45,6 +46,7 @@ const App = () => {
                   <Stack.Screen name="Main" component={MainScreen} />
                   <Stack.Screen name="Stats" component={StatsScreen} />
                   <Stack.Screen name="Select" component={SelectScreen} />
+
                   {/* 각 기능 스택 연결 */}
                   <Stack.Screen name="Music" component={SongScreen} />
                   <Stack.Screen name="Dance" component={DanceNavigator} />
