@@ -22,7 +22,7 @@ import java.util.List;
 @Service
 public class SunoService {
 
-    @Value("${suno.token}")
+    @Value("${song.apikey}")
     private String token;
     public String generateSong(SunoRequest request){
         // Suno API로 HTTP 요청 보내는 코드
@@ -59,7 +59,7 @@ public class SunoService {
 
             // 2. 그 다음에 응답 읽기
             System.out.println("보낸 JSON: " + str);
-//            System.out.println("응답 코드: " + conn.getResponseCode());
+            //System.out.println("응답 코드: " + conn.getResponseCode());
             //System.out.println("응답 메시지: " + conn.getResponseMessage());
 
             return httpUtils.getHttpResponse(conn);
@@ -86,6 +86,8 @@ public class SunoService {
             return "❌ 콜백에 오디오 데이터가 없음";
         }
 
+        
+        // 로컬에 저장하는 코드
         Path saveDir = Paths.get("../music");
         try {
             if (!Files.exists(saveDir)) {
@@ -117,7 +119,7 @@ public class SunoService {
 
     }
 
-    // Get Timestamped Lyrics api 호출 함수
+    //Get Timestamped Lyrics api 호출 함수
 //    public String getLyrics(LyricsDTO request){
 //
 //        String url = "https://apibox.erweima.ai/api/v1/generate/get-timestamped-lyrics";
@@ -139,18 +141,20 @@ public class SunoService {
 //                    "\"AudioId\": \"" + request.getAudioId() + "\",\n" +
 //                    "\"musicIndex\": \"" + request.getMusicIndex() + "\",\n" +
 //                    "}";
-//
-//            // 1. 먼저 write 해야 함!
 //            try (DataOutputStream dataOutputStream = new DataOutputStream(conn.getOutputStream())) {
 //                dataOutputStream.write(str.getBytes(StandardCharsets.UTF_8)); // 한글 깨짐 방지 utf-8 붙임
 //                dataOutputStream.flush();
 //            }
 //
-//        } finally{
+//            return httpUtils.getHttpResponse(conn);
+//
+//        }catch (IOException e) {
+//
+//            throw new RuntimeException("Suno 가사 API 요청 실패", e);
+//        }
+//        finally{
 //            if(conn!=null) conn.disconnect();
 //        }
-//
-//        return "";
 //    }
 
 }

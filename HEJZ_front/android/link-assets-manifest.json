@@ -1,0 +1,17 @@
+{
+  "migIndex": 1,
+  "data": [
+    {
+      "path": "src/assets/fonts/Cafe24Meongi-B-v1.0.ttf",
+      "sha1": "50ecd9031eb519257e33e75da5404f372313f5a0"
+    },
+    {
+      "path": "src/assets/fonts/Ramche.otf",
+      "sha1": "f246aec5d84da4777b91c4b264dd648c639bfc4e"
+    },
+    {
+      "path": "src/assets/fonts/Ramche.ttf",
+      "sha1": "3cb1636f4f04bbf5a6b1d1616de2ae869c173f0c"
+    }
+  ]
+}

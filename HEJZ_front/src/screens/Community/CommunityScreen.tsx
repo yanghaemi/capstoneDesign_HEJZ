@@ -1,38 +1,73 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  FlatList,
   TouchableOpacity,
+  Dimensions,
+  FlatList,
+  Modal,
   TextInput,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Image
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Video from 'react-native-video';
+import LinearGradient from 'react-native-linear-gradient';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
-// 타입 정의
-type ShortsItem = {
-  id: string;
-  title: string;
-  likes: number;
-  Bookmark:boolean;
-  comments: string[];
-};
+const { height: screenHeight } = Dimensions.get('window');
 
-const CommunityScreen = ({ navigation }: any) => {
-  const [shorts, setShorts] = useState<ShortsItem[]>([]);
-  const [commentInput, setCommentInput] = useState<{ [key: string]: string }>({});
+const CommunityScreen = () => {
+  const navigation = useNavigation();
+  const [shorts, setShorts] = useState([]);
+  const [selectedId, setSelectedId] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [commentModalVisible, setCommentModalVisible] = useState(false);
+  const [commentInput, setCommentInput] = useState('');
 
-  // 더미 데이터 초기화
-  useEffect(() => {
-    const dummyData: ShortsItem[] = [
-      { id: '1', title: '양해미의 만취쇼', likes: 24, bookmarked: false, comments: [] },
-      { id: '2', title: '송영은의 애교송', likes: 45, bookmarked: false, comments: [] },
-      { id: '3', title: '아프잘의 헬스쇼', likes: 12, bookmarked: false, comments: [] },
-    ];
-    setShorts(dummyData);
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      const loadData = async () => {
+        const blockList = await AsyncStorage.getItem('blockedUsers');
+        const blockedIds = blockList ? JSON.parse(blockList) : [];
 
-  // 좋아요 토글
-  const toggleLike = (id: string) => {
+        const dummyData = [
+          {
+            id: '1',
+            userId: 'user1',
+            title: '양해미의 춤사위',
+            prompt: 'MT에서 선배미 뿜뿜',
+            likes: 24,
+            bookmarked: false,
+            comments: ['너무 재밌어요!', '이 영상 최고 ㅋㅋ'],
+            videoUri: require('../../assets/video1.mp4'),
+            followed: false,
+          },
+          {
+            id: '2',
+            userId: 'user2',
+            title: '송영은의 마임쇼',
+            prompt: '귀여움이 넘치는 캠퍼스 아이돌',
+            likes: 45,
+            bookmarked: false,
+            comments: ['완전 귀여워요!', '이런 마임 더 보고 싶다'],
+            videoUri: require('../../assets/video2.mp4'),
+            followed: false,
+          },
+        ];
+
+        const filtered = dummyData.filter((item) => !blockedIds.includes(item.userId));
+        setShorts(filtered);
+      };
+
+      loadData();
+    }, [])
+  );
+
+  const toggleLike = (id) => {
     setShorts((prev) =>
       prev.map((item) =>
         item.id === id
@@ -46,92 +81,153 @@ const CommunityScreen = ({ navigation }: any) => {
     );
   };
 
-  // 댓글 추가
-  const addComment = (id: string, comment: string) => {
+  const toggleBookmark = (id) => {
+    setShorts((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, bookmarked: !item.bookmarked } : item))
+    );
+  };
+
+  const toggleFollow = (id) => {
+    setShorts((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, followed: !item.followed } : item))
+    );
+  };
+
+  const addComment = (id, comment) => {
     setShorts((prev) =>
       prev.map((item) =>
         item.id === id ? { ...item, comments: [...item.comments, comment] } : item
       )
     );
   };
-  const toggleBookmark = (id: string) => {
-    setShorts((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, bookmarked: !item.bookmarked } : item
-      )
-    );
+
+  const handleBlockUser = async (id) => {
+    const confirm = await new Promise((resolve) => {
+      Alert.alert('차단 확인', '정말 이 사용자를 차단할까요?', [
+        { text: '취소', style: 'cancel', onPress: () => resolve(false) },
+        { text: '차단', style: 'destructive', onPress: () => resolve(true) },
+      ]);
+    });
+    if (!confirm) return;
+    const existing = await AsyncStorage.getItem('blockedUsers');
+    const parsed = existing ? JSON.parse(existing) : [];
+    const updated = [...new Set([...parsed, id])];
+    await AsyncStorage.setItem('blockedUsers', JSON.stringify(updated));
+    setShorts((prev) => prev.filter((item) => item.userId !== id));
   };
 
-  // 항목 렌더링
-  const renderItem = ({ item }: { item: ShortsItem }) => (
-    <View style={styles.shortsItem}>
-      <View style={styles.thumbnail} />
-      <Text style={styles.shortsTitle}>{item.title}</Text>
+  const handleReportUser = (id) => {
+    Alert.alert('신고 완료', '신고가 접수되었습니다.');
+  };
 
-      <View style={styles.metaRow}>
-        <View style={styles.likeBookmarkRow}>
-            <TouchableOpacity onPress={() => toggleLike(item.id)}>
-              <Text style={styles.metaText}>{item.liked ? '💖' : '🤍'} {item.likes}</Text>
+  const renderItem = ({ item }) => (
+    <View style={styles.videoContainer}>
+      <Video source={{ uri: item.videoUri }} style={styles.video} repeat resizeMode="cover" muted />
+      <LinearGradient colors={['transparent', 'rgba(0,0,0,0.8)']} style={styles.gradient} />
+
+      <View style={styles.overlay}>
+        <View style={styles.bottomTextContainer}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text style={styles.title}>{item.title}</Text>
+            <TouchableOpacity onPress={() => toggleFollow(item.id)} style={styles.followButton}>
+              <Text style={styles.followText}>{item.followed ? '팔로잉' : '팔로우'}</Text>
             </TouchableOpacity>
+          </View>
+          <Text style={styles.prompt}>{item.prompt}</Text>
+        </View>
 
-            <TouchableOpacity onPress={() => toggleBookmark(item.id)} style={{ marginLeft: 6 }}>
-              <Text style={styles.metaText}>{item.bookmarked ? '📑' : '🔖'}</Text>
-            </TouchableOpacity>
-         </View>
+        <View style={styles.actionsContainer}>
+          <TouchableOpacity onPress={() => toggleLike(item.id)}>
+            <Text style={styles.actionIcon}>{item.liked ? '💖' : '🤍'}{item.likes}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => toggleBookmark(item.id)}>
+            <Text style={styles.actionIcon}>{item.bookmarked ? '📌' : '🔖'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => {
+            setSelectedId(item.id);
+            setCommentModalVisible(true);
+          }}>
+            <Text style={styles.actionIcon}>💬{item.comments.length}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => {
+            setSelectedId(item.userId);
+            setModalVisible(true);
+          }}>
+            <Text style={styles.actionIcon}>⋮</Text>
+          </TouchableOpacity>
+        </View>
 
-        <Text style={styles.metaText}>💬 {item.comments.length}</Text>
-      </View>
-
-      <View style={styles.commentInputRow}>
-        <TextInput
-          style={styles.commentInput}
-          value={commentInput[item.id] || ''}
-          onChangeText={(text) => setCommentInput((prev) => ({ ...prev, [item.id]: text }))}
-          placeholder="댓글을 입력하세요"
-        />
-        <TouchableOpacity
-          onPress={() => {
-            const text = commentInput[item.id]?.trim();
-            if (text) {
-              addComment(item.id, text);
-              setCommentInput((prev) => ({ ...prev, [item.id]: '' }));
-            }
-          }}
-        >
-          <Text style={styles.commentSubmit}>등록</Text>
+        <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('MyRoom')}>
+          <Image source={require('../../assets/cat.png')} style={{ width: 50, height: 50, borderRadius: 25 }} />
         </TouchableOpacity>
       </View>
-
-      {item.comments.length > 0 && (
-        <View style={styles.commentBox}>
-          {item.comments.map((c, idx) => (
-            <Text key={idx} style={styles.commentText}>• {c}</Text>
-          ))}
-        </View>
-      )}
     </View>
   );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>숏츠 게시판</Text>
-
+    <View style={{ flex: 1 }}>
       <FlatList
         data={shorts}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
+        pagingEnabled
+        showsVerticalScrollIndicator={false}
       />
 
-      {/* 하단 네비게이션 바 */}
-      <View style={styles.bottomBar}>
-        <TouchableOpacity onPress={() => navigation.navigate('Select')}>
-          <Text style={styles.navButton}>홈</Text>
+      <Modal transparent visible={modalVisible} animationType="fade">
+        <TouchableOpacity style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
+          <View style={styles.popupContainer}>
+            <TouchableOpacity onPress={() => {
+              if (selectedId) handleBlockUser(selectedId);
+              setModalVisible(false);
+            }}>
+              <Text style={styles.popupText}>차단</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => {
+              if (selectedId) handleReportUser(selectedId);
+              setModalVisible(false);
+            }}>
+              <Text style={styles.popupText}>신고</Text>
+            </TouchableOpacity>
+          </View>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('Feeds')}>
-          <Text style={styles.navButton}>마이페이지</Text>
-        </TouchableOpacity>
-      </View>
+      </Modal>
+
+      <Modal transparent visible={commentModalVisible} animationType="slide">
+        <View style={styles.bottomSheet}>
+          <View style={styles.bottomSheetBar} />
+          <Text style={styles.commentHeader}>댓글</Text>
+          <TouchableOpacity onPress={() => setCommentModalVisible(false)} style={styles.closeButton}>
+            <Text style={styles.closeButtonText}>닫기</Text>
+          </TouchableOpacity>
+          <FlatList
+            data={shorts.find((s) => s.id === selectedId)?.comments || []}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({ item }) => <Text style={styles.commentItem}>💬 {item}</Text>}
+            style={styles.commentList}
+          />
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            keyboardVerticalOffset={100}
+            style={styles.commentInputRow}>
+            <TextInput
+              style={styles.commentInput}
+              value={commentInput}
+              onChangeText={setCommentInput}
+              placeholder="댓글을 입력하세요"
+            />
+            <TouchableOpacity
+              onPress={() => {
+                if (selectedId && commentInput.trim()) {
+                  addComment(selectedId, commentInput);
+                  setCommentInput('');
+                }
+              }}>
+              <Text style={styles.sendButton}>등록</Text>
+            </TouchableOpacity>
+          </KeyboardAvoidingView>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -139,101 +235,152 @@ const CommunityScreen = ({ navigation }: any) => {
 export default CommunityScreen;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    backgroundColor: '#fff',
+  videoContainer: {
+    height: screenHeight,
+    position: 'relative',
   },
-  title: {
-    fontSize: 22,
-    fontWeight: '700',
-    marginBottom: 20,
-    textAlign: 'center',
-    color: '#000',
-  },
-  listContainer: {
-    paddingBottom: 120,
-  },
-  shortsItem: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
-  },
-  thumbnail: {
+  video: {
+    height: '100%',
     width: '100%',
-    aspectRatio: 1,
-    backgroundColor: '#eee',
-    borderRadius: 6,
-    marginBottom: 10,
+    position: 'absolute',
   },
-  shortsTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 6,
-    color: '#000',
-  },
-  metaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  metaText: {
-    fontSize: 14,
-    color: '#555',
-  },
-  commentInputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  commentInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    fontSize: 14,
-  },
-  commentSubmit: {
-    fontSize: 14,
-    color: '#4B9DFE',
-    fontWeight: '500',
-  },
-  commentBox: {
-    marginTop: 8,
-  },
-  commentText: {
-    fontSize: 13,
-    color: '#555',
-    marginBottom: 2,
-  },
-  bottomBar: {
+  gradient: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    height: 200,
+  },
+  overlay: {
+    flex: 1,
+    justifyContent: 'space-between',
+    padding: 16,
+  },
+  bottomTextContainer: {
+    position: 'absolute',
+    bottom: 40,
+    left: 16,
+    right: 80,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginRight: 8,
+  },
+  prompt: {
+    fontSize: 14,
+    color: '#ccc',
+  },
+  followButton: {
+    borderColor: '#fff',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+    marginLeft: 8,
+  },
+  followText: {
+    fontSize: 12,
+    color: '#fff',
+  },
+  actionsContainer: {
+    position: 'absolute',
+    right: 16,
+    bottom: 100,
     alignItems: 'center',
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderColor: '#ddd',
+    gap: 12,
+  },
+  actionIcon: {
+    fontSize: 20,
+    color: '#fff',
+    textAlign: 'center',
+  },
+  profileButton: {
+    position: 'absolute',
+    right: 16,
+    bottom: 220,
+    zIndex: 10,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  popupContainer: {
     backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 20,
+    width: 200,
   },
-  navButton: {
+  popupText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#4B9DFE',
+    paddingVertical: 10,
   },
-  likeBookmarkRow: {
+  bottomSheet: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    padding: 20,
+    maxHeight: screenHeight * 0.6,
+  },
+  bottomSheetBar: {
+    width: 40,
+    height: 5,
+    backgroundColor: '#ccc',
+    borderRadius: 3,
+    alignSelf: 'center',
+    marginBottom: 10,
+  },
+  commentHeader: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  commentList: {
+    marginBottom: 10,
+  },
+  commentItem: {
+    fontSize: 14,
+    paddingVertical: 4,
+  },
+  commentInputRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-
-
+  commentInput: {
+    flex: 1,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 4,
+    padding: 8,
+    marginRight: 8,
+  },
+  sendButton: {
+    backgroundColor: '#007AFF',
+    color: 'white',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 4,
+  },
+  profileButton: {
+      position: 'absolute',
+      right: 16,
+      bottom: 40, // 기존보다 아래로 내려서 겹치지 않게
+      zIndex: 10,
+    },
+    closeButton: {
+      position: 'absolute',
+      top: 10,
+      right: 20,
+    },
+    closeButtonText: {
+      fontSize: 16,
+      color: '#007AFF',
+    },
 });
