@@ -26,19 +26,29 @@ spring:
       name: none
       password: none
 
+<<<<<<< HEAD
 song:
   apikey: ${API_SUNO_KEY}
+=======
+  openai:
+    api:
+      key: ${OPENAI_API_KEY}
+      model: ${OPENAI_API_MODEL}
+
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+    display-request-duration: true
+
+>>>>>>> cb3ba3749e69d5e390125c4a7abe84a6690a41b5
 
 #app:
 #  jwt:
 #    secret: ${APP_JWT_SECRET}
 #    expiration-ms: ${APP_JWT_EXPIRATION_MS}
 #
-#springdoc:
-#  swagger-ui:
-#    path: /swagger-ui.html
-#    operationsSorter: method
-#    tagsSorter: alpha
-#    display-request-duration: true
-#  api-docs:
-#    path: /v3/api-docs

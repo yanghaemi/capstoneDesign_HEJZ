@@ -1,9 +1,15 @@
-package com.HEJZ.HEJZ_back.service;
+package com.HEJZ.HEJZ_back.domain.music.service;
 
+<<<<<<< HEAD:HEJZ_back/src/main/java/com/HEJZ/HEJZ_back/service/SunoService.java
 import com.HEJZ.HEJZ_back.dto.LyricsDTO;
 import com.HEJZ.HEJZ_back.dto.SunoRequest;
 import com.HEJZ.HEJZ_back.dto.SunoResponse;
 import com.HEJZ.HEJZ_back.util.HttpUtils;
+=======
+import com.HEJZ.HEJZ_back.domain.music.dto.SunoRequest;
+import com.HEJZ.HEJZ_back.domain.music.dto.SunoResponse;
+import com.HEJZ.HEJZ_back.global.util.HttpUtils;
+>>>>>>> cb3ba3749e69d5e390125c4a7abe84a6690a41b5:HEJZ_back/src/main/java/com/HEJZ/HEJZ_back/domain/music/service/SunoService.java
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
