@@ -21,7 +21,7 @@ import java.util.List;
 @Service
 public class SunoService {
 
-    @Value("${suno.token}")
+    @Value("${suno.api.token}")
     private String token;
     public String requestToSuno(SunoRequest request){
         // Suno API로 HTTP 요청 보내는 코드

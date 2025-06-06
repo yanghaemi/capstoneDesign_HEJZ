@@ -33,9 +33,14 @@ services:
     depends_on:
       - mysql
     environment:
+      SPRING_PROFILES_ACTIVE: dev
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql_capstoneHEJZ:3306/${MYSQL_DATABASE}
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      SUNO_API_TOKEN: ${SUNO_API_TOKEN}
+      AWS_ACCESS_KEY: ${AWS_ACCESS_KEY}
+      AWS_SECRET_KEY: ${AWS_SECRET_KEY}
+
       #APP_JWT_SECRET: ${APP_JWT_SECRET}
       #APP_JWT_EXPIRATION_MS: ${APP_JWT_EXPIRATION_MS}
     networks:
