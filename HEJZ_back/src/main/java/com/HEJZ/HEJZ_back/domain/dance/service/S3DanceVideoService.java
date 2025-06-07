@@ -24,7 +24,7 @@ public class S3DanceVideoService {
     @Value("${cloud.aws.s3.bucket}")
     private String bucketName;
 
-    public Map<String, Object> getPresignedUrlForMotion(String motionId) {
+    public String getPresignedUrl(String motionId) {
         try {
             String key = "videos/" + motionId + ".mp4";
 
@@ -39,13 +39,7 @@ public class S3DanceVideoService {
                     .build();
 
             URL presignedUrl = s3Presigner.presignGetObject(presignRequest).url();
-
-            Map<String, Object> result = new HashMap<>();
-            result.put("motionId", motionId);
-            result.put("type", "video");
-            result.put("fileUrl", presignedUrl.toString());
-
-            return result;
+            return presignedUrl.toString();
 
         } catch (S3Exception e) {
             throw new CustomException(ErrorCode.VIDEO_NOT_FOUND);
