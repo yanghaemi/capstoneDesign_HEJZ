@@ -15,7 +15,7 @@ import CommunityNavigator from './screens/Community/CommunityStack';
 import StatsScreen from './screens/StatesScreen';
 import SelectScreen from './screens/SelectScreen';
 import SignUpScreen from './screens/SignUpScreen';
-import SongPlayScreen from './screens/Community/SongPlayScreen';
+import SongPlayScreen from './screens/SongPlayScreen';
 
 
 

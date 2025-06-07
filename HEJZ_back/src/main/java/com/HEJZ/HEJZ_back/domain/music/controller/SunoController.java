@@ -42,13 +42,13 @@ public class SunoController {
     }
 
      /*
-     호출 url : http://localhost:8080/api/suno/lyrics
-     가사 호출 api
+     호출 url : http://localhost:8080/api/suno/get_timestamplyrics
+     설명 : 가사 호출 api
      method: post
       */
-    @PostMapping("/lyrics")
-    public ResponseEntity<String> getLyrics(@RequestBody com.HEJZ.HEJZ_back.dto.LyricsDTO request) {
-        String result = sunoService.getLyrics(request);
+    @PostMapping("/get_timestamplyrics")
+    public ResponseEntity<String> getTimestampLyrics(@RequestBody com.HEJZ.HEJZ_back.dto.SunoLyricsDTO request) {
+        String result = sunoService.getTimestampLyrics(request);
         System.out.println("타임스탬프: "+result);
         return ResponseEntity.ok(result);
     }

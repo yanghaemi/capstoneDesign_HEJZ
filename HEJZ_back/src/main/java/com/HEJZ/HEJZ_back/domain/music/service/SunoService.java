@@ -120,7 +120,7 @@ public class SunoService {
     }
 
     //Get Timestamped Lyrics api 호출 함수
-    public String getLyrics(com.HEJZ.HEJZ_back.dto.LyricsDTO request){
+    public String getTimestampLyrics(com.HEJZ.HEJZ_back.dto.SunoLyricsDTO request){
 
         String url = "https://apibox.erweima.ai/api/v1/generate/get-timestamped-lyrics";
 

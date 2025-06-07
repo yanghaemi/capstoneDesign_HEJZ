@@ -7,7 +7,7 @@ import lombok.Setter;
 // Get Timestamped Lyric DTO
 @Getter
 @Setter
-public class LyricsDTO {
+public class SunoLyricsDTO {
     String taskId;
     String AudioId;
     int musicIndex; // possible valudes: 0, 1

@@ -10,7 +10,7 @@ import {
   ImageBackground,
 } from 'react-native';
 import { useRoute } from '@react-navigation/native';
-import lyricsData from '../../../src/assets/Document/Lyrics.json';
+import lyricsData from '../../src/assets/Document/Lyrics.json';
 import SoundPlayer from 'react-native-sound-player';
 
 const songs = [
@@ -104,7 +104,7 @@ const SongPlayScreen = () => {
 
   return (
     <ImageBackground
-      source={require("../../../src/assets/background/SongBackgroud.png")}
+      source={require("../../src/assets/background/SongBackgroud.png")}
       style={styles.background}
     >
       <View style={styles.container}>
@@ -116,7 +116,7 @@ const SongPlayScreen = () => {
 
         <View style={styles.bottomControlRow}>
           <TouchableOpacity onPress={handlePrev} style={styles.navButton}>
-            <Image source={require("../../../src/assets/icon/left.png")} style={styles.navIcon} />
+            <Image source={require("../../src/assets/icon/left.png")} style={styles.navIcon} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -131,15 +131,15 @@ const SongPlayScreen = () => {
             <Image
               source={
                 isPlaying
-                  ? require("../../../src/assets/icon/Pause.png")
-                  : require("../../../src/assets/icon/Play.png")
+                  ? require("../../src/assets/icon/Pause.png")
+                  : require("../../src/assets/icon/Play.png")
               }
               style={styles.navIcon}
             />
           </TouchableOpacity>
 
           <TouchableOpacity onPress={handleNext} style={styles.navButton}>
-            <Image source={require("../../../src/assets/icon/right.png")} style={styles.navIcon} />
+            <Image source={require("../../src/assets/icon/right.png")} style={styles.navIcon} />
           </TouchableOpacity>
         </View>
       </View>
