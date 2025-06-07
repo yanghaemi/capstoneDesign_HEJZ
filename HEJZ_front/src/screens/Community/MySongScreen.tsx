@@ -100,7 +100,7 @@ const MySongsScreen = ({ navigation }: any) => {
 
   return (
     <ImageBackground
-      source={require("../../../src/assets/background/SongBackgroud.png")}
+      source={require("../../../src/assets/background/background.png")}
       style={styles.background}
     >
       <View style={styles.container}>

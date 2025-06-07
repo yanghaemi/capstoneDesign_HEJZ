@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
@@ -25,11 +26,14 @@ const SongPlayScreen = () => {
 
   const [currentId, setCurrentId] = useState(songId);
   const [isPlaying, setIsPlaying] = useState(false);
-//   console.log('songId:', songId);
-//   console.log('currentId:', currentId);
-//   console.log('lyricsData:', lyricsData);
-  const lyrics = useMemo(() => {
-    return lyricsData[String(currentId)]?.lyrics || '가사를 찾을 수 없습니다.';
+  const [currentLyric, setCurrentLyric] = useState('');
+
+  const lyricsList = useMemo(() => {
+    const raw = lyricsData[String(currentId)] || [];
+    return raw.map(line => ({
+      time: Number(line.time),
+      text: line.text,
+    }));
   }, [currentId]);
 
   const handlePlay = (file: string) => {
@@ -73,11 +77,30 @@ const SongPlayScreen = () => {
     if (song) {
       handlePlay(song.file);
     }
-
-    return () => {
-      handleStop();
-    };
+    return () => handleStop();
   }, [currentId]);
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const info = await SoundPlayer.getInfo();
+        const time = info.currentTime;
+
+        const currentLine = lyricsList.find((line, i) => {
+          const next = lyricsList[i + 1];
+          return time >= line.time && (!next || time < next.time);
+        });
+
+        if (currentLine?.text !== currentLyric) {
+          setCurrentLyric(currentLine?.text || '');
+        }
+      } catch (e) {
+        console.log('getInfo 실패:', e);
+      }
+    }, 400);
+
+    return () => clearInterval(interval);
+  }, [lyricsList, currentLyric]);
 
   return (
     <ImageBackground
@@ -87,7 +110,7 @@ const SongPlayScreen = () => {
       <View style={styles.container}>
         <View style={styles.lyricsBox}>
           <ScrollView>
-            <Text style={styles.lyricsText}>{lyrics}</Text>
+            <Text style={styles.lyricsText}>{currentLyric}</Text>
           </ScrollView>
         </View>
 
@@ -149,6 +172,7 @@ const styles = StyleSheet.create({
     lineHeight: 34,
     color: '#333',
     fontWeight: '500',
+    textAlign: 'center',
   },
   bottomControlRow: {
     flexDirection: 'row',
