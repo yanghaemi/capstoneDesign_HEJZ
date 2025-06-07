@@ -15,7 +15,8 @@ public class MotionController {
     private final S3DanceVideoService s3DanceVideoService;
 
     @GetMapping("/{motionId}")
-    public ResponseEntity<Map<String, Object>> getMotionUrl(@PathVariable String motionId) {
-        return ResponseEntity.ok(s3DanceVideoService.getPresignedUrlForMotion(motionId));
+    public ResponseEntity<String> getMotionUrl(@PathVariable String motionId) {
+        String url = s3DanceVideoService.getPresignedUrl(motionId);
+        return ResponseEntity.ok(url);
     }
 }
