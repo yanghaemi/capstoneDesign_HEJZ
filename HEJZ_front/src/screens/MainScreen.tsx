@@ -59,6 +59,16 @@ const MainScreen = ({ navigation }: any) => {
           </>
         )}
       </View>
+      <TouchableOpacity
+                style={styles.recordButton}
+                onPress={() => {
+                  navigation.navigate('Dance', { screen: 'RecordScreen' }, {
+                    fileName: 'song1', // 실제 파일명으로 바꿔줘도 됨
+                  });
+                }}
+              >
+                <Text style={styles.recordText}>📹 테스트 녹화</Text>
+              </TouchableOpacity>
     </ImageBackground>
   );
 };

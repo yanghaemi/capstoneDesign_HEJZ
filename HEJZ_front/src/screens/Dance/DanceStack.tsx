@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import DanceRecommendScreen from './DanceRecommendScreen';
 import DanceScreen from './DanceScreen';
+import RecordScreen from './RecordScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -10,6 +11,7 @@ export const DanceNavigator = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="DanceScreen" component={DanceScreen} />
     <Stack.Screen name="DanceRecommendScreen" component={DanceRecommendScreen} />
+    <Stack.Screen name="RecordScreen" component={RecordScreen} />
 
   </Stack.Navigator>
 );

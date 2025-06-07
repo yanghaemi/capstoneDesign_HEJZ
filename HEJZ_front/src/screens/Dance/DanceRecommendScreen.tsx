@@ -130,6 +130,7 @@ const DanceRecommendScreen=({ route, navigation }) =>{
             {Math.floor(duration / 60)}:{Math.floor(duration % 60).toString().padStart(2, '0')} 초
           </Text>
         </View>
+
     </ImageBackground>
 
 
