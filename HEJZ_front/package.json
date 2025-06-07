@@ -31,7 +31,8 @@
     "react-native-sound-player": "^0.14.5",
     "react-native-vector-icons": "^10.2.0",
     "react-native-video": "^6.14.1",
-    "react-native-vision-camera": "^4.6.4"
+    "react-native-vision-camera": "^4.6.4",
+    "react-native-webview": "^13.14.2"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
