@@ -4,7 +4,7 @@ import { View, Text, StyleSheet,Image, ImageBackground} from 'react-native';
 const StatsScreen = () => {
   // 더미 통계 데이터
   const stats = {
-    mostLiked: '🔥 감성 힙합 숏츠',
+    mostLiked: '양해미의 댄스쇼',
     songCount: 4,
     videoCount: 3,
     commentCount: 9,
@@ -12,12 +12,12 @@ const StatsScreen = () => {
 
   return (
     <ImageBackground
-          source={require('../assets/mainbackground.png')}
+          source={require('../assets/background/mainbackground.png')}
           style={styles.background}
           resizeMode="cover"
         >
       <View style={styles.container}>
-        <Text style={styles.title}>📊 내 콘텐츠 통계</Text>
+        <Text style={styles.title}>내 콘텐츠 통계</Text>
 
         <View style={styles.section}>
           <Text style={styles.label}>가장 인기 있는 게시물</Text>
@@ -25,17 +25,17 @@ const StatsScreen = () => {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.label}>🎵 내가 만든 노래</Text>
+          <Text style={styles.label}>내가 만든 노래</Text>
           <Text style={styles.value}>{stats.songCount}곡</Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.label}>🎬 내가 만든 영상</Text>
+          <Text style={styles.label}>내가 만든 영상</Text>
           <Text style={styles.value}>{stats.videoCount}개</Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.label}>💬 내가 쓴 댓글</Text>
+          <Text style={styles.label}>내가 쓴 댓글</Text>
           <Text style={styles.value}>{stats.commentCount}개</Text>
         </View>
       </View>

@@ -17,7 +17,10 @@ public enum ErrorCode {
 
     // === 시스템 에러 ===
     CSV_LOADING_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S001", "CSV 파일 로딩 실패"),
-    UNKNOWN_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S999", "알 수 없는 서버 에러");
+    UNKNOWN_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S999", "알 수 없는 서버 에러"),
+
+    // === 노래 관련 ===
+    GET_LYRICS_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "S001", "가사 가져오기 실패");
 
     private final HttpStatus status;
     private final String code;

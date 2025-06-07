@@ -1,87 +1,107 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ImageBackground } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ImageBackground,
+  Image,
+} from 'react-native';
+import BottomBar from './BottomBar';
 
 const SelectScreen = ({ navigation }: any) => {
   return (
-    <ImageBackground
-      source={require('../assets/mainbackground.png')}
-      style={styles.background}
-      resizeMode="cover"
-    >
-      <View style={styles.container}>
-        
+    <View style={styles.screen}>
+      <ImageBackground
+        source={require('../assets/background/selectbackground.png')}
+        style={styles.background}
+        resizeMode="cover"
+      >
+        <View style={styles.container}>
+          {/* 상단 이미지 버튼 두 개 */}
+          <View style={styles.row}>
+            <TouchableOpacity
+              style={styles.iconWrapper}
+              onPress={() => navigation.navigate('Music')}
+            >
+              <Image
+                source={require('../assets/icon/MusicTown.png')}
+                style={styles.icon}
+              />
+            </TouchableOpacity>
 
-        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Song')}>
-            <Text style={styles.buttonText}>노래 만들기</Text>
-        </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.iconWrapper}
+              onPress={() =>
+                navigation.navigate('Dance', { screen: 'DanceScreen' })
+              }
+            >
+              <Image
+                source={require('../assets/icon/DanceTown.png')}
+                style={styles.icon}
+              />
+            </TouchableOpacity>
+          </View>
 
+          {/* 하단 커뮤니티 아이콘 */}
+          <TouchableOpacity
+            style={styles.communityButton}
+            onPress={() => navigation.navigate('Community')}
+          >
+            <Image
+              source={require('../assets/icon/communityTown.png')}
+              style={styles.communityIcon}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+        </View>
+      </ImageBackground>
 
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => navigation.navigate('Dance')}
-        >
-          <Text style={styles.buttonText}>안무 추천</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => navigation.navigate('Community')}
-        >
-          <Text style={styles.buttonText}>둘러보기</Text>
-        </TouchableOpacity>
-      </View>
-    </ImageBackground>
+      {/* ✅ 하단 바 추가 */}
+      <BottomBar />
+    </View>
   );
 };
 
-export default SelectScreen; // ✅ 꼭 함수 바깥에 써줘야 함!
+export default SelectScreen;
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    backgroundColor: 'transparent',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 32,
-    color: '#000', // 글자색 확실하게
-  },
-  button: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ccc',
-    paddingVertical: 14,
-    borderRadius: 8,
-    marginBottom: 16,
-  },
-  buttonText: {
-    color: '#000',
-    textAlign: 'center',
-    fontWeight: '500',
-    fontSize: 16,
+    justifyContent: 'space-between',
   },
   background: {
     flex: 1,
-    resizeMode: 'cover',
   },
-  imageButton: {
-  width: 200,
-  height: 200,
-  justifyContent: 'center',
-  alignItems: 'center',
-  marginBottom: 20,
-},
-imageButtonText: {
-  color: '#333',
-  fontSize: 18,
-  fontWeight: 'bold',
-  textAlign: 'center',
-  fontFamily: 'Ramche',
-},
-
-
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+    marginTop: 60,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: 32,
+  },
+  iconWrapper: {
+    alignItems: 'center',
+    marginHorizontal: 20,
+  },
+  icon: {
+    width: 140,
+    height: 140,
+    marginBottom: 6,
+    resizeMode: 'contain',
+  },
+  communityButton: {
+    position: 'absolute',
+    bottom: -50,
+    alignSelf: 'center',
+  },
+  communityIcon: {
+    width: 270,
+    height: 270,
+    resizeMode: 'contain',
+  },
 });

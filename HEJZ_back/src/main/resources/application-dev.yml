@@ -4,10 +4,12 @@ spring:
       on-profile: dev
 
   datasource:
-    url: jdbc:mysql://mysql_capstoneHEJZ:3306/${MYSQL_DATABASE}
+    url: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}
     username: ${MYSQL_USER}
     password: ${MYSQL_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
+
+
 
   jpa:
     hibernate:
@@ -24,6 +26,9 @@ spring:
       name: none
       password: none
 
+song:
+  apikey: ${API_SUNO_KEY}
+
   openai:
     api:
       key: ${OPENAI_API_KEY}
@@ -31,7 +36,7 @@ spring:
 
   suno:
     api:
-      token: ${SUNO_API_TOKEN}
+      key: ${SUNO_API_KEY}
 
 
 springdoc:

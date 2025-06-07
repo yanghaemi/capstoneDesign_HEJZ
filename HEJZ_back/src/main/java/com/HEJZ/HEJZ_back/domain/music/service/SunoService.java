@@ -1,5 +1,6 @@
 package com.HEJZ.HEJZ_back.domain.music.service;
 
+
 import com.HEJZ.HEJZ_back.domain.music.dto.SunoRequest;
 import com.HEJZ.HEJZ_back.domain.music.dto.SunoResponse;
 import com.HEJZ.HEJZ_back.global.util.HttpUtils;
@@ -21,9 +22,10 @@ import java.util.List;
 @Service
 public class SunoService {
 
-    @Value("${suno.api.token}")
+    @Value("${suno.api.key}")
+
     private String token;
-    public String requestToSuno(SunoRequest request){
+    public String generateSong(SunoRequest request){
         // Suno API로 HTTP 요청 보내는 코드
         String url = "https://apibox.erweima.ai/api/v1/generate";
         HttpURLConnection conn = null;
@@ -58,7 +60,7 @@ public class SunoService {
 
             // 2. 그 다음에 응답 읽기
             System.out.println("보낸 JSON: " + str);
-//            System.out.println("응답 코드: " + conn.getResponseCode());
+            //System.out.println("응답 코드: " + conn.getResponseCode());
             //System.out.println("응답 메시지: " + conn.getResponseMessage());
 
             return httpUtils.getHttpResponse(conn);
@@ -72,6 +74,7 @@ public class SunoService {
         }
     }
 
+
     // 콜백 결과 처리 함수
     public String callbackFromSuno(SunoResponse callback) {
         if (!"complete".equals(callback.getData().getCallbackType())) {
@@ -84,7 +87,9 @@ public class SunoService {
             return "❌ 콜백에 오디오 데이터가 없음";
         }
 
-        Path saveDir = Paths.get("music");
+        
+        // 로컬에 저장하는 코드
+        Path saveDir = Paths.get("../../HEJZ_front/android/app/src/main/res/raw");
         try {
             if (!Files.exists(saveDir)) {
                 Files.createDirectories(saveDir);
@@ -110,6 +115,48 @@ public class SunoService {
             e.printStackTrace();
             return "❌ 전체 저장 중 예외 발생: " + e.getMessage();
         }
+
+
+
     }
+
+    //Get Timestamped Lyrics api 호출 함수
+    public String getTimestampLyrics(com.HEJZ.HEJZ_back.dto.SunoLyricsDTO request){
+
+        String url = "https://apibox.erweima.ai/api/v1/generate/get-timestamped-lyrics";
+
+        HttpURLConnection conn = null;
+
+        HttpUtils httpUtils = new HttpUtils();
+
+        try{
+
+            conn = httpUtils.getHttpURLConnection(url, "POST", token);
+            conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+            conn.setRequestProperty("Authorization", "Bearer " + token);
+            conn.setDoInput(true); // post 요청 보낼 때 있어야 함
+
+            // body string
+            String str = "{\n" +
+                    "\"taskId\": \"" + request.getTaskId() + "\",\n" +
+                    "\"AudioId\": \"" + request.getAudioId() + "\",\n" +
+                    "\"musicIndex\": \"" + request.getMusicIndex() + "\",\n" +
+                    "}";
+            try (DataOutputStream dataOutputStream = new DataOutputStream(conn.getOutputStream())) {
+                dataOutputStream.write(str.getBytes(StandardCharsets.UTF_8)); // 한글 깨짐 방지 utf-8 붙임
+                dataOutputStream.flush();
+            }
+
+            return httpUtils.getHttpResponse(conn);
+
+        }catch (IOException e) {
+
+            throw new RuntimeException("Suno 가사 API 요청 실패", e);
+        }
+        finally{
+            if(conn!=null) conn.disconnect();
+        }
+    }
+
 }
 

@@ -1,3 +1,10 @@
 spring:
   profiles:
     active: dev #test할때는 test로 바꾸면 에러 안남 그 외에는 dev
+
+
+#
+#  datasource:
+#    url: ${SPRING_DATASOURCE_URL}
+#    username: ${SPRING_DATASOURCE_USERNAME}
+#    password: ${SPRING_DATASOURCE_PASSWORD}

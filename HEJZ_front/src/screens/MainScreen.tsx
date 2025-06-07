@@ -13,9 +13,15 @@ const MainScreen = ({ navigation }: any) => {
   };
 
   return (
-    <ImageBackground source={require("../assets/background.png")} style={styles.background}>
-      <View style={styles.container}>
-        <Image source={require("../assets/Photo.png")} style={styles.logo} />
+    <ImageBackground source={require("../assets/background/background.png")} style={styles.background}>
+      <View style={{ width: '100%', alignItems: 'center' }}>
+        <Image
+          source={require('../assets/icon/USTAR.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+
+
 
         {!showLogin ? (
           <>
@@ -73,9 +79,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   logo: {
-    width: 400,
-    height: 150,
-    marginBottom: 100,
+    width: '90%',          // 화면의 80% 너비로!
+    height: undefined,
+    aspectRatio: 3.5,        // 예: 가로:세로 비율이 4:1 정도
+    marginTop: 240,
+    marginBottom: 80,
   },
   title: {
     fontSize: 24,
@@ -84,24 +92,24 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   button: {
-    backgroundColor: '#FFF8FC',  // 연한 핑크 계열 배경
-    paddingVertical: 15,
-    paddingHorizontal: 40,
-    borderRadius: 25,
-    marginVertical: 10,
-    width: 200,
-    alignItems: 'center',
-    borderColor: '#D6BBF6',      // 보라빛 살짝 돌게
-    borderWidth: 2,
-    shadowColor: '#D6BBF6',
-    shadowOpacity: 0.3,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-  },
+      backgroundColor: '#FFF8FC',  // 연한 핑크 계열 배경
+      paddingVertical: 15,
+      paddingHorizontal: 40,
+      borderRadius: 25,
+      marginVertical: 10,
+      width: 200,
+      alignItems: 'center',
+      borderColor: '#D6BBF6',      // 보라빛 살짝 돌게
+      borderWidth: 2,
+      shadowColor: '#D6BBF6',
+      shadowOpacity: 0.3,
+      shadowOffset: { width: 0, height: 2 },
+      shadowRadius: 4,
+    },
   buttonText: {
-    color: '#5B4DA7', // 보라색 계열 텍스트
-    fontWeight: 'bold',
-    fontSize: 16,
+      color: '#5B4DA7', // 보라색 계열 텍스트
+      fontWeight: 'bold',
+      fontSize: 16,
   },
 
 testButton: {
@@ -128,6 +136,15 @@ cancelText: {
   color: '#888',
   marginTop: 12,
 },
+// logoText: {
+//   fontSize: 60,
+//   fontWeight: 'bold',
+//   color: '#FEC260',
+//   marginBottom: 100,
+//   marginTop: 60,
+//   fontFamily: 'Cafe24 Meongi B',
+// },
+
 
 
 });
