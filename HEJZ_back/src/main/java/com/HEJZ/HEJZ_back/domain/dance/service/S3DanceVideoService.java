@@ -31,6 +31,7 @@ public class S3DanceVideoService {
             GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                     .bucket(bucketName)
                     .key(key)
+                    .responseContentType("video/mp4")
                     .build();
 
             GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
