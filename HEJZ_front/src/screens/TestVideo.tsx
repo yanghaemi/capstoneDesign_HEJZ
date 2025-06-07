@@ -58,8 +58,11 @@ const VideoSelectionScreen = () => {
 
   const handleFinalize = () => {
     if (selectedIndex !== null) {
-      setIsFinalized(true);
       console.log('✅ 최종 선택된 영상 URL:', videoUrls[selectedIndex]);
+      setIsFinalized(false); // 다시 버튼 보이게
+      setCurrentLyricIndex((prev) => prev + 1);
+      setCurrentVideoIndex(0);
+      setSelectedIndex(null);
     }
   };
 
@@ -67,7 +70,6 @@ const VideoSelectionScreen = () => {
     const nextVideoIndex = (currentVideoIndex + 1) % videoUrls.length;
     setCurrentVideoIndex(nextVideoIndex);
     setSelectedIndex(null);
-    // 가사 인덱스는 유지하도록 수정
   };
 
   return (
@@ -95,29 +97,22 @@ const VideoSelectionScreen = () => {
         ))}
       </View>
 
-      {!isFinalized && (
-        <View style={styles.buttonRow}>
-          <TouchableOpacity
-            style={[
-              styles.selectButton,
-              selectedIndex === currentVideoIndex ? styles.selectButtonActive : styles.selectButtonDisabled,
-            ]}
-            onPress={() => {
-              handleFinalize();
-              setCurrentLyricIndex((prev) => prev + 1);
-              setCurrentVideoIndex(0);
-              setSelectedIndex(null);
-            }}
-            disabled={selectedIndex !== currentVideoIndex}
-          >
-            <Text style={styles.selectButtonText}>선택하기</Text>
-          </TouchableOpacity>
+      <View style={styles.buttonRow}>
+        <TouchableOpacity
+          style={[
+            styles.selectButton,
+            selectedIndex === currentVideoIndex ? styles.selectButtonActive : styles.selectButtonDisabled,
+          ]}
+          onPress={handleFinalize}
+          disabled={selectedIndex !== currentVideoIndex}
+        >
+          <Text style={styles.selectButtonText}>선택하기</Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity onPress={handleRetry} style={styles.retryButton}>
-            <Text style={styles.retryText}>다시하기</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+        <TouchableOpacity onPress={handleRetry} style={styles.retryButton}>
+          <Text style={styles.retryText}>다시하기</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
