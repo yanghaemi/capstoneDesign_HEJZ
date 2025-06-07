@@ -10,6 +10,7 @@ export const DanceNavigator = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="DanceScreen" component={DanceScreen} />
     <Stack.Screen name="DanceRecommendScreen" component={DanceRecommendScreen} />
+
   </Stack.Navigator>
 );
 

@@ -13,10 +13,10 @@ const MainScreen = ({ navigation }: any) => {
   };
 
   return (
-    <ImageBackground source={require("../assets/background.png")} style={styles.background}>
+    <ImageBackground source={require("../assets/background/background.png")} style={styles.background}>
       <View style={{ width: '100%', alignItems: 'center' }}>
         <Image
-          source={require('../assets/USTAR.png')}
+          source={require('../assets/icon/USTAR.png')}
           style={styles.logo}
           resizeMode="contain"
         />

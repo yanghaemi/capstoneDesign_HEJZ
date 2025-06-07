@@ -43,7 +43,7 @@ const CommunityScreen = () => {
             likes: 24,
             bookmarked: false,
             comments: ['너무 재밌어요!', '이 영상 최고 ㅋㅋ'],
-            videoUri: require('../../assets/video1.mp4'),
+            videoUri: require('../../assets/Videos/video1.mp4'),
             followed: false,
           },
           {
@@ -54,7 +54,7 @@ const CommunityScreen = () => {
             likes: 45,
             bookmarked: false,
             comments: ['완전 귀여워요!', '이런 마임 더 보고 싶다'],
-            videoUri: require('../../assets/video2.mp4'),
+            videoUri: require('../../assets/Videos/video2.mp4'),
             followed: false,
           },
         ];
@@ -158,7 +158,7 @@ const CommunityScreen = () => {
         </View>
 
         <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('MyRoom')}>
-          <Image source={require('../../assets/cat.png')} style={{ width: 50, height: 50, borderRadius: 25 }} />
+          <Image source={require('../../assets/icon/cat.png')} style={{ width: 50, height: 50, borderRadius: 25 }} />
         </TouchableOpacity>
       </View>
     </View>
