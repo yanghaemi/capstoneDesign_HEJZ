@@ -2,10 +2,13 @@ package com.HEJZ.HEJZ_back.domain.dance.controller;
 
 import com.HEJZ.HEJZ_back.domain.dance.dto.LyricsRequest;
 import com.HEJZ.HEJZ_back.domain.dance.dto.RecommendationResult;
+import com.HEJZ.HEJZ_back.domain.dance.dto.SelectionGroupDto;
+import com.HEJZ.HEJZ_back.domain.dance.dto.SelectionGroupResponseDto;
 import com.HEJZ.HEJZ_back.domain.dance.model.EmotionEnum;
 import com.HEJZ.HEJZ_back.domain.dance.model.EmotionResult;
 import com.HEJZ.HEJZ_back.domain.dance.service.EmotionAnalyzerService;
 import com.HEJZ.HEJZ_back.domain.dance.service.EmotionResultService;
+import com.HEJZ.HEJZ_back.domain.dance.service.EmotionSelectionService;
 import com.HEJZ.HEJZ_back.domain.dance.service.MotionRecommenderService;
 import com.HEJZ.HEJZ_back.global.exception.CustomException;
 import com.HEJZ.HEJZ_back.global.exception.ErrorCode;
@@ -29,6 +32,7 @@ public class LyricsEmotionController {
     private final EmotionAnalyzerService emotionAnalyzerService;
     private final MotionRecommenderService motionRecommenderService;
     private final EmotionResultService emotionResultService;
+    private final EmotionSelectionService emotionSelectionService;
 
     @PostMapping("/analyze")
     @ApiResponses(value = {
@@ -84,4 +88,17 @@ public class LyricsEmotionController {
 
         return ResponseEntity.ok(results);
     }
+
+    @PostMapping("/selection/bulk")
+    public ResponseEntity<?> saveEmotionSelections(@RequestBody List<SelectionGroupDto> request) {
+        emotionSelectionService.saveSelections(request);
+        return ResponseEntity.ok("선택한 안무가 저장되었습니다.");
+    }
+
+    @GetMapping("/selection")
+    public ResponseEntity<List<SelectionGroupResponseDto>> getAllEmotionSelections() {
+        List<SelectionGroupResponseDto> results = emotionSelectionService.getAllSelections();
+        return ResponseEntity.ok(results);
+    }
+
 }
