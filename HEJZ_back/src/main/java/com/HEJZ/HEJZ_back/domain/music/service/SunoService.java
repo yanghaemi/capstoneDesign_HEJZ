@@ -1,15 +1,9 @@
 package com.HEJZ.HEJZ_back.domain.music.service;
 
-<<<<<<< HEAD:HEJZ_back/src/main/java/com/HEJZ/HEJZ_back/service/SunoService.java
-import com.HEJZ.HEJZ_back.dto.LyricsDTO;
-import com.HEJZ.HEJZ_back.dto.SunoRequest;
-import com.HEJZ.HEJZ_back.dto.SunoResponse;
-import com.HEJZ.HEJZ_back.util.HttpUtils;
-=======
+
 import com.HEJZ.HEJZ_back.domain.music.dto.SunoRequest;
 import com.HEJZ.HEJZ_back.domain.music.dto.SunoResponse;
 import com.HEJZ.HEJZ_back.global.util.HttpUtils;
->>>>>>> cb3ba3749e69d5e390125c4a7abe84a6690a41b5:HEJZ_back/src/main/java/com/HEJZ/HEJZ_back/domain/music/service/SunoService.java
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -94,7 +88,7 @@ public class SunoService {
 
         
         // 로컬에 저장하는 코드
-        Path saveDir = Paths.get("../music");
+        Path saveDir = Paths.get("../../HEJZ_front/android/app/src/main/res/raw");
         try {
             if (!Files.exists(saveDir)) {
                 Files.createDirectories(saveDir);
@@ -126,42 +120,42 @@ public class SunoService {
     }
 
     //Get Timestamped Lyrics api 호출 함수
-//    public String getLyrics(LyricsDTO request){
-//
-//        String url = "https://apibox.erweima.ai/api/v1/generate/get-timestamped-lyrics";
-//
-//        HttpURLConnection conn = null;
-//
-//        HttpUtils httpUtils = new HttpUtils();
-//
-//        try{
-//
-//            conn = httpUtils.getHttpURLConnection(url, "POST", token);
-//            conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
-//            conn.setRequestProperty("Authorization", "Bearer " + token);
-//            conn.setDoInput(true); // post 요청 보낼 때 있어야 함
-//
-//            // body string
-//            String str = "{\n" +
-//                    "\"taskId\": \"" + request.getTaskId() + "\",\n" +
-//                    "\"AudioId\": \"" + request.getAudioId() + "\",\n" +
-//                    "\"musicIndex\": \"" + request.getMusicIndex() + "\",\n" +
-//                    "}";
-//            try (DataOutputStream dataOutputStream = new DataOutputStream(conn.getOutputStream())) {
-//                dataOutputStream.write(str.getBytes(StandardCharsets.UTF_8)); // 한글 깨짐 방지 utf-8 붙임
-//                dataOutputStream.flush();
-//            }
-//
-//            return httpUtils.getHttpResponse(conn);
-//
-//        }catch (IOException e) {
-//
-//            throw new RuntimeException("Suno 가사 API 요청 실패", e);
-//        }
-//        finally{
-//            if(conn!=null) conn.disconnect();
-//        }
-//    }
+    public String getLyrics(com.HEJZ.HEJZ_back.dto.LyricsDTO request){
+
+        String url = "https://apibox.erweima.ai/api/v1/generate/get-timestamped-lyrics";
+
+        HttpURLConnection conn = null;
+
+        HttpUtils httpUtils = new HttpUtils();
+
+        try{
+
+            conn = httpUtils.getHttpURLConnection(url, "POST", token);
+            conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+            conn.setRequestProperty("Authorization", "Bearer " + token);
+            conn.setDoInput(true); // post 요청 보낼 때 있어야 함
+
+            // body string
+            String str = "{\n" +
+                    "\"taskId\": \"" + request.getTaskId() + "\",\n" +
+                    "\"AudioId\": \"" + request.getAudioId() + "\",\n" +
+                    "\"musicIndex\": \"" + request.getMusicIndex() + "\",\n" +
+                    "}";
+            try (DataOutputStream dataOutputStream = new DataOutputStream(conn.getOutputStream())) {
+                dataOutputStream.write(str.getBytes(StandardCharsets.UTF_8)); // 한글 깨짐 방지 utf-8 붙임
+                dataOutputStream.flush();
+            }
+
+            return httpUtils.getHttpResponse(conn);
+
+        }catch (IOException e) {
+
+            throw new RuntimeException("Suno 가사 API 요청 실패", e);
+        }
+        finally{
+            if(conn!=null) conn.disconnect();
+        }
+    }
 
 }
 

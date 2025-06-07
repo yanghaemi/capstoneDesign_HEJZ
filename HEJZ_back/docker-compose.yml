@@ -33,9 +33,12 @@ services:
     depends_on:
       - mysql
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql_capstoneHEJZ:3306/${MYSQL_DATABASE}
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      API_SUNO_KEY: ${API_SUNO_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_API_MODEL: ${OPENAI_API_MODEL}
       #APP_JWT_SECRET: ${APP_JWT_SECRET}
       #APP_JWT_EXPIRATION_MS: ${APP_JWT_EXPIRATION_MS}
     networks:
