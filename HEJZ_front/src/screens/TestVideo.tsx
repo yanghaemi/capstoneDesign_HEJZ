@@ -18,45 +18,42 @@ const videoUrls = [
 const lyricSegments = lyricsData["song1"] || [];
 
 const VideoSelectionScreen = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const [currentLyricIndex, setCurrentLyricIndex] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [isFinalized, setIsFinalized] = useState(false);
   const [currentLyrics, setCurrentLyrics] = useState<string[]>([]);
-  const [looping, setLooping] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    const playSegment = () => {
-      const { start, end, lines } = lyricSegments[currentIndex % lyricSegments.length];
-      setCurrentLyrics(lines);
-      try {
-        SoundPlayer.playSoundFile('song1', 'mp3');
-        setTimeout(() => {
-          SoundPlayer.seek(start);
-        }, 300);
+    const { start, end, lines } = lyricSegments[currentLyricIndex % lyricSegments.length];
+    setCurrentLyrics(lines);
+    try {
+      SoundPlayer.playSoundFile('song1', 'mp3');
+      setTimeout(() => {
+        SoundPlayer.seek(start);
+      }, 300);
 
-        if (intervalRef.current) clearInterval(intervalRef.current);
-        intervalRef.current = setInterval(async () => {
-          try {
-            const info = await SoundPlayer.getInfo();
-            if (info.currentTime >= end) {
-              SoundPlayer.seek(start);
-            }
-          } catch {}
-        }, 500);
-      } catch (e) {
-        console.error('Sound error:', e);
-      }
-    };
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      intervalRef.current = setInterval(async () => {
+        try {
+          const info = await SoundPlayer.getInfo();
+          if (info.currentTime >= end) {
+            SoundPlayer.seek(start);
+          }
+        } catch {}
+      }, 500);
+    } catch (e) {
+      console.error('Sound error:', e);
+    }
 
-    playSegment();
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [currentIndex]);
+  }, [currentLyricIndex]);
 
   const handleVideoTap = () => {
-    setSelectedIndex(currentIndex);
+    setSelectedIndex(currentVideoIndex);
   };
 
   const handleFinalize = () => {
@@ -67,16 +64,17 @@ const VideoSelectionScreen = () => {
   };
 
   const handleRetry = () => {
-    const nextIndex = (currentIndex + 1) % videoUrls.length;
-    setCurrentIndex(nextIndex);
+    const nextVideoIndex = (currentVideoIndex + 1) % videoUrls.length;
+    setCurrentVideoIndex(nextVideoIndex);
     setSelectedIndex(null);
+    // 가사 인덱스는 유지하도록 수정
   };
 
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={handleVideoTap} activeOpacity={0.9}>
         <Video
-          source={{ uri: videoUrls[currentIndex] }}
+          source={{ uri: videoUrls[currentVideoIndex] }}
           style={styles.video}
           resizeMode="cover"
           repeat
@@ -84,7 +82,7 @@ const VideoSelectionScreen = () => {
           muted={false}
           onError={(e) => console.log('Video Error:', e)}
         />
-        {selectedIndex === currentIndex && (
+        {selectedIndex === currentVideoIndex && (
           <View style={styles.overlay}>
             <Text style={styles.selectedText}>✔ 선택됨</Text>
           </View>
@@ -102,10 +100,15 @@ const VideoSelectionScreen = () => {
           <TouchableOpacity
             style={[
               styles.selectButton,
-              selectedIndex === currentIndex ? styles.selectButtonActive : styles.selectButtonDisabled,
+              selectedIndex === currentVideoIndex ? styles.selectButtonActive : styles.selectButtonDisabled,
             ]}
-            onPress={handleFinalize}
-            disabled={selectedIndex !== currentIndex}
+            onPress={() => {
+              handleFinalize();
+              setCurrentLyricIndex((prev) => prev + 1);
+              setCurrentVideoIndex(0);
+              setSelectedIndex(null);
+            }}
+            disabled={selectedIndex !== currentVideoIndex}
           >
             <Text style={styles.selectButtonText}>선택하기</Text>
           </TouchableOpacity>
