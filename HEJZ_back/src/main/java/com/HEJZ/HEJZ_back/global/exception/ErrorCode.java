@@ -13,6 +13,7 @@ public enum ErrorCode {
     EMPTY_LYRICS(HttpStatus.BAD_REQUEST, "G004", "가사가 비어 있습니다."),
     INVALID_LYRICS_FORMAT(HttpStatus.BAD_REQUEST, "G005", "2줄 이상의 가사를 입력해주세요."),
     RECOMMENDATION_FAILED(HttpStatus.NOT_FOUND, "G006", "추천 결과가 존재하지 않습니다."),
+    VIDEO_NOT_FOUND(HttpStatus.NOT_FOUND, "G007", "해당 안무 영상이 존재하지 않습니다."),
 
     // === 시스템 에러 ===
     CSV_LOADING_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S001", "CSV 파일 로딩 실패"),

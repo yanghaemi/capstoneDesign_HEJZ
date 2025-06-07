@@ -34,6 +34,10 @@ song:
       key: ${OPENAI_API_KEY}
       model: ${OPENAI_API_MODEL}
 
+  suno:
+    api:
+      token: ${SUNO_API_TOKEN}
+
 
 springdoc:
   api-docs:
@@ -44,7 +48,18 @@ springdoc:
     tagsSorter: alpha
     display-request-duration: true
 
-
+cloud:
+  aws:
+    s3:
+      bucket: ${CLOUD_AWS_S3_BUCKET}
+    credentials:
+      access-key: ${AWS_ACCESS_KEY}
+      secret-key: ${AWS_SECRET_KEY}
+    region:
+      static: ${CLOUD_AWS_REGION_STATIC}
+      auto: false
+    stack:
+      auto: false
 #app:
 #  jwt:
 #    secret: ${APP_JWT_SECRET}

@@ -23,6 +23,7 @@ import java.util.List;
 public class SunoService {
 
     @Value("${song.apikey}")
+
     private String token;
     public String generateSong(SunoRequest request){
         // Suno API로 HTTP 요청 보내는 코드
