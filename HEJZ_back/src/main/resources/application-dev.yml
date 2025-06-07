@@ -36,7 +36,7 @@ song:
 
   suno:
     api:
-      token: ${SUNO_API_TOKEN}
+      key: ${SUNO_API_KEY}
 
 
 springdoc:

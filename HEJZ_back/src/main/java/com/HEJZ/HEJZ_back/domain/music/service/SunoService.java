@@ -22,7 +22,7 @@ import java.util.List;
 @Service
 public class SunoService {
 
-    @Value("${song.apikey}")
+    @Value("${suno.api.key}")
 
     private String token;
     public String generateSong(SunoRequest request){
