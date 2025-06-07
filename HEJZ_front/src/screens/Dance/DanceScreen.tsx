@@ -51,7 +51,7 @@ const DanceScreen = ({ navigation }: any) => {
 
   return (
     <ImageBackground
-      source={require('../../assets/mainbackground.png')}
+      source={require('../../assets/background/mainbackground.png')}
       style={styles.background}
       resizeMode="cover"
     >
@@ -59,7 +59,7 @@ const DanceScreen = ({ navigation }: any) => {
         <Text style={styles.header}>노래를 선택해주세요</Text>
 
         <FlatList
-          data={songs}
+          data={dummySongs}
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
           style={styles.list}

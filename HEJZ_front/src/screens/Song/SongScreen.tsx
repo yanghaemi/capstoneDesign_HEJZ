@@ -71,7 +71,7 @@ const SongScreen = () => {
 
   return (
       <ImageBackground
-            source={require('../../assets/mainbackground.png')}
+            source={require('../../assets/background/mainbackground.png')}
             style={styles.background}
             resizeMode="cover"
        >

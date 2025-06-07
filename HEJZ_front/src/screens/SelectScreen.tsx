@@ -13,7 +13,7 @@ const SelectScreen = ({ navigation }: any) => {
   return (
     <View style={styles.screen}>
       <ImageBackground
-        source={require('../assets/selectbackground.png')}
+        source={require('../assets/background/selectbackground.png')}
         style={styles.background}
         resizeMode="cover"
       >
@@ -25,7 +25,7 @@ const SelectScreen = ({ navigation }: any) => {
               onPress={() => navigation.navigate('Music')}
             >
               <Image
-                source={require('../assets/MusicTown.png')}
+                source={require('../assets/icon/MusicTown.png')}
                 style={styles.icon}
               />
             </TouchableOpacity>
@@ -37,7 +37,7 @@ const SelectScreen = ({ navigation }: any) => {
               }
             >
               <Image
-                source={require('../assets/DanceTown.png')}
+                source={require('../assets/icon/DanceTown.png')}
                 style={styles.icon}
               />
             </TouchableOpacity>
@@ -49,7 +49,7 @@ const SelectScreen = ({ navigation }: any) => {
             onPress={() => navigation.navigate('Community')}
           >
             <Image
-              source={require('../assets/communityTown.png')}
+              source={require('../assets/icon/communityTown.png')}
               style={styles.communityIcon}
               resizeMode="contain"
             />

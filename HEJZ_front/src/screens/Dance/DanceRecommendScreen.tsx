@@ -8,6 +8,7 @@ import SoundPlayer from 'react-native-sound-player';
 import Slider from '@react-native-community/slider';
 // import RNFS from 'react-native-fs';
 import songTitleMap from '../../assets/Document/SongTitleName.json';
+import Video from 'react-native-video';
 
 const DanceRecommendScreen=({ route, navigation }) =>{
     const { p_id, p_title, p_filepath } = route.params; // props 받는 코드
@@ -87,10 +88,17 @@ const DanceRecommendScreen=({ route, navigation }) =>{
 
     return (
     <ImageBackground
-      source={require('../../assets/mainbackground.png')}
+      source={require('../../assets//background/mainbackground.png')}
       style={styles.background}
       resizeMode="cover"
       >
+      <Video
+          source={{ uri: fileUrl }}
+          style={styles.video}
+          controls={true}
+          resizeMode="contain"
+          paused={false}
+        />
         <View style={styles.playerCard}>
           <Text style={styles.nowPlayingText}>⏱ 재생 중: {title}</Text>
 

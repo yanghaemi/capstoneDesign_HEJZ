@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,148 +6,158 @@ import {
   StyleSheet,
   FlatList,
   Alert,
+  ImageBackground,
+  Image,
 } from 'react-native';
-import SoundPlayer from 'react-native-sound-player';
 import Slider from '@react-native-community/slider';
-import RNFS from 'react-native-fs';
-import songTitleMap from '../../assets/Document/SongTitleName.json';
+import SoundPlayer from 'react-native-sound-player';
 
-interface Song {
-  id: string;
-  title: string;
-  file: string;
-}
+const songs = [
+  { id: '1', title: '나는야 장지혜야', file: 'song1' },
+  { id: '2', title: '영은아 YOUNG하게 살자', file: 'song3' },
+  { id: '3', title: '아프잘 아프지마', file: 'song2' },
+  { id: '4', title: '혜미가 아니라 해미라구요', file: 'song4' },
+];
 
-const MySongsScreen = () => {
-  const [songs, setSongs] = useState<Song[]>([]);
-  const [currentSong, setCurrentSong] = useState<Song | null>(null);
+const MySongsScreen = ({ navigation }: any) => {
+  const [selectedSongId, setSelectedSongId] = useState<string | null>(null);
+  const [currentSong, setCurrentSong] = useState<string | null>(null);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [intervalId, setIntervalId] = useState<any>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
-  useEffect(() => {
-    const loadSongs = async () => {
-      try {
-        const dir = `${RNFS.DocumentDirectoryPath}/songs`;
-        const files = await RNFS.readDir(dir);
-        const mp3Files = files.filter(f => f.name.endsWith('.mp3'));
-
-        const songList = mp3Files.map((f, i) => {
-          const baseName = f.name.replace('.mp3', '');
-          const title = songTitleMap[baseName] || baseName;
-          return {
-            id: `${i}`,
-            title,
-            file: f.path,
-          };
-        });
-
-        setSongs(songList);
-      } catch (e) {
-        Alert.alert('오류', '노래를 불러오는 중 문제가 발생했어요.');
-      }
-    };
-
-    loadSongs();
-  }, []);
-
-  const handlePlay = async (song: Song) => {
+  const handlePlay = async (file: string, id: string) => {
     try {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      SoundPlayer.playUrl(`file://${song.file}`);
-      setCurrentSong(song);
+      SoundPlayer.playSoundFile(file, 'mp3');
+      setSelectedSongId(id);
+      setCurrentSong(file);
       setCurrentTime(0);
       setDuration(0);
+      setIsPlaying(true);
 
-      const interval = setInterval(() => {
-        SoundPlayer.getInfo()
-          .then(info => {
-            setCurrentTime(info.currentTime || 0);
-            setDuration(info.duration || 0);
-          })
-          .catch(err => {
-            console.log('getInfo 오류:', err);
-          });
+      if (intervalId) clearInterval(intervalId);
+
+      const idInterval = setInterval(async () => {
+        try {
+          const info = await SoundPlayer.getInfo();
+          setCurrentTime(info.currentTime || 0);
+          setDuration(info.duration || 0);
+        } catch (e) {
+          console.log('getInfo 에러:', e);
+        }
       }, 500);
-
-      intervalRef.current = interval;
+      setIntervalId(idInterval);
     } catch (e) {
-      Alert.alert('재생 실패', '오디오 파일을 재생할 수 없어요.');
       console.log('재생 에러:', e);
+      Alert.alert('재생 실패', '오디오 파일을 찾을 수 없어요.');
     }
   };
 
   const handleStop = () => {
-    try {
-      SoundPlayer.stop();
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      setCurrentSong(null);
-      setCurrentTime(0);
-      setDuration(0);
-    } catch (e) {
-      console.log('정지 에러:', e);
-    }
+    SoundPlayer.stop();
+    clearInterval(intervalId);
+    setIsPlaying(false);
   };
 
   const handleSeek = (value: number) => {
-    try {
-      SoundPlayer.seek(value);
-      setCurrentTime(value);
-    } catch (e) {
-      console.log('seek 에러:', e);
+    SoundPlayer.seek(value);
+    setCurrentTime(value);
+  };
+
+  const handlePrev = () => {
+    const index = songs.findIndex((s) => s.id === selectedSongId);
+    if (index > 0) {
+      const prev = songs[index - 1];
+      handlePlay(prev.file, prev.id);
     }
   };
 
-  const renderItem = ({ item }: { item: Song }) => (
-    <View style={styles.songItem}>
+  const handleNext = () => {
+    const index = songs.findIndex((s) => s.id === selectedSongId);
+    if (index < songs.length - 1) {
+      const next = songs[index + 1];
+      handlePlay(next.file, next.id);
+    }
+  };
+
+  const renderItem = ({ item }: { item: (typeof songs)[0] }) => (
+    <View
+      style={[styles.songItem, selectedSongId === item.id && styles.selectedItem]}
+    >
       <Text style={styles.songTitle}>{item.title}</Text>
       <TouchableOpacity
+        onPress={() => handlePlay(item.file, item.id)}
         style={styles.playButton}
-        onPress={() => handlePlay(item)}
       >
-        <Text style={styles.playText}>재생</Text>
+        <Image
+          source={require("../../../src/assets/icon/Play.png")}
+          style={styles.playIcon}
+        />
       </TouchableOpacity>
     </View>
   );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>나의 음악들</Text>
+    <ImageBackground
+      source={require("../../../src/assets/background/SongBackgroud.png")}
+      style={styles.background}
+    >
+      <View style={styles.container}>
+        <FlatList
+          data={songs}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          style={styles.songList}
+        />
 
-      <FlatList
-        data={songs}
-        keyExtractor={item => item.id}
-        renderItem={renderItem}
-        style={{ marginBottom: 20 }}
-      />
-
-      {currentSong && (
-        <View style={styles.nowPlaying}>
-          <Text style={styles.nowPlayingText}>
-            🎶 {currentSong.title}
-          </Text>
-
+        {currentSong && (
           <Slider
             value={currentTime}
             minimumValue={0}
             maximumValue={duration}
             onSlidingComplete={handleSeek}
-            minimumTrackTintColor="#4B9DFE"
-            maximumTrackTintColor="#ddd"
-            thumbTintColor="#4B9DFE"
-            style={{ marginTop: 8 }}
+            minimumTrackTintColor="#A1D6FF"
+            maximumTrackTintColor="#E0E0E0"
+            thumbTintColor="#FFCFD2"
+            style={styles.progressBar}
           />
+        )}
 
-          <Text style={styles.timeText}>
-              {Math.floor((Math.floor(currentTime)/60))}:{Math.floor(currentTime)%60} / {Math.floor((Math.floor(duration)/60))}:{Math.floor(duration)%60} 초
-          </Text>
+        {selectedSongId && (
+          <View style={styles.bottomControlRow}>
+            <TouchableOpacity onPress={handlePrev} style={styles.navButton}>
+              <Image source={require("../../../src/assets/icon/left.png")} style={styles.navIcon} />
+            </TouchableOpacity>
 
-          <TouchableOpacity onPress={handleStop} style={styles.stopButton}>
-            <Text style={styles.stopText}>정지</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-    </View>
+            <TouchableOpacity
+              onPress={() => {
+                const song = songs.find((s) => s.id === selectedSongId);
+                if (song) {
+                  isPlaying ? handleStop() : handlePlay(song.file, song.id);
+                }
+              }}
+              style={styles.navButton}
+            >
+              <Image
+                source={isPlaying ? require("../../../src/assets/icon/Pause.png") : require("../../../src/assets/icon/Play.png")}
+                style={styles.navIcon}
+              />
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={handleNext} style={styles.navButton}>
+              <Image source={require("../../../src/assets/icon/right.png")} style={styles.navIcon} />
+            </TouchableOpacity>
+            <TouchableOpacity
+                onPress={() => navigation.navigate('SongPlay', { songId: selectedSongId })}
+                style={styles.navButton}
+              >
+                <Image source={require("../../../src/assets/icon/SongMenu.png")} style={styles.navIcon} />
+              </TouchableOpacity>
+          </View>
+        )}
+      </View>
+    </ImageBackground>
   );
 };
 
@@ -158,58 +168,56 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 60,
     paddingHorizontal: 24,
-    backgroundColor: '#fff',
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 20,
   },
   songItem: {
+    paddingVertical: 14,
+    borderBottomWidth: 2,
+    borderColor: '#95ABE4',
+    width: '100%',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderColor: '#ddd',
+    alignItems: 'center',
   },
   songTitle: {
     fontSize: 16,
   },
   playButton: {
-    backgroundColor: '#4B9DFE',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+    padding: 6,
+  },
+  playIcon: {
+    width: 24,
+    height: 24,
+    resizeMode: 'contain',
+  },
+  background: {
+    flex: 1,
+    resizeMode: 'cover',
+  },
+  songList: {
+    marginTop: 40,
+  },
+  selectedItem: {
+    backgroundColor: '#ffffff33',
     borderRadius: 6,
+    paddingHorizontal: 10,
   },
-  playText: {
-    color: '#fff',
-    fontWeight: 'bold',
+  progressBar: {
+    marginTop: 50,
+    marginHorizontal: 20,
   },
-  nowPlaying: {
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    backgroundColor: '#f2f2f2',
-    borderRadius: 8,
+  bottomControlRow: {
+    marginTop: 20,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 30,
   },
-  nowPlayingText: {
-    fontSize: 16,
-    marginBottom: 6,
+  navButton: {
+    padding: 10,
   },
-  timeText: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 4,
-  },
-  stopButton: {
-    backgroundColor: '#FE4B4B',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    alignSelf: 'flex-start',
-    marginTop: 10,
-  },
-  stopText: {
-    color: '#fff',
-    fontWeight: 'bold',
+  navIcon: {
+    width: 48,   // 기존보다 키움
+    height: 48,  // 기존보다 키움
+    resizeMode: 'contain',
   },
 });
