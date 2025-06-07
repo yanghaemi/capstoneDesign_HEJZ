@@ -13,19 +13,20 @@ import com.HEJZ.HEJZ_back.domain.dance.service.MotionRecommenderService;
 import com.HEJZ.HEJZ_back.global.exception.CustomException;
 import com.HEJZ.HEJZ_back.global.exception.ErrorCode;
 import com.HEJZ.HEJZ_back.global.exception.ErrorResponse;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Tag(name = "Emotion", description = "가사 감정 분석 및 안무 추천 관련 API")
 @RestController

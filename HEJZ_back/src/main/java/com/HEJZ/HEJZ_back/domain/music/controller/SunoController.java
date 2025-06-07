@@ -3,13 +3,14 @@ package com.HEJZ.HEJZ_back.domain.music.controller;
 import com.HEJZ.HEJZ_back.domain.music.dto.SunoRequest;
 import com.HEJZ.HEJZ_back.domain.music.dto.SunoResponse;
 import com.HEJZ.HEJZ_back.domain.music.service.SunoService;
-
+import com.HEJZ.HEJZ_back.dto.SunoLyricsDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
 // 프론트에서 요청 받은 거 처리하는 곳
 
 @RestController
@@ -25,7 +26,7 @@ public class SunoController {
     @PostMapping("/generate")
     public ResponseEntity<String> generateSong(@RequestBody SunoRequest request) {
         String result = sunoService.generateSong(request);
-        System.out.println("곡 생성: "+result);
+        System.out.println("곡 생성: " + result);
         return ResponseEntity.ok(result);
     }
 
@@ -37,19 +38,18 @@ public class SunoController {
         System.out.println("taskId: " + callback_res.getData().getTask_id());
         System.out.println("✅ 콜백 성공! data size: " + callback_res.getData().getData().size());
         String result = sunoService.callbackFromSuno(callback_res);
-//        System.out.println("콜백: "+result);
         return ResponseEntity.ok(result);
     }
 
-     /*
+    /*
      호출 url : http://localhost:8080/api/suno/get_timestamplyrics
      설명 : 가사 호출 api
      method: post
-      */
+    */
     @PostMapping("/get_timestamplyrics")
-    public ResponseEntity<String> getTimestampLyrics(@RequestBody com.HEJZ.HEJZ_back.dto.SunoLyricsDTO request) {
+    public ResponseEntity<String> getTimestampLyrics(@RequestBody SunoLyricsDTO request) {
         String result = sunoService.getTimestampLyrics(request);
-        System.out.println("타임스탬프: "+result);
+        System.out.println("타임스탬프: " + result);
         return ResponseEntity.ok(result);
     }
 }

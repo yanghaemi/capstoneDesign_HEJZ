@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-
 import java.util.List;
 
 @Getter
@@ -15,6 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RecommendationResult {
+
     @Schema(description = "두 줄로 끊긴 가사 조각")
     private String lyrics;
 
