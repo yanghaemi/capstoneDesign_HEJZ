@@ -4,7 +4,7 @@ spring:
       on-profile: dev
 
   datasource:
-    url: jdbc:mysql://mysql_capstoneHEJZ:3306/${MYSQL_DATABASE}
+    url: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}
     username: ${MYSQL_USER}
     password: ${MYSQL_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -47,6 +47,37 @@ springdoc:
 
 >>>>>>> cb3ba3749e69d5e390125c4a7abe84a6690a41b5
 
+  openai:
+    api:
+      key: ${OPENAI_API_KEY}
+      model: ${OPENAI_API_MODEL}
+
+  suno:
+    api:
+      key: ${SUNO_API_KEY}
+
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+    display-request-duration: true
+
+cloud:
+  aws:
+    s3:
+      bucket: ${CLOUD_AWS_S3_BUCKET}
+    credentials:
+      access-key: ${AWS_ACCESS_KEY}
+      secret-key: ${AWS_SECRET_KEY}
+    region:
+      static: ${CLOUD_AWS_REGION_STATIC}
+      auto: false
+    stack:
+      auto: false
 #app:
 #  jwt:
 #    secret: ${APP_JWT_SECRET}

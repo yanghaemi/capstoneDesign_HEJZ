@@ -9,7 +9,7 @@ const MyRoomHeader = ({ navigation }: any) => {
     <View style={styles.headerWrapper}>
       <View style={styles.topRow}>
         <Image
-          source={require('../../assets/cat.png')}
+          source={require('../../assets/icon/cat.png')}
           style={styles.profileImage}
         />
         <View style={styles.userInfo}>
