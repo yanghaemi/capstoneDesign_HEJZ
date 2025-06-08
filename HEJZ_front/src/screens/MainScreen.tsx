@@ -53,6 +53,10 @@ const MainScreen = ({ navigation }: any) => {
               <Text style={styles.buttonText}>로그인</Text>
             </TouchableOpacity>
 
+            <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('SunoPreviewScreen')}>
+                          <Text style={styles.buttonText}>테스트</Text>
+                        </TouchableOpacity>
+
             <TouchableOpacity onPress={() => setShowLogin(false)}>
               <Text style={styles.cancelText}>← 뒤로가기</Text>
             </TouchableOpacity>

@@ -47,9 +47,12 @@ services:
       #APP_JWT_EXPIRATION_MS: ${APP_JWT_EXPIRATION_MS}
     networks:
       - capstoneHEJZ_network
+    volumes:
+      - ./music:/app/music
 
 volumes:
   mysql_data:
+
 
 networks:
   capstoneHEJZ_network:

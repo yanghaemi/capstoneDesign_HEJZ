@@ -1,8 +1,15 @@
 package com.HEJZ.HEJZ_back.domain.music.service;
 
+import com.HEJZ.HEJZ_back.domain.music.dto.SavedSongDTO;
 import com.HEJZ.HEJZ_back.domain.music.dto.SunoRequest;
 import com.HEJZ.HEJZ_back.domain.music.dto.SunoResponse;
+import com.HEJZ.HEJZ_back.domain.music.entity.SavedSong;
+import com.HEJZ.HEJZ_back.domain.music.repository.SavedSongRepository;
 import com.HEJZ.HEJZ_back.global.util.HttpUtils;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -16,14 +23,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class SunoService {
 
     @Value("${suno.api.key}")
-
     private String token;
+
+    @Autowired
+    private SavedSongRepository savedSongRepository;
     public String generateSong(SunoRequest request){
         // Suno API로 HTTP 요청 보내는 코드
         String url = "https://apibox.erweima.ai/api/v1/generate";
@@ -76,20 +86,22 @@ public class SunoService {
 
 
     // 콜백 결과 처리 함수
-    public String callbackFromSuno(SunoResponse callback) {
+    public List<SavedSongDTO> callbackFromSuno(SunoResponse callback) {
         if (!"complete".equals(callback.getData().getCallbackType())) {
-            return "⚠️ 곡 생성 완료 상태가 아님: " + callback.getData().getCallbackType();
+            return List.of();
         }
 
         List<SunoResponse.AudioData> audioList = callback.getData().getData();
 
         if (audioList == null || audioList.isEmpty()) {
-            return "❌ 콜백에 오디오 데이터가 없음";
+            return List.of();
         }
 
-        
-        // 로컬에 저장하는 코드
-        Path saveDir = Paths.get("../../HEJZ_front/android/app/src/main/res/raw");
+        System.out.println("🎧 콜백 데이터: " + callback.getData());
+
+        Path saveDir = Paths.get("music");
+        List<SavedSongDTO> savedSongs = new ArrayList<>();
+
         try {
             if (!Files.exists(saveDir)) {
                 Files.createDirectories(saveDir);
@@ -97,27 +109,85 @@ public class SunoService {
 
             for (SunoResponse.AudioData audio : audioList) {
                 String audioUrl = audio.getAudio_url();
-                String title = audio.getTitle().replaceAll("\\s+", "_"); // 공백 제거
+                String sourceAudioUrl = audio.getSource_audio_url();
+                String streamAudioUrl = audio.getStream_audio_url();
+                String sourceStreamAudioUrl = audio.getSource_stream_audio_url();
+                String prompt = audio.getPrompt();
+                String title = audio.getTitle().replaceAll("\\s+", "_");
                 String fileName = title + "_" + System.currentTimeMillis() + ".mp3";
+                String lyricsJson = "";
+                String plainLyrics = "";
                 Path targetPath = saveDir.resolve(fileName);
+                String publicUrl = "/music/" + fileName;
 
                 try (InputStream in = new URL(audioUrl).openStream()) {
                     Files.copy(in, targetPath, StandardCopyOption.REPLACE_EXISTING);
                     System.out.println("✅ 저장 성공: " + targetPath);
+
+                    // 엔티티 저장
+                    SavedSong entity = new SavedSong();
+                    entity.setTitle(title);
+                    entity.setAudioUrl(publicUrl);
+                    entity.setTaskId(callback.getData().getTask_id());
+                    entity.setAudioId(audio.getId());
+                    entity.setSourceAudioUrl(sourceAudioUrl);
+                    entity.setStreamAudioUrl(streamAudioUrl);
+                    entity.setSourceStreamAudioUrl(sourceStreamAudioUrl);
+                    entity.setPrompt(prompt);
+                    entity.setLyricsJson(lyricsJson);
+                    entity.setPlainLyrics(plainLyrics);
+
+                    savedSongRepository.save(entity);
+
+                    // DTO 응답용 추가
+                    savedSongs.add(new SavedSongDTO(
+                            title,
+                            publicUrl,
+                            callback.getData().getTask_id(),
+                            audio.getId(),
+                            sourceAudioUrl,
+                            streamAudioUrl,
+                            sourceStreamAudioUrl,
+                            prompt,
+                            lyricsJson,
+                            plainLyrics
+                    ));
+
                 } catch (Exception e) {
                     System.err.println("❌ 저장 실패 for: " + audioUrl);
                     e.printStackTrace();
                 }
             }
 
-            return "✅ 모든 mp3 저장 완료";
+            return savedSongs;
+
         } catch (Exception e) {
             e.printStackTrace();
-            return "❌ 전체 저장 중 예외 발생: " + e.getMessage();
+            return List.of();
         }
+    }
 
+    public void updateLyrics(String taskId, String lyricsJson) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode dataArray = mapper.readTree(lyricsJson);
 
+            StringBuilder plainBuilder = new StringBuilder();
+            for (JsonNode wordNode : dataArray) {
+                plainBuilder.append(wordNode.get("word").asText());
+            }
+            String plainLyrics = plainBuilder.toString();
 
+            savedSongRepository.findByTaskId(taskId).ifPresent(song -> {
+                song.setLyricsJson(lyricsJson);
+                song.setPlainLyrics(plainLyrics);
+                savedSongRepository.save(song);
+            });
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("가사 파싱 중 오류 발생");
+        }
     }
 
     //Get Timestamped Lyrics api 호출 함수
@@ -157,6 +227,5 @@ public class SunoService {
             if(conn!=null) conn.disconnect();
         }
     }
-
 }
 

@@ -16,6 +16,7 @@ import StatsScreen from './screens/StatesScreen';
 import SelectScreen from './screens/SelectScreen';
 import SignUpScreen from './screens/SignUpScreen';
 import SongPlayScreen from './screens/SongPlayScreen';
+import SunoPreviewScreen from './screens/SunoPreviewScreen';
 
 
 
@@ -54,6 +55,8 @@ const App = () => {
                   <Stack.Screen name="Dance" component={DanceNavigator} />
                   <Stack.Screen name="Community" component={CommunityNavigator} />
                   <Stack.Screen name="SongPlay" component={SongPlayScreen} />
+                  <Stack.Screen name="SunoPreviewScreen" component={SunoPreviewScreen} />
+
 
                 </Stack.Navigator>
 
