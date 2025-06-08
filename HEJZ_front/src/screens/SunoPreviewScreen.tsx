@@ -22,6 +22,7 @@ const SunoPreviewScreen = () => {
   const [audioId, setAudioId] = useState('');
   const [lyrics, setLyrics] = useState('');
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [parseLyrics, setParseLyrics] = useState('');
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -58,25 +59,46 @@ const SunoPreviewScreen = () => {
 
             console.log(song);
             console.log(title);
+            console.log(lyrics);
             console.log(sourceAudioUrl);
+
+            lyricsAnalyze();
 
 //             Alert.alert('불러오기 완료', '🎵 '+song.title+' 를 재생할 수 있어요!');
           } catch (err) {
             console.error('곡 목록 불러오기 실패:', err);
           }
         };
-      const lyricsAnalyze = async()=>{
-        try{
-            const res = await axios.post(`${callBackUrl}/api/emotion/analyze`,{
 
+      const lyricsAnalyze = async () => {
+        try {
+          const cleanedLyrics = stripSectionHeaders(lyrics);
+          const parsedLyrics = cleanedLyrics.replace(/\n/g, "\\n");
+          setParseLyrics(parsedLyrics); // 필요하면 화면에 띄우기용
 
-            })
+          console.log('🔹 파싱된 가사:\n',parsedLyrics);
+
+          const res = await axios.post(`http://10.0.2.2:8080/api/emotion/analyze`, {
+            lyrics: parsedLyrics,
+          });
+
+          console.log('🔸 분석 결과:', res.data);
+        } catch (err) {
+          console.error('가사 분석 실패: ', err);
         }
+      };
+
+      function stripSectionHeaders(lyrics: string): string {
+        return lyrics
+          .split('\n')
+          .filter(line => !line.trim().startsWith('[')) // 헤더([Chorus]) 제거
+          .filter(line => line.trim() !== '')           // 빈 줄 제거
+          .join('\n');                                  // 줄바꿈 유지
       }
 
-      useEffect(() => {
-         lyricsAnalyze(); // 가사 분석 요청 api
-         }, [lyrics]);
+//       useEffect(() => {
+//          lyricsAnalyze(); // 가사 분석 요청 api
+//          }, [lyrics]);
 
   const playSong = () => {
     setIsLoading(true); // 🎧 로딩 시작
