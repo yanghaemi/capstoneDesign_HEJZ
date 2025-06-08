@@ -1,0 +1,1091 @@
+{
+  "data": {
+    "alignedWords": [
+      {
+        "word": "담배 ",
+        "success": true,
+        "startS": 7.10106,
+        "endS": 7.34043,
+        "palign": 0
+      },
+      {
+        "word": "연기 ",
+        "success": true,
+        "startS": 7.5,
+        "endS": 7.97872,
+        "palign": 0
+      },
+      {
+        "word": "속에 ",
+        "success": true,
+        "startS": 8.1383,
+        "endS": 8.37766,
+        "palign": 0
+      },
+      {
+        "word": "내 ",
+        "success": true,
+        "startS": 8.53723,
+        "endS": 8.61702,
+        "palign": 0
+      },
+      {
+        "word": "맘을 ",
+        "success": true,
+        "startS": 8.7766,
+        "endS": 9.09574,
+        "palign": 0
+      },
+      {
+        "word": "던져\n",
+        "success": true,
+        "startS": 9.25532,
+        "endS": 10.45213,
+        "palign": 0
+      },
+      {
+        "word": "좋지만 ",
+        "success": true,
+        "startS": 10.6117,
+        "endS": 11.32979,
+        "palign": 0
+      },
+      {
+        "word": "싫어 ",
+        "success": true,
+        "startS": 11.48936,
+        "endS": 11.8883,
+        "palign": 0
+      },
+      {
+        "word": "이 ",
+        "success": true,
+        "startS": 12.04787,
+        "endS": 12.12766,
+        "palign": 0
+      },
+      {
+        "word": "모순의 ",
+        "success": true,
+        "startS": 12.28723,
+        "endS": 12.76596,
+        "palign": 0
+      },
+      {
+        "word": "번져\n",
+        "success": true,
+        "startS": 12.92553,
+        "endS": 14.68085,
+        "palign": 0
+      },
+      {
+        "word": "한 ",
+        "success": true,
+        "startS": 14.84043,
+        "endS": 15.07979,
+        "palign": 0
+      },
+      {
+        "word": "모금 ",
+        "success": true,
+        "startS": 15.23936,
+        "endS": 15.55851,
+        "palign": 0
+      },
+      {
+        "word": "한숨 ",
+        "success": true,
+        "startS": 15.71809,
+        "endS": 16.19681,
+        "palign": 0
+      },
+      {
+        "word": "끊어야 ",
+        "success": true,
+        "startS": 16.35638,
+        "endS": 17.39362,
+        "palign": 0
+      },
+      {
+        "word": "해\n",
+        "success": true,
+        "startS": 17.55319,
+        "endS": 17.87234,
+        "palign": 0
+      },
+      {
+        "word": "하지만 ",
+        "success": true,
+        "startS": 18.03191,
+        "endS": 18.75,
+        "palign": 0
+      },
+      {
+        "word": "손이 ",
+        "success": true,
+        "startS": 18.90957,
+        "endS": 19.22872,
+        "palign": 0
+      },
+      {
+        "word": "또 ",
+        "success": true,
+        "startS": 19.3883,
+        "endS": 19.70745,
+        "palign": 0
+      },
+      {
+        "word": "담배를 ",
+        "success": true,
+        "startS": 19.86702,
+        "endS": 20.18617,
+        "palign": 0
+      },
+      {
+        "word": "매\n\n",
+        "success": true,
+        "startS": 20.34574,
+        "endS": 20.353,
+        "palign": 0
+      },
+      {
+        "word": "\n끊고 ",
+        "success": true,
+        "startS": 20.36025,
+        "endS": 21.2234,
+        "palign": 0
+      },
+      {
+        "word": "싶어 ",
+        "success": true,
+        "startS": 21.2633,
+        "endS": 21.30319,
+        "palign": 0
+      },
+      {
+        "word": "끊기 ",
+        "success": true,
+        "startS": 21.46277,
+        "endS": 21.78191,
+        "palign": 0
+      },
+      {
+        "word": "싫어\n",
+        "success": true,
+        "startS": 21.94149,
+        "endS": 23.05851,
+        "palign": 0
+      },
+      {
+        "word": "끊고 ",
+        "success": true,
+        "startS": 23.1383,
+        "endS": 23.37766,
+        "palign": 0
+      },
+      {
+        "word": "싶어 ",
+        "success": true,
+        "startS": 23.45745,
+        "endS": 23.53723,
+        "palign": 0
+      },
+      {
+        "word": "끊기 ",
+        "success": true,
+        "startS": 23.57713,
+        "endS": 23.61702,
+        "palign": 0
+      },
+      {
+        "word": "싫어\n",
+        "success": true,
+        "startS": 23.7766,
+        "endS": 24.9734,
+        "palign": 0
+      },
+      {
+        "word": "내 ",
+        "success": true,
+        "startS": 25.13298,
+        "endS": 25.21277,
+        "palign": 0
+      },
+      {
+        "word": "맘속엔 ",
+        "success": true,
+        "startS": 25.37234,
+        "endS": 26.32979,
+        "palign": 0
+      },
+      {
+        "word": "두 ",
+        "success": true,
+        "startS": 26.48936,
+        "endS": 26.56915,
+        "palign": 0
+      },
+      {
+        "word": "목소리 ",
+        "success": true,
+        "startS": 26.72872,
+        "endS": 28.56383,
+        "palign": 0
+      },
+      {
+        "word": "더\n",
+        "success": true,
+        "startS": 28.64362,
+        "endS": 28.64362,
+        "palign": 0
+      },
+      {
+        "word": "몸은 ",
+        "success": true,
+        "startS": 28.80319,
+        "endS": 29.12234,
+        "palign": 0
+      },
+      {
+        "word": "외치고 ",
+        "success": true,
+        "startS": 29.28191,
+        "endS": 30.31915,
+        "palign": 0
+      },
+      {
+        "word": "마음은 ",
+        "success": true,
+        "startS": 30.47872,
+        "endS": 30.95745,
+        "palign": 0
+      },
+      {
+        "word": "비명\n",
+        "success": true,
+        "startS": 31.11702,
+        "endS": 32.15426,
+        "palign": 0
+      },
+      {
+        "word": "이 ",
+        "success": true,
+        "startS": 32.31383,
+        "endS": 32.31383,
+        "palign": 0
+      },
+      {
+        "word": "혼란 ",
+        "success": true,
+        "startS": 32.4734,
+        "endS": 32.79255,
+        "palign": 0
+      },
+      {
+        "word": "속에 ",
+        "success": true,
+        "startS": 32.95213,
+        "endS": 33.27128,
+        "palign": 0
+      },
+      {
+        "word": "갇힌 ",
+        "success": true,
+        "startS": 33.43085,
+        "endS": 34.22872,
+        "palign": 0
+      },
+      {
+        "word": "나의 ",
+        "success": true,
+        "startS": 34.3883,
+        "endS": 34.62766,
+        "palign": 0
+      },
+      {
+        "word": "심경\n\n",
+        "success": true,
+        "startS": 34.78723,
+        "endS": 35.21011,
+        "palign": 0
+      },
+      {
+        "word": "\n오늘도 ",
+        "success": true,
+        "startS": 35.23404,
+        "endS": 35.82447,
+        "palign": 0
+      },
+      {
+        "word": "난 ",
+        "success": true,
+        "startS": 35.98404,
+        "endS": 36.30319,
+        "palign": 0
+      },
+      {
+        "word": "다짐의 ",
+        "success": true,
+        "startS": 36.38298,
+        "endS": 36.70213,
+        "palign": 0
+      },
+      {
+        "word": "불씨를 ",
+        "success": true,
+        "startS": 36.8617,
+        "endS": 37.26064,
+        "palign": 0
+      },
+      {
+        "word": "켜\n",
+        "success": true,
+        "startS": 37.42021,
+        "endS": 37.5,
+        "palign": 0
+      },
+      {
+        "word": "첫 ",
+        "success": true,
+        "startS": 37.65957,
+        "endS": 37.65957,
+        "palign": 0
+      },
+      {
+        "word": "불 ",
+        "success": true,
+        "startS": 37.73936,
+        "endS": 37.73936,
+        "palign": 0
+      },
+      {
+        "word": "붙일 ",
+        "success": true,
+        "startS": 37.89894,
+        "endS": 38.21809,
+        "palign": 0
+      },
+      {
+        "word": "땐 ",
+        "success": true,
+        "startS": 38.29787,
+        "endS": 38.37766,
+        "palign": 0
+      },
+      {
+        "word": "세상이 ",
+        "success": true,
+        "startS": 38.45745,
+        "endS": 38.69681,
+        "palign": 0
+      },
+      {
+        "word": "멈춰\n",
+        "success": true,
+        "startS": 38.85638,
+        "endS": 40.05319,
+        "palign": 0
+      },
+      {
+        "word": "하지만 ",
+        "success": true,
+        "startS": 40.21277,
+        "endS": 40.93085,
+        "palign": 0
+      },
+      {
+        "word": "끝엔 ",
+        "success": true,
+        "startS": 41.09043,
+        "endS": 41.64894,
+        "palign": 0
+      },
+      {
+        "word": "죄책감 ",
+        "success": true,
+        "startS": 41.80851,
+        "endS": 42.28723,
+        "palign": 0
+      },
+      {
+        "word": "넘쳐\n",
+        "success": true,
+        "startS": 42.36702,
+        "endS": 42.76596,
+        "palign": 0
+      },
+      {
+        "word": "입안에 ",
+        "success": true,
+        "startS": 42.92553,
+        "endS": 44.60106,
+        "palign": 0
+      },
+      {
+        "word": "남은 ",
+        "success": true,
+        "startS": 44.76064,
+        "endS": 45.07979,
+        "palign": 0
+      },
+      {
+        "word": "쓴맛의 ",
+        "success": true,
+        "startS": 45.15957,
+        "endS": 45.55851,
+        "palign": 0
+      },
+      {
+        "word": "흔적\n",
+        "success": true,
+        "startS": 45.71809,
+        "endS": 45.79787,
+        "palign": 0
+      },
+      {
+        "word": "입안에 ",
+        "success": true,
+        "startS": 45.95745,
+        "endS": 46.67553,
+        "palign": 0
+      },
+      {
+        "word": "남은 ",
+        "success": true,
+        "startS": 46.75532,
+        "endS": 46.83511,
+        "palign": 0
+      },
+      {
+        "word": "쓴맛의 ",
+        "success": true,
+        "startS": 46.8617,
+        "endS": 46.91489,
+        "palign": 0
+      },
+      {
+        "word": "흔적\n",
+        "success": true,
+        "startS": 47.07447,
+        "endS": 47.39362,
+        "palign": 0
+      },
+      {
+        "word": "행복과 ",
+        "success": true,
+        "startS": 47.55319,
+        "endS": 48.27128,
+        "palign": 0
+      },
+      {
+        "word": "슬픔의 ",
+        "success": true,
+        "startS": 48.43085,
+        "endS": 48.90957,
+        "palign": 0
+      },
+      {
+        "word": "끈적한 ",
+        "success": true,
+        "startS": 48.94947,
+        "endS": 49.22872,
+        "palign": 0
+      },
+      {
+        "word": "연결\n\n",
+        "success": true,
+        "startS": 49.24368,
+        "endS": 49.28856,
+        "palign": 0
+      },
+      {
+        "word": "\n날 ",
+        "success": true,
+        "startS": 49.30352,
+        "endS": 49.45312,
+        "palign": 0
+      },
+      {
+        "word": "잡아줘 ",
+        "success": true,
+        "startS": 49.46809,
+        "endS": 49.78723,
+        "palign": 0
+      },
+      {
+        "word": "이 ",
+        "success": true,
+        "startS": 49.94681,
+        "endS": 50.18617,
+        "palign": 0
+      },
+      {
+        "word": "굴레 ",
+        "success": true,
+        "startS": 50.34574,
+        "endS": 51.10372,
+        "palign": 0
+      },
+      {
+        "word": "속에서\n",
+        "success": true,
+        "startS": 51.14362,
+        "endS": 51.2234,
+        "palign": 0
+      },
+      {
+        "word": "날 ",
+        "success": true,
+        "startS": 51.30319,
+        "endS": 51.30319,
+        "palign": 0
+      },
+      {
+        "word": "잡아줘 ",
+        "success": true,
+        "startS": 51.46277,
+        "endS": 52.18085,
+        "palign": 0
+      },
+      {
+        "word": "이 ",
+        "success": true,
+        "startS": 52.34043,
+        "endS": 52.5,
+        "palign": 0
+      },
+      {
+        "word": "굴레 ",
+        "success": true,
+        "startS": 52.65957,
+        "endS": 52.89894,
+        "palign": 0
+      },
+      {
+        "word": "속에서\n",
+        "success": true,
+        "startS": 53.05851,
+        "endS": 54.73404,
+        "palign": 0
+      },
+      {
+        "word": "내 ",
+        "success": true,
+        "startS": 54.89362,
+        "endS": 54.9734,
+        "palign": 0
+      },
+      {
+        "word": "의지와 ",
+        "success": true,
+        "startS": 55.13298,
+        "endS": 55.85106,
+        "palign": 0
+      },
+      {
+        "word": "욕망의 ",
+        "success": true,
+        "startS": 56.01064,
+        "endS": 56.56915,
+        "palign": 0
+      },
+      {
+        "word": "대결선에서\n",
+        "success": true,
+        "startS": 56.72872,
+        "endS": 58.96277,
+        "palign": 0
+      },
+      {
+        "word": "이제는 ",
+        "success": true,
+        "startS": 59.12234,
+        "endS": 59.84043,
+        "palign": 0
+      },
+      {
+        "word": "끝내야 ",
+        "success": true,
+        "startS": 60.0,
+        "endS": 60.79787,
+        "palign": 0
+      },
+      {
+        "word": "할 ",
+        "success": true,
+        "startS": 60.95745,
+        "endS": 61.19681,
+        "palign": 0
+      },
+      {
+        "word": "이 ",
+        "success": true,
+        "startS": 61.35638,
+        "endS": 61.43617,
+        "palign": 0
+      },
+      {
+        "word": "게임\n",
+        "success": true,
+        "startS": 61.59574,
+        "endS": 62.15426,
+        "palign": 0
+      },
+      {
+        "word": "하지만 ",
+        "success": true,
+        "startS": 62.31383,
+        "endS": 63.03191,
+        "palign": 0
+      },
+      {
+        "word": "손은 ",
+        "success": true,
+        "startS": 63.19149,
+        "endS": 63.51064,
+        "palign": 0
+      },
+      {
+        "word": "다시금 ",
+        "success": true,
+        "startS": 63.67021,
+        "endS": 64.3883,
+        "palign": 0
+      },
+      {
+        "word": "Flame\n\n",
+        "success": true,
+        "startS": 64.48803,
+        "endS": 65.60687,
+        "palign": 0
+      },
+      {
+        "word": "\n끊고 ",
+        "success": true,
+        "startS": 65.62863,
+        "endS": 66.06383,
+        "palign": 0
+      },
+      {
+        "word": "싶어 ",
+        "success": true,
+        "startS": 66.2234,
+        "endS": 66.38298,
+        "palign": 0
+      },
+      {
+        "word": "끊기 ",
+        "success": true,
+        "startS": 66.42287,
+        "endS": 66.46277,
+        "palign": 0
+      },
+      {
+        "word": "싫어\n",
+        "success": true,
+        "startS": 66.62234,
+        "endS": 67.5,
+        "palign": 0
+      },
+      {
+        "word": "끊고 ",
+        "success": true,
+        "startS": 67.65957,
+        "endS": 67.89894,
+        "palign": 0
+      },
+      {
+        "word": "싶어 ",
+        "success": true,
+        "startS": 67.93883,
+        "endS": 67.97872,
+        "palign": 0
+      },
+      {
+        "word": "끊기 ",
+        "success": true,
+        "startS": 68.07846,
+        "endS": 68.27793,
+        "palign": 0
+      },
+      {
+        "word": "싫어\n",
+        "success": true,
+        "startS": 68.37766,
+        "endS": 69.33511,
+        "palign": 0
+      },
+      {
+        "word": "내 ",
+        "success": true,
+        "startS": 69.49468,
+        "endS": 69.57447,
+        "palign": 0
+      },
+      {
+        "word": "맘속엔 ",
+        "success": true,
+        "startS": 69.73404,
+        "endS": 70.69149,
+        "palign": 0
+      },
+      {
+        "word": "두 ",
+        "success": true,
+        "startS": 70.85106,
+        "endS": 70.93085,
+        "palign": 0
+      },
+      {
+        "word": "목소리 ",
+        "success": true,
+        "startS": 71.09043,
+        "endS": 72.92553,
+        "palign": 0
+      },
+      {
+        "word": "더\n",
+        "success": true,
+        "startS": 73.00532,
+        "endS": 73.00532,
+        "palign": 0
+      },
+      {
+        "word": "몸은 ",
+        "success": true,
+        "startS": 73.16489,
+        "endS": 73.48404,
+        "palign": 0
+      },
+      {
+        "word": "외치고 ",
+        "success": true,
+        "startS": 73.64362,
+        "endS": 74.68085,
+        "palign": 0
+      },
+      {
+        "word": "마음은 ",
+        "success": true,
+        "startS": 74.80053,
+        "endS": 75.31915,
+        "palign": 0
+      },
+      {
+        "word": "비명\n",
+        "success": true,
+        "startS": 75.47872,
+        "endS": 76.43617,
+        "palign": 0
+      },
+      {
+        "word": "이 ",
+        "success": true,
+        "startS": 76.59574,
+        "endS": 76.67553,
+        "palign": 0
+      },
+      {
+        "word": "혼란 ",
+        "success": true,
+        "startS": 76.83511,
+        "endS": 77.15426,
+        "palign": 0
+      },
+      {
+        "word": "속에 ",
+        "success": true,
+        "startS": 77.31383,
+        "endS": 77.63298,
+        "palign": 0
+      },
+      {
+        "word": "갇힌 ",
+        "success": true,
+        "startS": 77.79255,
+        "endS": 78.51064,
+        "palign": 0
+      },
+      {
+        "word": "나의 ",
+        "success": true,
+        "startS": 78.67021,
+        "endS": 78.98936,
+        "palign": 0
+      },
+      {
+        "word": "심경\n\n",
+        "success": true,
+        "startS": 79.14894,
+        "endS": 80.53723,
+        "palign": 0
+      },
+      {
+        "word": "\n오늘도 ",
+        "success": true,
+        "startS": 80.56915,
+        "endS": 81.54255,
+        "palign": 0
+      },
+      {
+        "word": "난 ",
+        "success": true,
+        "startS": 81.70213,
+        "endS": 81.78191,
+        "palign": 0
+      },
+      {
+        "word": "다짐의 ",
+        "success": true,
+        "startS": 81.94149,
+        "endS": 82.42021,
+        "palign": 0
+      },
+      {
+        "word": "불씨를 ",
+        "success": true,
+        "startS": 82.57979,
+        "endS": 83.37766,
+        "palign": 0
+      },
+      {
+        "word": "켜\n",
+        "success": true,
+        "startS": 83.53723,
+        "endS": 84.25532,
+        "palign": 0
+      },
+      {
+        "word": "하지만 ",
+        "success": true,
+        "startS": 84.41489,
+        "endS": 85.37234,
+        "palign": 0
+      },
+      {
+        "word": "내 ",
+        "success": true,
+        "startS": 85.45213,
+        "endS": 85.45213,
+        "palign": 0
+      },
+      {
+        "word": "손엔 ",
+        "success": true,
+        "startS": 85.6117,
+        "endS": 85.93085,
+        "palign": 0
+      },
+      {
+        "word": "담배가 ",
+        "success": true,
+        "startS": 86.09043,
+        "endS": 86.64894,
+        "palign": 0
+      },
+      {
+        "word": "또 ",
+        "success": true,
+        "startS": 86.80851,
+        "endS": 87.5266,
+        "palign": 0
+      },
+      {
+        "word": "있어\n",
+        "success": true,
+        "startS": 87.64628,
+        "endS": 88.00532,
+        "palign": 0
+      },
+      {
+        "word": "내일은 ",
+        "success": true,
+        "startS": 88.16489,
+        "endS": 88.88298,
+        "palign": 0
+      },
+      {
+        "word": "다를까 ",
+        "success": true,
+        "startS": 89.04255,
+        "endS": 89.76064,
+        "palign": 0
+      },
+      {
+        "word": "속삭이며\n",
+        "success": true,
+        "startS": 89.92021,
+        "endS": 91.67553,
+        "palign": 0
+      },
+      {
+        "word": "이 ",
+        "success": true,
+        "startS": 91.83511,
+        "endS": 91.91489,
+        "palign": 0
+      },
+      {
+        "word": "노래 ",
+        "success": true,
+        "startS": 92.07447,
+        "endS": 92.55319,
+        "palign": 0
+      },
+      {
+        "word": "끝엔 ",
+        "success": true,
+        "startS": 92.71277,
+        "endS": 93.27128,
+        "palign": 0
+      },
+      {
+        "word": "자유를 ",
+        "success": true,
+        "startS": 93.43085,
+        "endS": 93.98936,
+        "palign": 0
+      },
+      {
+        "word": "꿈꾸며\n\n",
+        "success": true,
+        "startS": 94.14894,
+        "endS": 117.57012,
+        "palign": 0
+      },
+      {
+        "word": "\n오늘도 ",
+        "success": true,
+        "startS": 117.61364,
+        "endS": 118.40426,
+        "palign": 0
+      },
+      {
+        "word": "난 ",
+        "success": true,
+        "startS": 118.56383,
+        "endS": 118.64362,
+        "palign": 0
+      },
+      {
+        "word": "다짐의 ",
+        "success": true,
+        "startS": 118.80319,
+        "endS": 119.3617,
+        "palign": 0
+      },
+      {
+        "word": "불씨를 ",
+        "success": true,
+        "startS": 119.52128,
+        "endS": 120.23936,
+        "palign": 0
+      },
+      {
+        "word": "켜\n",
+        "success": true,
+        "startS": 120.39894,
+        "endS": 121.19681,
+        "palign": 0
+      },
+      {
+        "word": "하지만 ",
+        "success": true,
+        "startS": 121.35638,
+        "endS": 122.23404,
+        "palign": 0
+      },
+      {
+        "word": "내 ",
+        "success": true,
+        "startS": 122.31383,
+        "endS": 122.31383,
+        "palign": 0
+      },
+      {
+        "word": "손엔 ",
+        "success": true,
+        "startS": 122.4734,
+        "endS": 122.79255,
+        "palign": 0
+      },
+      {
+        "word": "담배가 ",
+        "success": true,
+        "startS": 122.95213,
+        "endS": 123.51064,
+        "palign": 0
+      },
+      {
+        "word": "또 ",
+        "success": true,
+        "startS": 123.67021,
+        "endS": 124.3883,
+        "palign": 0
+      },
+      {
+        "word": "있어\n",
+        "success": true,
+        "startS": 124.50798,
+        "endS": 124.86702,
+        "palign": 0
+      },
+      {
+        "word": "내일은 ",
+        "success": true,
+        "startS": 125.0266,
+        "endS": 125.82447,
+        "palign": 0
+      },
+      {
+        "word": "다를까 ",
+        "success": true,
+        "startS": 125.98404,
+        "endS": 126.62234,
+        "palign": 0
+      },
+      {
+        "word": "속삭이며\n",
+        "success": true,
+        "startS": 126.78191,
+        "endS": 128.61702,
+        "palign": 0
+      },
+      {
+        "word": "이 ",
+        "success": true,
+        "startS": 128.7766,
+        "endS": 128.85638,
+        "palign": 0
+      },
+      {
+        "word": "노래 ",
+        "success": true,
+        "startS": 129.01596,
+        "endS": 129.57447,
+        "palign": 0
+      },
+      {
+        "word": "끝엔 ",
+        "success": true,
+        "startS": 129.73404,
+        "endS": 130.29255,
+        "palign": 0
+      },
+      {
+        "word": "자유를 ",
+        "success": true,
+        "startS": 130.45213,
+        "endS": 130.93085,
+        "palign": 0
+      },
+      {
+        "word": "꿈꾸며\n\n",
+        "success": true,
+        "startS": 131.09043,
+        "endS": 131.64894,
+        "palign": 0
+      }
+    ]
+  }
+}

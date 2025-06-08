@@ -1,90 +1,181 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Platform } from 'react-native';
 import Video from 'react-native-video';
+import { parseLyricsTiming } from '../../src/parseLyricsTiming';
+import lyricsTiming from '../../src/assets/Document/lyricsTiming2.json';
 import SoundPlayer from 'react-native-sound-player';
-import lyricsData from '../assets/Document/lyricsTiming.json';
-
 const { width } = Dimensions.get('window');
 const videoWidth = width * 0.8;
 const videoHeight = videoWidth * 1.3;
 
-const videoUrls = [
-  'https://capstone-hejz-bucket.s3.ap-northeast-2.amazonaws.com/videos/videos/gJB_sBM_cAll_d08_mJB0_ch08.mp4?...',
-  'https://capstone-hejz-bucket.s3.ap-northeast-2.amazonaws.com/videos/videos/gWA_sBM_cAll_d25_mWA0_ch08.mp4?...',
-  'https://capstone-hejz-bucket.s3.ap-northeast-2.amazonaws.com/videos/videos/gWA_sBM_cAll_d26_mWA5_ch03.mp4?...',
-  'https://capstone-hejz-bucket.s3.ap-northeast-2.amazonaws.com/videos/videos/gJB_sBM_cAll_d08_mJB0_ch08.mp4?...'
-];
-
-const lyricSegments = lyricsData["song1"] || [];
-
 const VideoSelectionScreen = () => {
-  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
-  const [currentLyricIndex, setCurrentLyricIndex] = useState(0);
+    useEffect(() => {
+      const { start, end } = lyricsBlocks[currentIndex];
+
+      try {
+        SoundPlayer.stop(); // 기존 재생 멈추고
+        SoundPlayer.setVolume(1);
+        SoundPlayer.playSoundFile('nosmokingsong', 'mp3');
+
+        setTimeout(() => {
+          SoundPlayer.seek(start);
+        }, 300);
+
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        intervalRef.current = setInterval(async () => {
+          try {
+            const info = await SoundPlayer.getInfo();
+            if (info.currentTime >= end) {
+              SoundPlayer.seek(start);
+            }
+          } catch {}
+        }, 500);
+      } catch (e) {
+        console.error('Sound error:', e);
+      }
+
+      return () => {
+        if (intervalRef.current) clearInterval(intervalRef.current);
+      };
+    }, [currentIndex]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [isFinalized, setIsFinalized] = useState(false);
-  const [currentLyrics, setCurrentLyrics] = useState<string[]>([]);
+  const [videoOffsetIndex, setVideoOffsetIndex] = useState(0);
+  const [motionIdGroups, setMotionIdGroups] = useState<string[][]>([]);
+  const [videoUrls, setVideoUrls] = useState<string[][]>([]);
+  const [selections, setSelections] = useState<{ lyricsGroup: string; selectedMotionIds: string[] }[]>([]);
+  const [audioPosition, setAudioPosition] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const audioRef = useRef<Video>(null);
+
+  const lyricsBlocks = parseLyricsTiming(lyricsTiming.data.alignedWords);
+
+  const fetchMotionIds = async () => {
+    const all: string[][] = [];
+    for (let block of lyricsBlocks) {
+      const lyrics = block.lines.join('\n');
+      try {
+        const res = await fetch('http://52.78.174.239:8080/api/emotion/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lyrics }),
+        });
+        const data = await res.json();
+        const ids = Array.isArray(data) ? data.flatMap((d: any) => d.motionIds || []) : [];
+        all.push(ids);
+      } catch (e) {
+        console.error('motionId 요청 실패:', e);
+        all.push([]);
+      }
+    }
+    return all;
+  };
+
+  const fetchVideoUrls = async (motionIds: string[]) => {
+    const urls = await Promise.all(
+      motionIds.map(async (id) => {
+        try {
+          const res = await fetch(`http://52.78.174.239:8080/api/motion/${id}`, {
+            method: 'GET',
+          });
+
+          const text = await res.text();
+
+          // ✅ 응답이 바로 URL 형태라면
+          if (text.startsWith('http')) {
+            return text.trim();
+          }
+
+          // ✅ 아니면 JSON으로 파싱 시도
+          const data = JSON.parse(text);
+          return data.videoUrl || '';
+        } catch (e) {
+          console.log(`motionId ${id} 처리 실패:`, e);
+          return '';
+        }
+      })
+    );
+    console.log('videoUrls:', videoUrls);
+    return urls.filter(Boolean);
+  };
+
 
   useEffect(() => {
-    const { start, end, lines } = lyricSegments[currentLyricIndex % lyricSegments.length];
-    setCurrentLyrics(lines);
-    try {
-      SoundPlayer.playSoundFile('song1', 'mp3');
-      setTimeout(() => {
-        SoundPlayer.seek(start);
-      }, 300);
+    (async () => {
+      const motions = await fetchMotionIds();
+      setMotionIdGroups(motions);
+      const videos = await Promise.all(motions.map(fetchVideoUrls));
+      setVideoUrls(videos);
+    })();
+  }, []);
 
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      intervalRef.current = setInterval(async () => {
-        try {
-          const info = await SoundPlayer.getInfo();
-          if (info.currentTime >= end) {
-            SoundPlayer.seek(start);
-          }
-        } catch {}
-      }, 500);
-    } catch (e) {
-      console.error('Sound error:', e);
-    }
+  useEffect(() => {
+    const block = lyricsBlocks[currentIndex];
+    if (!block) return;
+
+    setAudioPosition(block.start);
+
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => {
+      audioRef.current?.seek(block.start);
+    }, (block.end - block.start) * 1000);
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [currentLyricIndex]);
+  }, [currentIndex]);
 
-  const handleVideoTap = () => {
-    setSelectedIndex(currentVideoIndex);
-  };
-
-  const handleFinalize = () => {
-    if (selectedIndex !== null) {
-      console.log('✅ 최종 선택된 영상 URL:', videoUrls[selectedIndex]);
-      setIsFinalized(false); // 다시 버튼 보이게
-      setCurrentLyricIndex((prev) => prev + 1);
-      setCurrentVideoIndex(0);
-      setSelectedIndex(null);
-    }
+  const handleVideoPress = () => {
+    setSelectedIndex((prev) => (prev === null ? videoOffsetIndex : null));
   };
 
   const handleRetry = () => {
-    const nextVideoIndex = (currentVideoIndex + 1) % videoUrls.length;
-    setCurrentVideoIndex(nextVideoIndex);
+    const currentVideos = videoUrls[currentIndex];
+    if (!currentVideos || currentVideos.length === 0) return;
+    const next = (videoOffsetIndex + 1) % currentVideos.length;
+    setVideoOffsetIndex(next);
     setSelectedIndex(null);
   };
 
+  const handleFinalize = () => {
+    if (selectedIndex === null) return;
+    const selectedMotionId = motionIdGroups[currentIndex]?.[selectedIndex];
+    const lyricsGroup = lyricsBlocks[currentIndex]?.lines.join('\n');
+
+    if (selectedMotionId && lyricsGroup) {
+      const newSelection = { lyricsGroup, selectedMotionIds: [selectedMotionId] };
+      setSelections((prev) => [...prev, newSelection]);
+      setCurrentIndex((prev) => prev + 1);
+      setSelectedIndex(null);
+      setVideoOffsetIndex(0);
+    }
+  };
+
+  useEffect(() => {
+    if (currentIndex >= lyricsBlocks.length && selections.length > 0) {
+      fetch('http://52.78.174.239:8080/api/emotion/selection/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(selections),
+      }).catch(e => console.error('선택 저장 실패:', e));
+    }
+  }, [currentIndex]);
+
+  const currentVideoUrl = videoUrls[currentIndex]?.[videoOffsetIndex] || '';
+  const selected = selectedIndex === videoOffsetIndex;
+
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={handleVideoTap} activeOpacity={0.9}>
+      <TouchableOpacity onPress={handleVideoPress} activeOpacity={0.9}>
         <Video
-          source={{ uri: videoUrls[currentVideoIndex] }}
+          source={{ uri: currentVideoUrl }}
           style={styles.video}
           resizeMode="cover"
           repeat
           paused={false}
           muted={false}
-          onError={(e) => console.log('Video Error:', e)}
         />
-        {selectedIndex === currentVideoIndex && (
+        {selected && (
           <View style={styles.overlay}>
             <Text style={styles.selectedText}>✔ 선택됨</Text>
           </View>
@@ -92,19 +183,16 @@ const VideoSelectionScreen = () => {
       </TouchableOpacity>
 
       <View style={styles.lyricsContainer}>
-        {currentLyrics.map((line, idx) => (
+        {lyricsBlocks[currentIndex]?.lines.map((line, idx) => (
           <Text key={idx} style={styles.lyricLine}>{line}</Text>
         ))}
       </View>
 
       <View style={styles.buttonRow}>
         <TouchableOpacity
-          style={[
-            styles.selectButton,
-            selectedIndex === currentVideoIndex ? styles.selectButtonActive : styles.selectButtonDisabled,
-          ]}
+          style={[styles.selectButton, selected ? styles.selectButtonActive : styles.selectButtonDisabled]}
           onPress={handleFinalize}
-          disabled={selectedIndex !== currentVideoIndex}
+          disabled={!selected}
         >
           <Text style={styles.selectButtonText}>선택하기</Text>
         </TouchableOpacity>
@@ -113,6 +201,8 @@ const VideoSelectionScreen = () => {
           <Text style={styles.retryText}>다시하기</Text>
         </TouchableOpacity>
       </View>
+
+
     </View>
   );
 };
@@ -120,70 +210,22 @@ const VideoSelectionScreen = () => {
 export default VideoSelectionScreen;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingBottom: 40,
-  },
-  video: {
-    width: videoWidth,
-    height: videoHeight,
-    backgroundColor: '#000',
-    borderRadius: 12,
-  },
+  container: { flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' },
+  video: { width: videoWidth, height: videoHeight, backgroundColor: '#000', borderRadius: 12 },
   overlay: {
-    position: 'absolute',
-    top: 20,
-    left: 20,
-    backgroundColor: 'rgba(255,255,255,0.8)',
-    padding: 8,
-    borderRadius: 8,
+    position: 'absolute', top: 20, left: 20, backgroundColor: 'rgba(255,255,255,0.8)',
+    padding: 8, borderRadius: 8,
   },
-  selectedText: {
-    color: '#000',
-    fontWeight: 'bold',
-  },
-  buttonRow: {
-    marginTop: 20,
-    flexDirection: 'row',
-    gap: 20,
-  },
-  selectButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  selectButtonActive: {
-    backgroundColor: '#4CAF50',
-  },
-  selectButtonDisabled: {
-    backgroundColor: '#999',
-  },
-  selectButtonText: {
-    color: '#fff',
-    fontSize: 16,
-  },
+  selectedText: { color: '#000', fontWeight: 'bold' },
+  lyricsContainer: { marginTop: 20, alignItems: 'center' },
+  lyricLine: { fontSize: 16, color: '#fff', textAlign: 'center', marginVertical: 2 },
+  buttonRow: { marginTop: 20, flexDirection: 'row', gap: 20 },
+  selectButton: { paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 },
+  selectButtonActive: { backgroundColor: '#4CAF50' },
+  selectButtonDisabled: { backgroundColor: '#999' },
+  selectButtonText: { color: '#fff', fontSize: 16 },
   retryButton: {
-    backgroundColor: '#fff',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 12,
+    backgroundColor: '#fff', paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12,
   },
-  retryText: {
-    fontSize: 16,
-    color: '#333',
-    fontWeight: 'bold',
-  },
-  lyricsContainer: {
-    marginTop: 20,
-    alignItems: 'center',
-  },
-  lyricLine: {
-    fontSize: 16,
-    color: '#fff',
-    textAlign: 'center',
-    marginVertical: 2,
-  },
+  retryText: { fontSize: 16, color: '#333', fontWeight: 'bold' },
 });
