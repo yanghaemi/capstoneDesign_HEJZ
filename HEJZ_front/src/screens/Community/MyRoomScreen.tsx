@@ -27,25 +27,25 @@ const MyRoomScreen = () => {
       </SafeAreaView>
 
       <ImageBackground
-        source={require('../../assets/BlueRoom.png')}
+        source={require('../../assets/background/BlueRoom.png')}
         style={styles.background}
         resizeMode="cover"
       >
         <TouchableOpacity style={styles.radioPosition} onPress={() => navigation.navigate('MySongs')}>
           <Image
-            source={require('../../assets/Radio.png')}
+            source={require('../../assets/icon/Radio.png')}
             style={styles.radioImage}
           />
         </TouchableOpacity>
         <TouchableOpacity style={styles.cameraPosition} onPress={() => navigation.navigate('MyVideos')}>
           <Image
-            source={require('../../assets/camera.png')}
+            source={require('../../assets/icon/camera.png')}
             style={styles.cameraImage}
           />
         </TouchableOpacity>
         <TouchableOpacity style={styles.albumPosition} onPress={() => navigation.navigate('Feeds')}>
           <Image
-            source={require('../../assets/phone.png')}
+            source={require('../../assets/icon/phone.png')}
             style={styles.albumImage}
           />
         </TouchableOpacity>
