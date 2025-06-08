@@ -1,20 +1,15 @@
 package com.HEJZ.HEJZ_back.domain.music.service;
 
 import com.HEJZ.HEJZ_back.domain.music.dto.SongSaveLyricsDTO;
-import com.HEJZ.HEJZ_back.domain.music.entity.Song;
-import com.HEJZ.HEJZ_back.domain.music.repository.SongRepository;
-import com.HEJZ.HEJZ_back.global.exception.ErrorResponse;
+import com.HEJZ.HEJZ_back.domain.music.entity.SavedSong;
+import com.HEJZ.HEJZ_back.domain.music.repository.SavedSongRepository;
 import com.HEJZ.HEJZ_back.global.response.ApiResponse;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.rmi.server.ExportException;
 import java.util.List;
 import java.util.Map;
 
@@ -23,7 +18,7 @@ import java.util.Map;
 public class SongService {
     // suno api를 쓰지 않는 u-star 자체 api service
 
-    private final SongRepository songRepository;
+    private final SavedSongRepository SavedSongRepository;
     public ResponseEntity<ApiResponse<Object>> getLyrics(String taskid){
         // 노래 id를 통해 DB에서 해당 곡 가사 가져오는 기능
         // method: get
@@ -51,18 +46,17 @@ public class SongService {
 
     }
 
-    private void saveSong(SongSaveLyricsDTO dto){
-        Song song = Song.builder()
-                .taskId(dto.getTaskId())
-                .title(dto.getTaskId())
-                .lyrics(dto.getLyrics())
-                .songUrl(dto.getSongUrl())
-                .songPath(dto.getSongPath())
-                .prompt(dto.getPrompt())
-                .build();
-
-        songRepository.save(song);
-    }
+//    private void saveSong(SongSaveLyricsDTO dto){
+//        SavedSong song = SavedSong.builder()
+//                .taskId(dto.getTaskId())
+//                .title(dto.getTaskId())
+//                .songUrl(dto.getSongUrl())
+//                .songPath(dto.getSongPath())
+//                .prompt(dto.getPrompt())
+//                .build();
+//
+//        SavedSongRepository.save(song);
+//    }
     public String saveLyrics(SongSaveLyricsDTO request){
         // 설명 : suno에서 가져온 가사 (timestamp 있는 버전)를 프론트에 불러오기 쉽게 한 줄 씩 포맷하고 db에 저장하는 api
 
@@ -77,7 +71,7 @@ public class SongService {
 
 
 
-            saveSong(request);
+//            saveSong(request);
 
         }catch (Exception e){
             throw new RuntimeException("가사 저장 실패", e);

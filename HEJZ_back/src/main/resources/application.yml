@@ -3,6 +3,7 @@ spring:
     active: dev #test할때는 test로 바꾸면 에러 안남 그 외에는 dev & 배포할때는 prod
 
 
+
 #
 #  datasource:
 #    url: ${SPRING_DATASOURCE_URL}

@@ -9,6 +9,10 @@ spring:
     password: ${MYSQL_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+  web:
+    resources:
+      static-locations: file:./music/
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -23,9 +27,6 @@ spring:
     user:
       name: none
       password: none
-
-song:
-  apikey: ${API_SUNO_KEY}
 
   openai:
     api:
