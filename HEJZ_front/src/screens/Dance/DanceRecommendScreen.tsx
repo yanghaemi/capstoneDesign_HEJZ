@@ -11,15 +11,18 @@ import {
 import Video from 'react-native-video';
 import Slider from '@react-native-community/slider';
 import SoundPlayer from 'react-native-sound-player';
+import { useNavigation } from '@react-navigation/native';
 import { parseLyricsTiming } from '../../../src/parseLyricsTiming';
-import lyricsTiming from '../../../src/assets/Document/lyricsTiming2.json';
+import lyricsTiming from '../../../src/assets/Document/lyricsTiming3.json';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
 const videoWidth = width * 0.8;
 const videoHeight = videoWidth * 1.3;
 
 const VideoSelectionScreen = () => {
-  const lyricsBlocks = useMemo(() => parseLyricsTiming(lyricsTiming.data.alignedWords), []);
+  const navigation = useNavigation();
+  const lyricsBlocks = useMemo(() => parseLyricsTiming(lyricsTiming), []);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [videoOffsetIndex, setVideoOffsetIndex] = useState(0);
@@ -29,6 +32,7 @@ const VideoSelectionScreen = () => {
   const [duration, setDuration] = useState(0);
   const [position, setPosition] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFinished, setIsFinished] = useState(false);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
   const currentVideoOptions = videoUrls[currentIndex] || [];
@@ -37,7 +41,7 @@ const VideoSelectionScreen = () => {
 
   useEffect(() => {
     if (!isLoading) {
-      SoundPlayer.loadSoundFile('nosmokingsong', 'mp3');
+      SoundPlayer.loadSoundFile('fire', 'mp3');
       SoundPlayer.play();
 
       pollingRef.current = setInterval(async () => {
@@ -128,8 +132,16 @@ const VideoSelectionScreen = () => {
 
     if (selectedMotionId && lyricsGroup) {
       const newSelection = { lyricsGroup, selectedMotionIds: [selectedMotionId] };
-      setSelections((prev) => [...prev, newSelection]);
-      setCurrentIndex((prev) => prev + 1);
+      const newSelections = [...selections, newSelection];
+      setSelections(newSelections);
+
+      if (currentIndex + 1 >= lyricsBlocks.length) {
+        setIsFinished(true);
+        setCurrentIndex(currentIndex + 1);
+      } else {
+        setCurrentIndex(currentIndex + 1);
+      }
+
       setSelectedIndex(null);
       setVideoOffsetIndex(0);
     }
@@ -137,17 +149,32 @@ const VideoSelectionScreen = () => {
 
   useEffect(() => {
     if (currentIndex >= lyricsBlocks.length && selections.length > 0) {
-      fetch('http://52.78.174.239:8080/api/emotion/selection/bulk', {
+      // motionId들만 뽑아내기
+      const selectedMotionIds = selections.map(sel => sel.selectedMotionIds[0]);
+
+      // 1. 로컬 저장
+      AsyncStorage.setItem('selectedMotionIds', JSON.stringify(selectedMotionIds))
+        .then(() => console.log('✅ motionId 배열 저장 완료'))
+        .catch((err) => console.error('❌ 저장 실패:', err));
+
+      // 2. 서버에도 저장 (필요 시)
+      fetch('http://52.78.174.239:8080/api/emotion/selections/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(selections),
-      });
+        body: JSON.stringify(selectedMotionIds),
+      })
+        .then(() => console.log('✅ 서버 저장 완료'))
+        .catch((err) => console.error('❌ 서버 저장 실패:', err));
     }
   }, [currentIndex]);
 
   const handleSeek = (value: number) => {
     SoundPlayer.seek(value);
     setPosition(value);
+  };
+
+  const goToRecordScreen = () => {
+    navigation.navigate('RecordScreen');
   };
 
   if (isLoading) {
@@ -169,59 +196,72 @@ const VideoSelectionScreen = () => {
       resizeMode="cover"
     >
       <View style={styles.innerContainer}>
-        <TouchableOpacity onPress={handleVideoPress} activeOpacity={0.9}>
-          {currentVideoUrl ? (
-            <Video
-              source={{ uri: currentVideoUrl }}
-              style={styles.video}
-              resizeMode="cover"
-              repeat
-              paused={false}
-              muted={false}
-            />
-          ) : (
-            <View style={[styles.video, { justifyContent: 'center', alignItems: 'center' }]}>
-              <Text style={{ color: '#fff' }}>⚠️ 영상 없음</Text>
+        {isFinished ? (
+          <>
+            <Text style={styles.finishedText}>🎉 모든 선택이 완료됐어요!</Text>
+            <TouchableOpacity onPress={goToRecordScreen} style={{ marginTop: 20 }}>
+              <Image
+                source={require('../../../src/assets/icon/Record.png')}
+                style={styles.iconButton}
+              />
+            </TouchableOpacity>
+          </>
+        ) : (
+          <>
+            <TouchableOpacity onPress={handleVideoPress} activeOpacity={0.9}>
+              {currentVideoUrl ? (
+                <Video
+                  source={{ uri: currentVideoUrl }}
+                  style={styles.video}
+                  resizeMode="cover"
+                  repeat
+                  paused={false}
+                  muted={false}
+                />
+              ) : (
+                <View style={[styles.video, { justifyContent: 'center', alignItems: 'center' }]}>\n                  <Text style={{ color: '#fff' }}>⚠️ 영상 없음</Text>
+                </View>
+              )}
+              {selected && (
+                <View style={styles.overlay}>
+                  <Text style={styles.selectedText}>✔ 선택됨</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+
+            <View style={styles.lyricsContainer}>
+              {lyricsBlocks[currentIndex]?.lines.map((line, idx) => (
+                <Text key={idx} style={styles.lyricLine}>{line}</Text>
+              ))}
             </View>
-          )}
-          {selected && (
-            <View style={styles.overlay}>
-              <Text style={styles.selectedText}>✔ 선택됨</Text>
+
+            <Slider
+              style={{ width: '90%', marginTop: 10 }}
+              minimumValue={0}
+              maximumValue={duration}
+              value={position}
+              onSlidingComplete={handleSeek}
+              minimumTrackTintColor="#FFFFFF"
+              maximumTrackTintColor="#888"
+            />
+
+            <View style={styles.buttonRow}>
+              <TouchableOpacity onPress={handleFinalize} disabled={!selected}>
+                <Image
+                  source={require('../../../src/assets/icon/suntek.png')}
+                  style={[styles.iconButton, !selected && { opacity: 0.5 }]}
+                />
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={handleRetry}>
+                <Image
+                  source={require('../../../src/assets/icon/dasi.png')}
+                  style={styles.iconButton}
+                />
+              </TouchableOpacity>
             </View>
-          )}
-        </TouchableOpacity>
-
-        <View style={styles.lyricsContainer}>
-          {lyricsBlocks[currentIndex]?.lines.map((line, idx) => (
-            <Text key={idx} style={styles.lyricLine}>{line}</Text>
-          ))}
-        </View>
-
-        <Slider
-          style={{ width: '90%', marginTop: 10 }}
-          minimumValue={0}
-          maximumValue={duration}
-          value={position}
-          onSlidingComplete={handleSeek}
-          minimumTrackTintColor="#FFFFFF"
-          maximumTrackTintColor="#888"
-        />
-
-        <View style={styles.buttonRow}>
-          <TouchableOpacity onPress={handleFinalize} disabled={!selected}>
-            <Image
-              source={require('../../../src/assets/icon/suntek.png')}
-              style={[styles.iconButton, !selected && { opacity: 0.5 }]}
-            />
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={handleRetry}>
-            <Image
-              source={require('../../../src/assets/icon/dasi.png')}
-              style={styles.iconButton}
-            />
-          </TouchableOpacity>
-        </View>
+          </>
+        )}
       </View>
     </ImageBackground>
   );
@@ -286,5 +326,11 @@ const styles = StyleSheet.create({
   loadingImage: {
     width: '100%',
     height: '100%',
+  },
+  finishedText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginTop: 24,
   },
 });
