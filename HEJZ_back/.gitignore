@@ -40,3 +40,4 @@ HEJZ_back/src/main/resources/*
 ./src/main/resources/application.properties
 
 .env
+**/application-prod.yml
