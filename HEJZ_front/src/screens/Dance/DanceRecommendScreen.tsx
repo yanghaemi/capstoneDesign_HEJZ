@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Image,
   ImageBackground,
+  FlatList,
 } from 'react-native';
 import Video from 'react-native-video';
 import Slider from '@react-native-community/slider';
@@ -14,7 +15,6 @@ import SoundPlayer from 'react-native-sound-player';
 import { useNavigation } from '@react-navigation/native';
 import { parseLyricsTiming } from '../../../src/parseLyricsTiming';
 import lyricsTiming from '../../../src/assets/Document/lyricsTiming3.json';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
 const videoWidth = width * 0.8;
@@ -149,22 +149,11 @@ const VideoSelectionScreen = () => {
 
   useEffect(() => {
     if (currentIndex >= lyricsBlocks.length && selections.length > 0) {
-      // motionId들만 뽑아내기
-      const selectedMotionIds = selections.map(sel => sel.selectedMotionIds[0]);
-
-      // 1. 로컬 저장
-      AsyncStorage.setItem('selectedMotionIds', JSON.stringify(selectedMotionIds))
-        .then(() => console.log('✅ motionId 배열 저장 완료'))
-        .catch((err) => console.error('❌ 저장 실패:', err));
-
-      // 2. 서버에도 저장 (필요 시)
-      fetch('http://52.78.174.239:8080/api/emotion/selections/save', {
+      fetch('http://52.78.174.239:8080/api/emotion/selection/bulk', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(selectedMotionIds),
-      })
-        .then(() => console.log('✅ 서버 저장 완료'))
-        .catch((err) => console.error('❌ 서버 저장 실패:', err));
+        body: JSON.stringify(selections),
+      });
     }
   }, [currentIndex]);
 
@@ -174,6 +163,7 @@ const VideoSelectionScreen = () => {
   };
 
   const goToRecordScreen = () => {
+    SoundPlayer.stop();
     navigation.navigate('RecordScreen');
   };
 
