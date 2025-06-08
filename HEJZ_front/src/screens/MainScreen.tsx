@@ -69,9 +69,7 @@ const MainScreen = ({ navigation }: any) => {
               >
                 <Text style={styles.recordText}>📹 테스트 녹화</Text>
               </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate('TestVideo')}>
-              <Text style={styles.cancelText}>테스트 영상</Text>
-      </TouchableOpacity>
+
     </ImageBackground>
   );
 };

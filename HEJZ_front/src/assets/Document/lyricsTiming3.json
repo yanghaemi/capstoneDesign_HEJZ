@@ -1,0 +1,1301 @@
+{
+  "data": {
+    "alignedWords": [
+      {
+        "word": "\n불타는 ",
+        "success": true,
+        "startS": 0.95745,
+        "endS": 1.2766,
+        "palign": 0
+      },
+      {
+        "word": "심장 ",
+        "success": true,
+        "startS": 1.39628,
+        "endS": 1.51596,
+        "palign": 0
+      },
+      {
+        "word": "멈출 ",
+        "success": true,
+        "startS": 1.55585,
+        "endS": 1.63564,
+        "palign": 0
+      },
+      {
+        "word": "수 ",
+        "success": true,
+        "startS": 1.67553,
+        "endS": 1.67553,
+        "palign": 0
+      },
+      {
+        "word": "없어\n",
+        "success": true,
+        "startS": 1.71543,
+        "endS": 1.75532,
+        "palign": 0
+      },
+      {
+        "word": "불타는 ",
+        "success": true,
+        "startS": 1.8617,
+        "endS": 2.15426,
+        "palign": 0
+      },
+      {
+        "word": "심장 ",
+        "success": true,
+        "startS": 2.31383,
+        "endS": 2.55319,
+        "palign": 0
+      },
+      {
+        "word": "멈출 ",
+        "success": true,
+        "startS": 2.71277,
+        "endS": 3.43085,
+        "palign": 0
+      },
+      {
+        "word": "수 ",
+        "success": true,
+        "startS": 3.59043,
+        "endS": 4.14894,
+        "palign": 0
+      },
+      {
+        "word": "없어\n",
+        "success": true,
+        "startS": 4.30851,
+        "endS": 4.86702,
+        "palign": 0
+      },
+      {
+        "word": "억누른 ",
+        "success": true,
+        "startS": 5.0266,
+        "endS": 5.58511,
+        "palign": 0
+      },
+      {
+        "word": "분노 ",
+        "success": true,
+        "startS": 5.74468,
+        "endS": 6.38298,
+        "palign": 0
+      },
+      {
+        "word": "이제는 ",
+        "success": true,
+        "startS": 6.54255,
+        "endS": 7.5,
+        "palign": 0
+      },
+      {
+        "word": "터져\n",
+        "success": true,
+        "startS": 7.65957,
+        "endS": 8.69681,
+        "palign": 0
+      },
+      {
+        "word": "세상이 ",
+        "success": true,
+        "startS": 8.85638,
+        "endS": 9.41489,
+        "palign": 0
+      },
+      {
+        "word": "날 ",
+        "success": true,
+        "startS": 9.57447,
+        "endS": 9.89362,
+        "palign": 0
+      },
+      {
+        "word": "삼키려 ",
+        "success": true,
+        "startS": 10.05319,
+        "endS": 11.09043,
+        "palign": 0
+      },
+      {
+        "word": "해도\n",
+        "success": true,
+        "startS": 11.25,
+        "endS": 11.80851,
+        "palign": 0
+      },
+      {
+        "word": "난 ",
+        "success": true,
+        "startS": 11.96809,
+        "endS": 12.04787,
+        "palign": 0
+      },
+      {
+        "word": "끝까지 ",
+        "success": true,
+        "startS": 12.20745,
+        "endS": 13.00532,
+        "palign": 0
+      },
+      {
+        "word": "싸울 ",
+        "success": true,
+        "startS": 13.16489,
+        "endS": 13.48404,
+        "palign": 0
+      },
+      {
+        "word": "준비 ",
+        "success": true,
+        "startS": 13.64362,
+        "endS": 13.96277,
+        "palign": 0
+      },
+      {
+        "word": "됐어\n\n",
+        "success": true,
+        "startS": 14.12234,
+        "endS": 15.20309,
+        "palign": 0
+      },
+      {
+        "word": "\n분노 ",
+        "success": true,
+        "startS": 15.24662,
+        "endS": 16.11702,
+        "palign": 0
+      },
+      {
+        "word": "분노 ",
+        "success": true,
+        "startS": 16.2766,
+        "endS": 17.39362,
+        "palign": 0
+      },
+      {
+        "word": "나의 ",
+        "success": true,
+        "startS": 17.55319,
+        "endS": 17.87234,
+        "palign": 0
+      },
+      {
+        "word": "피를 ",
+        "success": true,
+        "startS": 18.03191,
+        "endS": 18.59043,
+        "palign": 0
+      },
+      {
+        "word": "끓여\n",
+        "success": true,
+        "startS": 18.75,
+        "endS": 19.06915,
+        "palign": 0
+      },
+      {
+        "word": "완전 ",
+        "success": true,
+        "startS": 19.22872,
+        "endS": 19.94681,
+        "palign": 0
+      },
+      {
+        "word": "최강 ",
+        "success": true,
+        "startS": 20.10638,
+        "endS": 20.50532,
+        "palign": 0
+      },
+      {
+        "word": "폭풍처럼 ",
+        "success": true,
+        "startS": 20.66489,
+        "endS": 21.70213,
+        "palign": 0
+      },
+      {
+        "word": "몰아쳐\n",
+        "success": true,
+        "startS": 21.8617,
+        "endS": 22.89894,
+        "palign": 0
+      },
+      {
+        "word": "분노 ",
+        "success": true,
+        "startS": 23.05851,
+        "endS": 23.85638,
+        "palign": 0
+      },
+      {
+        "word": "분노 ",
+        "success": true,
+        "startS": 24.01596,
+        "endS": 25.05319,
+        "palign": 0
+      },
+      {
+        "word": "내 ",
+        "success": true,
+        "startS": 25.21277,
+        "endS": 25.29255,
+        "palign": 0
+      },
+      {
+        "word": "안에서 ",
+        "success": true,
+        "startS": 25.45213,
+        "endS": 26.25,
+        "palign": 0
+      },
+      {
+        "word": "울어\n",
+        "success": true,
+        "startS": 26.40957,
+        "endS": 26.64894,
+        "palign": 0
+      },
+      {
+        "word": "멈출 ",
+        "success": true,
+        "startS": 26.80851,
+        "endS": 27.20745,
+        "palign": 0
+      },
+      {
+        "word": "수 ",
+        "success": true,
+        "startS": 27.36702,
+        "endS": 27.44681,
+        "palign": 0
+      },
+      {
+        "word": "없는 ",
+        "success": true,
+        "startS": 27.60638,
+        "endS": 28.16489,
+        "palign": 0
+      },
+      {
+        "word": "불꽃처럼 ",
+        "success": true,
+        "startS": 28.32447,
+        "endS": 29.3617,
+        "palign": 0
+      },
+      {
+        "word": "타올라\n\n",
+        "success": true,
+        "startS": 29.52128,
+        "endS": 30.98404,
+        "palign": 0
+      },
+      {
+        "word": "\n거친 ",
+        "success": true,
+        "startS": 31.01064,
+        "endS": 47.15426,
+        "palign": 0
+      },
+      {
+        "word": "숨결 ",
+        "success": true,
+        "startS": 47.23404,
+        "endS": 48.03191,
+        "palign": 0
+      },
+      {
+        "word": "내뱉는 ",
+        "success": true,
+        "startS": 48.19149,
+        "endS": 48.82979,
+        "palign": 0
+      },
+      {
+        "word": "한마디\n",
+        "success": true,
+        "startS": 48.98936,
+        "endS": 49.94681,
+        "palign": 0
+      },
+      {
+        "word": "세상은 ",
+        "success": true,
+        "startS": 50.10638,
+        "endS": 50.90426,
+        "palign": 0
+      },
+      {
+        "word": "내 ",
+        "success": true,
+        "startS": 51.06383,
+        "endS": 51.14362,
+        "palign": 0
+      },
+      {
+        "word": "목소릴 ",
+        "success": true,
+        "startS": 51.30319,
+        "endS": 51.94149,
+        "palign": 0
+      },
+      {
+        "word": "들을 ",
+        "success": true,
+        "startS": 52.10106,
+        "endS": 52.42021,
+        "palign": 0
+      },
+      {
+        "word": "거야\n",
+        "success": true,
+        "startS": 52.57979,
+        "endS": 53.7766,
+        "palign": 0
+      },
+      {
+        "word": "거짓의 ",
+        "success": true,
+        "startS": 53.93617,
+        "endS": 54.81383,
+        "palign": 0
+      },
+      {
+        "word": "벽 ",
+        "success": true,
+        "startS": 54.9734,
+        "endS": 55.69149,
+        "palign": 0
+      },
+      {
+        "word": "무너뜨릴 ",
+        "success": true,
+        "startS": 55.85106,
+        "endS": 56.96809,
+        "palign": 0
+      },
+      {
+        "word": "순간\n",
+        "success": true,
+        "startS": 57.12766,
+        "endS": 57.60638,
+        "palign": 0
+      },
+      {
+        "word": "날 ",
+        "success": true,
+        "startS": 57.76596,
+        "endS": 57.92553,
+        "palign": 0
+      },
+      {
+        "word": "막을 ",
+        "success": true,
+        "startS": 58.08511,
+        "endS": 58.40426,
+        "palign": 0
+      },
+      {
+        "word": "자 ",
+        "success": true,
+        "startS": 58.56383,
+        "endS": 59.04255,
+        "palign": 0
+      },
+      {
+        "word": "아무도 ",
+        "success": true,
+        "startS": 59.20213,
+        "endS": 60.07979,
+        "palign": 0
+      },
+      {
+        "word": "없어\n\n",
+        "success": true,
+        "startS": 60.19947,
+        "endS": 61.32012,
+        "palign": 0
+      },
+      {
+        "word": "\n분노 ",
+        "success": true,
+        "startS": 61.36364,
+        "endS": 62.23404,
+        "palign": 0
+      },
+      {
+        "word": "분노 ",
+        "success": true,
+        "startS": 62.39362,
+        "endS": 63.43085,
+        "palign": 0
+      },
+      {
+        "word": "나의 ",
+        "success": true,
+        "startS": 63.59043,
+        "endS": 63.90957,
+        "palign": 0
+      },
+      {
+        "word": "피를 ",
+        "success": true,
+        "startS": 64.06915,
+        "endS": 64.54787,
+        "palign": 0
+      },
+      {
+        "word": "끓여\n",
+        "success": true,
+        "startS": 64.62766,
+        "endS": 64.86702,
+        "palign": 0
+      },
+      {
+        "word": "분노 ",
+        "success": true,
+        "startS": 65.0266,
+        "endS": 65.10638,
+        "palign": 0
+      },
+      {
+        "word": "분노 ",
+        "success": true,
+        "startS": 65.26596,
+        "endS": 65.90426,
+        "palign": 0
+      },
+      {
+        "word": "나의 ",
+        "success": true,
+        "startS": 65.94415,
+        "endS": 65.98404,
+        "palign": 0
+      },
+      {
+        "word": "피를 ",
+        "success": true,
+        "startS": 66.10372,
+        "endS": 66.30319,
+        "palign": 0
+      },
+      {
+        "word": "끓여\n",
+        "success": true,
+        "startS": 66.38298,
+        "endS": 66.46277,
+        "palign": 0
+      },
+      {
+        "word": "완전 ",
+        "success": true,
+        "startS": 66.47872,
+        "endS": 66.51064,
+        "palign": 0
+      },
+      {
+        "word": "최강 ",
+        "success": true,
+        "startS": 66.5266,
+        "endS": 66.54255,
+        "palign": 0
+      },
+      {
+        "word": "폭풍처럼 ",
+        "success": true,
+        "startS": 66.70213,
+        "endS": 67.73936,
+        "palign": 0
+      },
+      {
+        "word": "몰아쳐\n",
+        "success": true,
+        "startS": 67.89894,
+        "endS": 68.93617,
+        "palign": 0
+      },
+      {
+        "word": "분노 ",
+        "success": true,
+        "startS": 69.09574,
+        "endS": 69.89362,
+        "palign": 0
+      },
+      {
+        "word": "분노 ",
+        "success": true,
+        "startS": 70.05319,
+        "endS": 71.09043,
+        "palign": 0
+      },
+      {
+        "word": "내 ",
+        "success": true,
+        "startS": 71.25,
+        "endS": 71.32979,
+        "palign": 0
+      },
+      {
+        "word": "안에서 ",
+        "success": true,
+        "startS": 71.48936,
+        "endS": 72.44681,
+        "palign": 0
+      },
+      {
+        "word": "울어\n",
+        "success": true,
+        "startS": 72.60638,
+        "endS": 72.68617,
+        "palign": 0
+      },
+      {
+        "word": "멈출 ",
+        "success": true,
+        "startS": 72.84574,
+        "endS": 73.24468,
+        "palign": 0
+      },
+      {
+        "word": "수 ",
+        "success": true,
+        "startS": 73.40426,
+        "endS": 73.48404,
+        "palign": 0
+      },
+      {
+        "word": "없는 ",
+        "success": true,
+        "startS": 73.64362,
+        "endS": 74.20213,
+        "palign": 0
+      },
+      {
+        "word": "불꽃처럼 ",
+        "success": true,
+        "startS": 74.3617,
+        "endS": 75.39894,
+        "palign": 0
+      },
+      {
+        "word": "타올라\n",
+        "success": true,
+        "startS": 75.55851,
+        "endS": 76.2766,
+        "palign": 0
+      },
+      {
+        "word": "내 ",
+        "success": true,
+        "startS": 76.43617,
+        "endS": 76.43617,
+        "palign": 0
+      },
+      {
+        "word": "분노에 ",
+        "success": true,
+        "startS": 76.51596,
+        "endS": 77.07447,
+        "palign": 0
+      },
+      {
+        "word": "타올라 ",
+        "success": true,
+        "startS": 77.15426,
+        "endS": 77.87234,
+        "palign": 0
+      },
+      {
+        "word": "사라질 ",
+        "success": true,
+        "startS": 77.91223,
+        "endS": 78.03191,
+        "palign": 0
+      },
+      {
+        "word": "거야\n\n",
+        "success": true,
+        "startS": 78.19149,
+        "endS": 78.63395,
+        "palign": 0
+      },
+      {
+        "word": "\n분노 ",
+        "success": true,
+        "startS": 78.67747,
+        "endS": 79.78723,
+        "palign": 0
+      },
+      {
+        "word": "분노 ",
+        "success": true,
+        "startS": 79.94681,
+        "endS": 80.26596,
+        "palign": 0
+      },
+      {
+        "word": "나의 ",
+        "success": true,
+        "startS": 80.42553,
+        "endS": 80.66489,
+        "palign": 0
+      },
+      {
+        "word": "피를 ",
+        "success": true,
+        "startS": 80.74468,
+        "endS": 80.98404,
+        "palign": 0
+      },
+      {
+        "word": "끓여\n",
+        "success": true,
+        "startS": 81.14362,
+        "endS": 81.8617,
+        "palign": 0
+      },
+      {
+        "word": "완전 ",
+        "success": true,
+        "startS": 82.02128,
+        "endS": 82.34043,
+        "palign": 0
+      },
+      {
+        "word": "최강 ",
+        "success": true,
+        "startS": 82.5,
+        "endS": 82.89894,
+        "palign": 0
+      },
+      {
+        "word": "폭풍처럼 ",
+        "success": true,
+        "startS": 83.05851,
+        "endS": 84.09574,
+        "palign": 0
+      },
+      {
+        "word": "몰아쳐\n",
+        "success": true,
+        "startS": 84.25532,
+        "endS": 85.69149,
+        "palign": 0
+      },
+      {
+        "word": "분노 ",
+        "success": true,
+        "startS": 85.85106,
+        "endS": 86.25,
+        "palign": 0
+      },
+      {
+        "word": "분노 ",
+        "success": true,
+        "startS": 86.40957,
+        "endS": 87.44681,
+        "palign": 0
+      },
+      {
+        "word": "내 ",
+        "success": true,
+        "startS": 87.60638,
+        "endS": 87.68617,
+        "palign": 0
+      },
+      {
+        "word": "안에서 ",
+        "success": true,
+        "startS": 87.84574,
+        "endS": 88.40426,
+        "palign": 0
+      },
+      {
+        "word": "울어\n",
+        "success": true,
+        "startS": 88.56383,
+        "endS": 89.28191,
+        "palign": 0
+      },
+      {
+        "word": "멈출 ",
+        "success": true,
+        "startS": 89.44149,
+        "endS": 89.84043,
+        "palign": 0
+      },
+      {
+        "word": "수 ",
+        "success": true,
+        "startS": 90.0,
+        "endS": 90.23936,
+        "palign": 0
+      },
+      {
+        "word": "없는 ",
+        "success": true,
+        "startS": 90.39894,
+        "endS": 90.79787,
+        "palign": 0
+      },
+      {
+        "word": "불꽃처럼 ",
+        "success": true,
+        "startS": 90.95745,
+        "endS": 91.99468,
+        "palign": 0
+      },
+      {
+        "word": "타올라\n",
+        "success": true,
+        "startS": 92.15426,
+        "endS": 93.03191,
+        "palign": 0
+      },
+      {
+        "word": "날 ",
+        "success": true,
+        "startS": 93.09176,
+        "endS": 93.1516,
+        "palign": 0
+      },
+      {
+        "word": "막을 ",
+        "success": true,
+        "startS": 93.21144,
+        "endS": 93.27128,
+        "palign": 0
+      },
+      {
+        "word": "자 ",
+        "success": true,
+        "startS": 93.29787,
+        "endS": 93.32447,
+        "palign": 0
+      },
+      {
+        "word": "아무도 ",
+        "success": true,
+        "startS": 93.35106,
+        "endS": 93.67021,
+        "palign": 0
+      },
+      {
+        "word": "없어\n\n",
+        "success": true,
+        "startS": 93.78989,
+        "endS": 93.95309,
+        "palign": 0
+      },
+      {
+        "word": "\n분노 ",
+        "success": true,
+        "startS": 93.99662,
+        "endS": 95.10638,
+        "palign": 0
+      },
+      {
+        "word": "분노 ",
+        "success": true,
+        "startS": 95.26596,
+        "endS": 95.58511,
+        "palign": 0
+      },
+      {
+        "word": "나의 ",
+        "success": true,
+        "startS": 95.74468,
+        "endS": 95.98404,
+        "palign": 0
+      },
+      {
+        "word": "피를 ",
+        "success": true,
+        "startS": 96.06383,
+        "endS": 96.30319,
+        "palign": 0
+      },
+      {
+        "word": "끓여\n",
+        "success": true,
+        "startS": 96.46277,
+        "endS": 97.18085,
+        "palign": 0
+      },
+      {
+        "word": "완전 ",
+        "success": true,
+        "startS": 97.34043,
+        "endS": 97.73936,
+        "palign": 0
+      },
+      {
+        "word": "최강 ",
+        "success": true,
+        "startS": 97.89894,
+        "endS": 98.21809,
+        "palign": 0
+      },
+      {
+        "word": "폭풍처럼 ",
+        "success": true,
+        "startS": 98.37766,
+        "endS": 99.41489,
+        "palign": 0
+      },
+      {
+        "word": "몰아쳐\n",
+        "success": true,
+        "startS": 99.57447,
+        "endS": 101.01064,
+        "palign": 0
+      },
+      {
+        "word": "분노 ",
+        "success": true,
+        "startS": 101.17021,
+        "endS": 101.56915,
+        "palign": 0
+      },
+      {
+        "word": "분노 ",
+        "success": true,
+        "startS": 101.72872,
+        "endS": 102.76596,
+        "palign": 0
+      },
+      {
+        "word": "내 ",
+        "success": true,
+        "startS": 102.92553,
+        "endS": 103.00532,
+        "palign": 0
+      },
+      {
+        "word": "안에서 ",
+        "success": true,
+        "startS": 103.16489,
+        "endS": 103.7234,
+        "palign": 0
+      },
+      {
+        "word": "울어\n",
+        "success": true,
+        "startS": 103.88298,
+        "endS": 104.60106,
+        "palign": 0
+      },
+      {
+        "word": "멈출 ",
+        "success": true,
+        "startS": 104.76064,
+        "endS": 105.15957,
+        "palign": 0
+      },
+      {
+        "word": "수 ",
+        "success": true,
+        "startS": 105.31915,
+        "endS": 105.39894,
+        "palign": 0
+      },
+      {
+        "word": "없는 ",
+        "success": true,
+        "startS": 105.55851,
+        "endS": 106.11702,
+        "palign": 0
+      },
+      {
+        "word": "불꽃처럼 ",
+        "success": true,
+        "startS": 106.2766,
+        "endS": 107.39362,
+        "palign": 0
+      },
+      {
+        "word": "타올라\n",
+        "success": true,
+        "startS": 107.55319,
+        "endS": 111.46277,
+        "palign": 0
+      },
+      {
+        "word": "분노 ",
+        "success": true,
+        "startS": 111.62234,
+        "endS": 115.21277,
+        "palign": 0
+      },
+      {
+        "word": "분노 ",
+        "success": true,
+        "startS": 115.29255,
+        "endS": 115.53191,
+        "palign": 0
+      },
+      {
+        "word": "내 ",
+        "success": true,
+        "startS": 115.69149,
+        "endS": 115.77128,
+        "palign": 0
+      },
+      {
+        "word": "안에서 ",
+        "success": true,
+        "startS": 115.93085,
+        "endS": 117.44681,
+        "palign": 0
+      },
+      {
+        "word": "울어\n",
+        "success": true,
+        "startS": 117.60638,
+        "endS": 119.04255,
+        "palign": 0
+      },
+      {
+        "word": "멈출 ",
+        "success": true,
+        "startS": 119.12234,
+        "endS": 119.3617,
+        "palign": 0
+      },
+      {
+        "word": "수 ",
+        "success": true,
+        "startS": 119.52128,
+        "endS": 119.60106,
+        "palign": 0
+      },
+      {
+        "word": "없는 ",
+        "success": true,
+        "startS": 119.76064,
+        "endS": 121.03723,
+        "palign": 0
+      },
+      {
+        "word": "불꽃처럼 ",
+        "success": true,
+        "startS": 121.19681,
+        "endS": 122.95213,
+        "palign": 0
+      },
+      {
+        "word": "타올라\n\n",
+        "success": true,
+        "startS": 123.1117,
+        "endS": 124.19246,
+        "palign": 0
+      },
+      {
+        "word": "\n저 ",
+        "success": true,
+        "startS": 124.23598,
+        "endS": 124.62766,
+        "palign": 0
+      },
+      {
+        "word": "어둠 ",
+        "success": true,
+        "startS": 124.78723,
+        "endS": 125.10638,
+        "palign": 0
+      },
+      {
+        "word": "속에 ",
+        "success": true,
+        "startS": 125.26596,
+        "endS": 125.58511,
+        "palign": 0
+      },
+      {
+        "word": "숨은 ",
+        "success": true,
+        "startS": 125.74468,
+        "endS": 126.30319,
+        "palign": 0
+      },
+      {
+        "word": "자들아\n",
+        "success": true,
+        "startS": 126.46277,
+        "endS": 127.89894,
+        "palign": 0
+      },
+      {
+        "word": "날 ",
+        "success": true,
+        "startS": 128.05851,
+        "endS": 128.21809,
+        "palign": 0
+      },
+      {
+        "word": "두려워해 ",
+        "success": true,
+        "startS": 128.37766,
+        "endS": 129.57447,
+        "palign": 0
+      },
+      {
+        "word": "이제 ",
+        "success": true,
+        "startS": 129.73404,
+        "endS": 130.13298,
+        "palign": 0
+      },
+      {
+        "word": "내가 ",
+        "success": true,
+        "startS": 130.29255,
+        "endS": 130.6117,
+        "palign": 0
+      },
+      {
+        "word": "간다\n",
+        "success": true,
+        "startS": 130.77128,
+        "endS": 131.72872,
+        "palign": 0
+      },
+      {
+        "word": "빛을 ",
+        "success": true,
+        "startS": 131.8883,
+        "endS": 132.28723,
+        "palign": 0
+      },
+      {
+        "word": "삼키려던 ",
+        "success": true,
+        "startS": 132.44681,
+        "endS": 133.24468,
+        "palign": 0
+      },
+      {
+        "word": "모든 ",
+        "success": true,
+        "startS": 133.40426,
+        "endS": 133.96277,
+        "palign": 0
+      },
+      {
+        "word": "손길\n",
+        "success": true,
+        "startS": 134.12234,
+        "endS": 134.92021,
+        "palign": 0
+      },
+      {
+        "word": "내 ",
+        "success": true,
+        "startS": 135.07979,
+        "endS": 135.31915,
+        "palign": 0
+      },
+      {
+        "word": "분노에 ",
+        "success": true,
+        "startS": 135.47872,
+        "endS": 136.11702,
+        "palign": 0
+      },
+      {
+        "word": "타올라 ",
+        "success": true,
+        "startS": 136.2766,
+        "endS": 137.15426,
+        "palign": 0
+      },
+      {
+        "word": "사라질 ",
+        "success": true,
+        "startS": 137.31383,
+        "endS": 137.87234,
+        "palign": 0
+      },
+      {
+        "word": "거야\n\n",
+        "success": true,
+        "startS": 138.03191,
+        "endS": 138.37282,
+        "palign": 0
+      },
+      {
+        "word": "\n분노 ",
+        "success": true,
+        "startS": 138.39458,
+        "endS": 139.06915,
+        "palign": 0
+      },
+      {
+        "word": "분노 ",
+        "success": true,
+        "startS": 139.22872,
+        "endS": 140.26596,
+        "palign": 0
+      },
+      {
+        "word": "나의 ",
+        "success": true,
+        "startS": 140.42553,
+        "endS": 140.74468,
+        "palign": 0
+      },
+      {
+        "word": "피를 ",
+        "success": true,
+        "startS": 140.90426,
+        "endS": 141.46277,
+        "palign": 0
+      },
+      {
+        "word": "끓여\n",
+        "success": true,
+        "startS": 141.62234,
+        "endS": 141.94149,
+        "palign": 0
+      },
+      {
+        "word": "완전 ",
+        "success": true,
+        "startS": 142.10106,
+        "endS": 142.89894,
+        "palign": 0
+      },
+      {
+        "word": "최강 ",
+        "success": true,
+        "startS": 143.05851,
+        "endS": 143.37766,
+        "palign": 0
+      },
+      {
+        "word": "폭풍처럼 ",
+        "success": true,
+        "startS": 143.53723,
+        "endS": 144.57447,
+        "palign": 0
+      },
+      {
+        "word": "몰아쳐\n",
+        "success": true,
+        "startS": 144.73404,
+        "endS": 145.77128,
+        "palign": 0
+      },
+      {
+        "word": "분노 ",
+        "success": true,
+        "startS": 145.93085,
+        "endS": 146.72872,
+        "palign": 0
+      },
+      {
+        "word": "분노 ",
+        "success": true,
+        "startS": 146.8883,
+        "endS": 147.92553,
+        "palign": 0
+      },
+      {
+        "word": "내 ",
+        "success": true,
+        "startS": 148.08511,
+        "endS": 148.16489,
+        "palign": 0
+      },
+      {
+        "word": "안에서 ",
+        "success": true,
+        "startS": 148.32447,
+        "endS": 149.12234,
+        "palign": 0
+      },
+      {
+        "word": "울어\n",
+        "success": true,
+        "startS": 149.28191,
+        "endS": 149.52128,
+        "palign": 0
+      },
+      {
+        "word": "멈출 ",
+        "success": true,
+        "startS": 149.68085,
+        "endS": 150.07979,
+        "palign": 0
+      },
+      {
+        "word": "수 ",
+        "success": true,
+        "startS": 150.23936,
+        "endS": 150.31915,
+        "palign": 0
+      },
+      {
+        "word": "없는 ",
+        "success": true,
+        "startS": 150.47872,
+        "endS": 151.03723,
+        "palign": 0
+      },
+      {
+        "word": "불꽃처럼 ",
+        "success": true,
+        "startS": 151.19681,
+        "endS": 152.23404,
+        "palign": 0
+      },
+      {
+        "word": "타올라\n",
+        "success": true,
+        "startS": 152.39362,
+        "endS": 153.43085,
+        "palign": 0
+      },
+      {
+        "word": "멈출 ",
+        "success": true,
+        "startS": 153.45745,
+        "endS": 153.51064,
+        "palign": 0
+      },
+      {
+        "word": "수 ",
+        "success": true,
+        "startS": 153.53723,
+        "endS": 153.56383,
+        "palign": 0
+      },
+      {
+        "word": "없는 ",
+        "success": true,
+        "startS": 153.59043,
+        "endS": 153.67021,
+        "palign": 0
+      },
+      {
+        "word": "불꽃처럼 ",
+        "success": true,
+        "startS": 153.82979,
+        "endS": 154.02128,
+        "palign": 0
+      },
+      {
+        "word": "타올라\n\n",
+        "success": true,
+        "startS": 154.08511,
+        "endS": 154.3883,
+        "palign": 0
+      }
+    ]
+  }
+}
