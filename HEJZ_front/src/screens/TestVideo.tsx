@@ -1,54 +1,47 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Platform } from 'react-native';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
+import { View, Text, TouchableOpacity, Dimensions, StyleSheet } from 'react-native';
 import Video from 'react-native-video';
+import Slider from '@react-native-community/slider';
+import SoundPlayer from 'react-native-sound-player';
 import { parseLyricsTiming } from '../../src/parseLyricsTiming';
 import lyricsTiming from '../../src/assets/Document/lyricsTiming2.json';
-import SoundPlayer from 'react-native-sound-player';
+
 const { width } = Dimensions.get('window');
 const videoWidth = width * 0.8;
 const videoHeight = videoWidth * 1.3;
 
 const VideoSelectionScreen = () => {
-    useEffect(() => {
-      const { start, end } = lyricsBlocks[currentIndex];
-
-      try {
-        SoundPlayer.stop(); // 기존 재생 멈추고
-        SoundPlayer.setVolume(1);
-        SoundPlayer.playSoundFile('nosmokingsong', 'mp3');
-
-        setTimeout(() => {
-          SoundPlayer.seek(start);
-        }, 300);
-
-        if (intervalRef.current) clearInterval(intervalRef.current);
-        intervalRef.current = setInterval(async () => {
-          try {
-            const info = await SoundPlayer.getInfo();
-            if (info.currentTime >= end) {
-              SoundPlayer.seek(start);
-            }
-          } catch {}
-        }, 500);
-      } catch (e) {
-        console.error('Sound error:', e);
-      }
-
-      return () => {
-        if (intervalRef.current) clearInterval(intervalRef.current);
-      };
-    }, [currentIndex]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [videoOffsetIndex, setVideoOffsetIndex] = useState(0);
+  const lyricsBlocks = useMemo(() => parseLyricsTiming(lyricsTiming.data.alignedWords), []);
+  const [currentIndex, setCurrentIndex] = useState(0); // 현재 가사 인덱스
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null); // 현재 선택된 영상 인덱스
+  const [videoOffsetIndex, setVideoOffsetIndex] = useState(0); // 영상 목록 순환 인덱스
   const [motionIdGroups, setMotionIdGroups] = useState<string[][]>([]);
   const [videoUrls, setVideoUrls] = useState<string[][]>([]);
   const [selections, setSelections] = useState<{ lyricsGroup: string; selectedMotionIds: string[] }[]>([]);
-  const [audioPosition, setAudioPosition] = useState(0);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const audioRef = useRef<Video>(null);
+  const [duration, setDuration] = useState(0);
+  const [position, setPosition] = useState(0);
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
-  const lyricsBlocks = parseLyricsTiming(lyricsTiming.data.alignedWords);
+  const currentVideoUrl = videoUrls[currentIndex]?.[videoOffsetIndex] || '';
+  const selected = selectedIndex === videoOffsetIndex;
+
+  useEffect(() => {
+    SoundPlayer.loadSoundFile('nosmokingsong', 'mp3');
+    SoundPlayer.play();
+
+    pollingRef.current = setInterval(async () => {
+      try {
+        const info = await SoundPlayer.getInfo();
+        setPosition(info.currentTime);
+        setDuration(info.duration);
+      } catch {}
+    }, 500);
+
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+      SoundPlayer.stop();
+    };
+  }, []);
 
   const fetchMotionIds = async () => {
     const all: string[][] = [];
@@ -64,7 +57,6 @@ const VideoSelectionScreen = () => {
         const ids = Array.isArray(data) ? data.flatMap((d: any) => d.motionIds || []) : [];
         all.push(ids);
       } catch (e) {
-        console.error('motionId 요청 실패:', e);
         all.push([]);
       }
     }
@@ -75,30 +67,18 @@ const VideoSelectionScreen = () => {
     const urls = await Promise.all(
       motionIds.map(async (id) => {
         try {
-          const res = await fetch(`http://52.78.174.239:8080/api/motion/${id}`, {
-            method: 'GET',
-          });
-
+          const res = await fetch(`http://52.78.174.239:8080/api/motion/${id}`);
           const text = await res.text();
-
-          // ✅ 응답이 바로 URL 형태라면
-          if (text.startsWith('http')) {
-            return text.trim();
-          }
-
-          // ✅ 아니면 JSON으로 파싱 시도
+          if (text.startsWith('http')) return text.trim();
           const data = JSON.parse(text);
           return data.videoUrl || '';
-        } catch (e) {
-          console.log(`motionId ${id} 처리 실패:`, e);
+        } catch {
           return '';
         }
       })
     );
-    console.log('videoUrls:', videoUrls);
     return urls.filter(Boolean);
   };
-
 
   useEffect(() => {
     (async () => {
@@ -108,22 +88,6 @@ const VideoSelectionScreen = () => {
       setVideoUrls(videos);
     })();
   }, []);
-
-  useEffect(() => {
-    const block = lyricsBlocks[currentIndex];
-    if (!block) return;
-
-    setAudioPosition(block.start);
-
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    intervalRef.current = setInterval(() => {
-      audioRef.current?.seek(block.start);
-    }, (block.end - block.start) * 1000);
-
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [currentIndex]);
 
   const handleVideoPress = () => {
     setSelectedIndex((prev) => (prev === null ? videoOffsetIndex : null));
@@ -157,12 +121,14 @@ const VideoSelectionScreen = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(selections),
-      }).catch(e => console.error('선택 저장 실패:', e));
+      }).catch(console.error);
     }
   }, [currentIndex]);
 
-  const currentVideoUrl = videoUrls[currentIndex]?.[videoOffsetIndex] || '';
-  const selected = selectedIndex === videoOffsetIndex;
+  const handleSeek = (value: number) => {
+    SoundPlayer.seek(value);
+    setPosition(value);
+  };
 
   return (
     <View style={styles.container}>
@@ -188,6 +154,16 @@ const VideoSelectionScreen = () => {
         ))}
       </View>
 
+      <Slider
+        style={{ width: '90%', marginTop: 10 }}
+        minimumValue={0}
+        maximumValue={duration}
+        value={position}
+        onSlidingComplete={handleSeek}
+        minimumTrackTintColor="#FFFFFF"
+        maximumTrackTintColor="#888"
+      />
+
       <View style={styles.buttonRow}>
         <TouchableOpacity
           style={[styles.selectButton, selected ? styles.selectButtonActive : styles.selectButtonDisabled]}
@@ -201,8 +177,6 @@ const VideoSelectionScreen = () => {
           <Text style={styles.retryText}>다시하기</Text>
         </TouchableOpacity>
       </View>
-
-
     </View>
   );
 };
@@ -219,7 +193,7 @@ const styles = StyleSheet.create({
   selectedText: { color: '#000', fontWeight: 'bold' },
   lyricsContainer: { marginTop: 20, alignItems: 'center' },
   lyricLine: { fontSize: 16, color: '#fff', textAlign: 'center', marginVertical: 2 },
-  buttonRow: { marginTop: 20, flexDirection: 'row', gap: 20 },
+  buttonRow: { marginTop: 20, flexDirection: 'row', gap: 20, justifyContent: 'space-around', width: '100%' },
   selectButton: { paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 },
   selectButtonActive: { backgroundColor: '#4CAF50' },
   selectButtonDisabled: { backgroundColor: '#999' },
