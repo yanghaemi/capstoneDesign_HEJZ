@@ -24,7 +24,7 @@ const DanceRecommendScreen=({ route, navigation }) =>{
     const [currentTime, setCurrentTime] = useState(0);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const [id, setId] = useState(p_id);
-    const [title, setTitle] = useState(p_title);
+    const [title, setTitle] = useState("nosmokingsong");
     const [filepath, setFilepath] = useState(p_filepath);
 
     const groupedLyrics = useMemo(() => {
@@ -41,7 +41,7 @@ const DanceRecommendScreen=({ route, navigation }) =>{
     };
 
      const loadSongs = async () => {
-          SoundPlayer.playSoundFile('song1', 'mp3');
+          SoundPlayer.playSoundFile(title, 'mp3');
      };
 
 //     const startLyricInterval = (lyricsList, currentLyric, setCurrentLyric) => {
@@ -116,7 +116,7 @@ const DanceRecommendScreen=({ route, navigation }) =>{
             if (intervalRef.current) clearInterval(intervalRef.current);
 
             // 1. 재생 시작
-            SoundPlayer.playSoundFile('song1', 'mp3');
+            SoundPlayer.playSoundFile('nosmokingsong', 'mp3');
 
             // 2. 약간 딜레이 주고 원하는 위치로 이동
             setTimeout(() => {
@@ -210,7 +210,9 @@ const DanceRecommendScreen=({ route, navigation }) =>{
                 const groupEnd = lineGroup[lineGroup.length - 1]?.endS ?? 0;
 
                 // 현재 시간이 이 그룹의 범위 안이면 표시
-                const isCurrentGroup = currentTime >= groupStart && currentTime <= groupEnd;
+                const isCurrentGroup =
+                  currentTime >= groupStart &&
+                  (currentTime <= groupEnd || lineIndex === groupedLyrics.length - 1);
 
                 if (!isCurrentGroup) return null;
 
