@@ -34,20 +34,20 @@ public class SunoService {
 
     @Autowired
     private SavedSongRepository savedSongRepository;
-    public String generateSong(SunoRequest request){
+
+    public String generateSong(SunoRequest request) {
         // Suno API로 HTTP 요청 보내는 코드
         String url = "https://apibox.erweima.ai/api/v1/generate";
         HttpURLConnection conn = null;
 
         HttpUtils httpUtils = new HttpUtils();
 
-        try{
+        try {
 
             conn = httpUtils.getHttpURLConnection(url, "POST", token);
             conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
             conn.setRequestProperty("Authorization", "Bearer " + token);
             conn.setDoInput(true); // post 요청 보낼 때 있어야 함
-
 
             String str = "{\n" +
                     "\"prompt\": \"" + request.getPrompt() + "\",\n" +
@@ -56,10 +56,8 @@ public class SunoService {
                     "\"customMode\": false,\n" +
                     "\"instrumental\": false,\n" +
                     "\"model\": \"" + request.getModel() + "\",\n" +
-                    "\"callBackUrl\":\"" +request.getCallBackUrl() +"\",\n" +
+                    "\"callBackUrl\":\"" + request.getCallBackUrl() + "\",\n" +
                     "}";
-
-
 
             // 1. 먼저 write 해야 함!
             try (DataOutputStream dataOutputStream = new DataOutputStream(conn.getOutputStream())) {
@@ -69,21 +67,19 @@ public class SunoService {
 
             // 2. 그 다음에 응답 읽기
             System.out.println("보낸 JSON: " + str);
-            //System.out.println("응답 코드: " + conn.getResponseCode());
-            //System.out.println("응답 메시지: " + conn.getResponseMessage());
-
+            // System.out.println("응답 코드: " + conn.getResponseCode());
+            // System.out.println("응답 메시지: " + conn.getResponseMessage());
 
             return httpUtils.getHttpResponse(conn);
 
-        }catch (IOException e) {
+        } catch (IOException e) {
 
             throw new RuntimeException("Suno API 요청 실패", e);
-        }
-        finally{
-            if(conn!=null) conn.disconnect();
+        } finally {
+            if (conn != null)
+                conn.disconnect();
         }
     }
-
 
     // 콜백 결과 처리 함수
     public List<SavedSongDTO> callbackFromSuno(SunoResponse callback) {
@@ -150,8 +146,7 @@ public class SunoService {
                             sourceStreamAudioUrl,
                             prompt,
                             lyricsJson,
-                            plainLyrics
-                    ));
+                            plainLyrics));
 
                 } catch (Exception e) {
                     System.err.println("❌ 저장 실패 for: " + audioUrl);
@@ -190,8 +185,8 @@ public class SunoService {
         }
     }
 
-    //Get Timestamped Lyrics api 호출 함수
-    public String getTimestampLyrics(com.HEJZ.HEJZ_back.dto.SunoLyricsDTO request){
+    // Get Timestamped Lyrics api 호출 함수
+    public String getTimestampLyrics(com.HEJZ.HEJZ_back.domain.music.dto.SunoLyricsDTO request) {
 
         String url = "https://apibox.erweima.ai/api/v1/generate/get-timestamped-lyrics";
 
@@ -199,7 +194,7 @@ public class SunoService {
 
         HttpUtils httpUtils = new HttpUtils();
 
-        try{
+        try {
 
             conn = httpUtils.getHttpURLConnection(url, "POST", token);
             conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
@@ -219,13 +214,12 @@ public class SunoService {
 
             return httpUtils.getHttpResponse(conn);
 
-        }catch (IOException e) {
+        } catch (IOException e) {
 
             throw new RuntimeException("Suno 가사 API 요청 실패", e);
-        }
-        finally{
-            if(conn!=null) conn.disconnect();
+        } finally {
+            if (conn != null)
+                conn.disconnect();
         }
     }
 }
-

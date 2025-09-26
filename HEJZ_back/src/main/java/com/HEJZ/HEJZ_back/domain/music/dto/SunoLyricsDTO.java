@@ -1,5 +1,4 @@
-package com.HEJZ.HEJZ_back.dto;
-
+package com.HEJZ.HEJZ_back.domain.music.dto;
 
 import lombok.Getter;
 import lombok.Setter;
