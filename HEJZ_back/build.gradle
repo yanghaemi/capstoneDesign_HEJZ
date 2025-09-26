@@ -30,6 +30,9 @@ dependencies {
 	// Jakarta
 	implementation 'jakarta.annotation:jakarta.annotation-api:2.1.1'
 
+	// Spring Security
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+
 	// 테스트
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -41,7 +44,6 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'software.amazon.awssdk:s3:2.25.10'
 	implementation 'software.amazon.awssdk:auth:2.25.10'
-
 
 
 	// 통일된 최신버전으로 변경 (Spring Boot 3.4.x 호환)
