@@ -37,7 +37,6 @@ spring:
     api:
       key: ${SUNO_API_KEY}
 
-
 springdoc:
   api-docs:
     path: /v3/api-docs
