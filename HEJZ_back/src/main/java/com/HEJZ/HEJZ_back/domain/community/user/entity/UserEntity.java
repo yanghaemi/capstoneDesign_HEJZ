@@ -30,7 +30,7 @@ public class UserEntity {
     private String username;
 
     @Column(nullable = false, length = 255)
-    private String passwordHash; // 비번을 해시로 저장
+    private String passwordHash; // 비번을 bcrypt 해싱하여 저장
 
     @Column(nullable = false, length = 100)
     private String email;

@@ -8,4 +8,5 @@ import com.HEJZ.HEJZ_back.domain.community.user.entity.UserEntity;
 @Repository
 public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
+    public UserEntity findByUsername(String username);
 }

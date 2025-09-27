@@ -44,11 +44,12 @@ public class UserController {
         // 로그인 로직 구현
         // 예: 유저 인증, 토큰 발급 등
         // method: post
-        // TODO: 로그인 로직 구현
         System.out.println("로그인 시도: " + loginRequest.getUsername());
 
-        // 임시 응답
-        ApiResponse<Object> apiRequest = new ApiResponse<>(200, null, "login successful!");
-        return ResponseEntity.ok(apiRequest);
+        ApiResponse<Object> result = userService.login(loginRequest.getUsername(), loginRequest.getPassword());
+
+        System.out.println("로그인 결과: " + result.getMsg());
+
+        return ResponseEntity.ok(result);
     }
 }
