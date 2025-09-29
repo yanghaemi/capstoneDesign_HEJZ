@@ -8,7 +8,6 @@ import com.HEJZ.HEJZ_back.domain.music.repository.SavedSongRepository;
 import com.HEJZ.HEJZ_back.domain.music.service.SunoService;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;

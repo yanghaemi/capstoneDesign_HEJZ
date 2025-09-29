@@ -5,3 +5,5 @@ HEJZ_back/music/
 music/
 HEJZ_back/src/main/resources/application.properties
 HEJZ_front/android/app/src/main/res/raw/
+
+.vscode/
