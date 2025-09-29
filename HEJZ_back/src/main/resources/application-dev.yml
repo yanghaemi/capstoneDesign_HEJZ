@@ -58,8 +58,7 @@ cloud:
       auto: false
     stack:
       auto: false
-#app:
-#  jwt:
-#    secret: ${APP_JWT_SECRET}
-#    expiration-ms: ${APP_JWT_EXPIRATION_MS}
-#
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration-ms: ${JWT_EXPIRES_MS:3600000} # 기본값 1시간
