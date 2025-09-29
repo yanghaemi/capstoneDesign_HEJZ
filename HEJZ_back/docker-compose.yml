@@ -42,9 +42,8 @@ services:
       SUNO_API_KEY: ${SUNO_API_KEY}
       AWS_ACCESS_KEY: ${AWS_ACCESS_KEY}
       AWS_SECRET_KEY: ${AWS_SECRET_KEY}
-
-      #APP_JWT_SECRET: ${APP_JWT_SECRET}
-      #APP_JWT_EXPIRATION_MS: ${APP_JWT_EXPIRATION_MS}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_MS: ${JWT_EXPIRES_MS}
     networks:
       - capstoneHEJZ_network
     volumes:

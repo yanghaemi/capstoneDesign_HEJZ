@@ -26,10 +26,10 @@ public class UserController {
      * method : post
      */
     @PostMapping("/signup")
-    public ResponseEntity<String> signUp(@RequestBody SignUpRequest request) {
-        String result = userService.signUp(request);
+    public ResponseEntity<ApiResponse<Object>> signUp(@RequestBody SignUpRequest request) {
+        ApiResponse<Object> result = userService.signUp(request);
 
-        System.out.println("회원가입: " + result);
+        System.out.println("회원가입: " + result.getMsg());
 
         return ResponseEntity.ok(result);
     }
@@ -47,8 +47,8 @@ public class UserController {
         System.out.println("로그인 시도: " + loginRequest.getUsername());
 
         ApiResponse<Object> result = userService.login(loginRequest.getUsername(), loginRequest.getPassword());
-
         System.out.println("로그인 결과: " + result.getMsg());
+        System.out.println("로그인 데이터: " + result.getData());
 
         return ResponseEntity.ok(result);
     }
