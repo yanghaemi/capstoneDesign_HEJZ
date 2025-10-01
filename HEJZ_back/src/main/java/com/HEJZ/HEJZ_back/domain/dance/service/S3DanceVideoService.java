@@ -13,6 +13,7 @@ import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignReques
 import java.net.URL;
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -26,7 +27,7 @@ public class S3DanceVideoService {
 
     public String getPresignedUrl(String motionId) {
         try {
-            String key = "videos/" + motionId + ".mp4";
+            String key = "videos/videos/" + motionId + ".mp4";
 
             GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                     .bucket(bucketName)
@@ -48,4 +49,10 @@ public class S3DanceVideoService {
             throw new CustomException(ErrorCode.UNKNOWN_SERVER_ERROR);
         }
     }
+    public List<String> getPresignedUrls(List<String> motionIds) {
+        return motionIds.stream()
+                .map(this::getPresignedUrl)
+                .toList();
+    }
+
 }
