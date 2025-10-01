@@ -1,296 +1,268 @@
 [
   {
-    "word": "[Verse]\n불타는 ",
+    "word": "[Verse]\n별빛 ",
     "success": true,
-    "startS": 0.95745,
-    "endS": 1.2766,
+    "startS": 7.57979,
+    "endS": 7.97872,
     "palign": 0
   },
   {
-    "word": "심장 ",
+    "word": "아래 ",
     "success": true,
-    "startS": 1.39628,
-    "endS": 1.51596,
+    "startS": 8.1383,
+    "endS": 9.25532,
     "palign": 0
   },
   {
-    "word": "멈출 ",
+    "word": "내 ",
     "success": true,
-    "startS": 1.55585,
-    "endS": 1.63564,
+    "startS": 9.41489,
+    "endS": 9.49468,
     "palign": 0
   },
   {
-    "word": "수 ",
+    "word": "꿈을 ",
     "success": true,
-    "startS": 1.67553,
-    "endS": 1.67553,
+    "startS": 9.65426,
+    "endS": 9.9734,
     "palign": 0
   },
   {
-    "word": "없어\n",
+    "word": "그려\n",
     "success": true,
-    "startS": 1.71543,
-    "endS": 1.75532,
+    "startS": 10.13298,
+    "endS": 11.17021,
     "palign": 0
   },
   {
-    "word": "불타는 ",
+    "word": "끝없는 ",
     "success": true,
-    "startS": 1.8617,
-    "endS": 2.15426,
-    "palign": 0
-  },
-  {
-    "word": "심장 ",
-    "success": true,
-    "startS": 2.31383,
-    "endS": 2.55319,
-    "palign": 0
-  },
-  {
-    "word": "멈출 ",
-    "success": true,
-    "startS": 2.71277,
-    "endS": 3.43085,
-    "palign": 0
-  },
-  {
-    "word": "수 ",
-    "success": true,
-    "startS": 3.59043,
-    "endS": 4.14894,
-    "palign": 0
-  },
-  {
-    "word": "없어\n",
-    "success": true,
-    "startS": 4.30851,
-    "endS": 4.86702,
-    "palign": 0
-  },
-  {
-    "word": "억누른 ",
-    "success": true,
-    "startS": 5.0266,
-    "endS": 5.58511,
-    "palign": 0
-  },
-  {
-    "word": "분노 ",
-    "success": true,
-    "startS": 5.74468,
-    "endS": 6.38298,
-    "palign": 0
-  },
-  {
-    "word": "이제는 ",
-    "success": true,
-    "startS": 6.54255,
-    "endS": 7.5,
-    "palign": 0
-  },
-  {
-    "word": "터져\n",
-    "success": true,
-    "startS": 7.65957,
-    "endS": 8.69681,
-    "palign": 0
-  },
-  {
-    "word": "세상이 ",
-    "success": true,
-    "startS": 8.85638,
-    "endS": 9.41489,
-    "palign": 0
-  },
-  {
-    "word": "날 ",
-    "success": true,
-    "startS": 9.57447,
-    "endS": 9.89362,
-    "palign": 0
-  },
-  {
-    "word": "삼키려 ",
-    "success": true,
-    "startS": 10.05319,
-    "endS": 11.09043,
-    "palign": 0
-  },
-  {
-    "word": "해도\n",
-    "success": true,
-    "startS": 11.25,
+    "startS": 11.32979,
     "endS": 11.80851,
     "palign": 0
   },
   {
-    "word": "난 ",
+    "word": "하늘 ",
     "success": true,
     "startS": 11.96809,
-    "endS": 12.04787,
+    "endS": 12.5266,
     "palign": 0
   },
   {
-    "word": "끝까지 ",
+    "word": "그 ",
     "success": true,
-    "startS": 12.20745,
-    "endS": 13.00532,
+    "startS": 12.68617,
+    "endS": 12.84574,
     "palign": 0
   },
   {
-    "word": "싸울 ",
+    "word": "위를 ",
     "success": true,
-    "startS": 13.16489,
-    "endS": 13.48404,
+    "startS": 13.00532,
+    "endS": 13.32447,
     "palign": 0
   },
   {
-    "word": "준비 ",
+    "word": "날아\n",
     "success": true,
-    "startS": 13.64362,
-    "endS": 13.96277,
+    "startS": 13.48404,
+    "endS": 15.07979,
     "palign": 0
   },
   {
-    "word": "됐어\n\n",
+    "word": "작은 ",
     "success": true,
-    "startS": 14.12234,
-    "endS": 15.20309,
+    "startS": 15.23936,
+    "endS": 15.55851,
     "palign": 0
   },
   {
-    "word": "[Chorus]\n분노 ",
+    "word": "바람도 ",
     "success": true,
-    "startS": 15.24662,
-    "endS": 16.11702,
+    "startS": 15.71809,
+    "endS": 16.99468,
     "palign": 0
   },
   {
-    "word": "분노 ",
+    "word": "나를 ",
     "success": true,
-    "startS": 16.2766,
+    "startS": 17.15426,
     "endS": 17.39362,
     "palign": 0
   },
   {
-    "word": "나의 ",
+    "word": "밀어줘\n",
     "success": true,
     "startS": 17.55319,
-    "endS": 17.87234,
-    "palign": 0
-  },
-  {
-    "word": "피를 ",
-    "success": true,
-    "startS": 18.03191,
     "endS": 18.59043,
     "palign": 0
   },
   {
-    "word": "끓여\n",
+    "word": "우린 ",
     "success": true,
     "startS": 18.75,
     "endS": 19.06915,
     "palign": 0
   },
   {
-    "word": "완전 ",
+    "word": "함께라면 ",
     "success": true,
     "startS": 19.22872,
-    "endS": 19.94681,
+    "endS": 20.26596,
     "palign": 0
   },
   {
-    "word": "최강 ",
+    "word": "무엇이든 ",
     "success": true,
-    "startS": 20.10638,
-    "endS": 20.50532,
+    "startS": 20.42553,
+    "endS": 21.2234,
     "palign": 0
   },
   {
-    "word": "폭풍처럼 ",
+    "word": "가능해\n\n",
     "success": true,
-    "startS": 20.66489,
-    "endS": 21.70213,
+    "startS": 21.38298,
+    "endS": 22.36702,
     "palign": 0
   },
   {
-    "word": "몰아쳐\n",
+    "word": "[Verse 2]\n흐르는 ",
     "success": true,
-    "startS": 21.8617,
-    "endS": 22.89894,
+    "startS": 22.39362,
+    "endS": 23.05851,
     "palign": 0
   },
   {
-    "word": "분노 ",
+    "word": "시간 ",
     "success": true,
-    "startS": 23.05851,
-    "endS": 23.85638,
+    "startS": 23.21809,
+    "endS": 24.17553,
     "palign": 0
   },
   {
-    "word": "분노 ",
+    "word": "속 ",
     "success": true,
-    "startS": 24.01596,
-    "endS": 25.05319,
+    "startS": 24.25532,
+    "endS": 24.25532,
     "palign": 0
   },
   {
-    "word": "내 ",
+    "word": "멈추지 ",
     "success": true,
-    "startS": 25.21277,
-    "endS": 25.29255,
+    "startS": 24.41489,
+    "endS": 24.9734,
     "palign": 0
   },
   {
-    "word": "안에서 ",
+    "word": "않아\n",
     "success": true,
-    "startS": 25.45213,
-    "endS": 26.25,
+    "startS": 25.13298,
+    "endS": 26.01064,
     "palign": 0
   },
   {
-    "word": "울어\n",
+    "word": "유스타 ",
     "success": true,
-    "startS": 26.40957,
-    "endS": 26.64894,
+    "startS": 26.03723,
+    "endS": 26.09043,
     "palign": 0
   },
   {
-    "word": "멈출 ",
+    "word": "빛나는 ",
     "success": true,
-    "startS": 26.80851,
-    "endS": 27.20745,
+    "startS": 26.25,
+    "endS": 26.72872,
     "palign": 0
   },
   {
-    "word": "수 ",
+    "word": "별처럼\n",
     "success": true,
-    "startS": 27.36702,
-    "endS": 27.44681,
+    "startS": 26.74012,
+    "endS": 26.77432,
     "palign": 0
   },
   {
-    "word": "없는 ",
+    "word": "빛나는 ",
     "success": true,
-    "startS": 27.60638,
-    "endS": 28.16489,
+    "startS": 26.78571,
+    "endS": 26.80851,
+    "palign": 0
+  },
+  {
+    "word": "순간은 ",
+    "success": true,
+    "startS": 26.96809,
+    "endS": 28.00532,
+    "palign": 0
+  },
+  {
+    "word": "바로 ",
+    "success": true,
+    "startS": 28.16489,
+    "endS": 28.48404,
+    "palign": 0
+  },
+  {
+    "word": "지금이야\n",
+    "success": true,
+    "startS": 28.64362,
+    "endS": 30.31915,
     "palign": 0
   },
   {
     "word": "불꽃처럼 ",
     "success": true,
-    "startS": 28.32447,
-    "endS": 29.3617,
+    "startS": 30.47872,
+    "endS": 31.51596,
     "palign": 0
   },
   {
-    "word": "타올라\n\n",
+    "word": "타오르는 ",
     "success": true,
-    "startS": 29.52128,
-    "endS": 30.98404,
+    "startS": 31.67553,
+    "endS": 32.4734,
+    "palign": 0
+  },
+  {
+    "word": "열정\n",
+    "success": true,
+    "startS": 32.63298,
+    "endS": 33.59043,
+    "palign": 0
+  },
+  {
+    "word": "우리 ",
+    "success": true,
+    "startS": 33.75,
+    "endS": 33.98936,
+    "palign": 0
+  },
+  {
+    "word": "청춘의 ",
+    "success": true,
+    "startS": 34.14894,
+    "endS": 34.70745,
+    "palign": 0
+  },
+  {
+    "word": "시작은 ",
+    "success": true,
+    "startS": 34.86702,
+    "endS": 35.50532,
+    "palign": 0
+  },
+  {
+    "word": "바로 ",
+    "success": true,
+    "startS": 35.66489,
+    "endS": 35.98404,
+    "palign": 0
+  },
+  {
+    "word": "여기\n\n",
+    "success": true,
+    "startS": 36.14362,
+    "endS": 37.36219,
     "palign": 0
   }
 

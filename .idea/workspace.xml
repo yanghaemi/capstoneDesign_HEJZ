@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="NONE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="57627266-73ca-409b-b8e7-6aab0568547c" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/HEJZ_front/android/app/src/main/res/raw/song1.mp3" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/HEJZ_front/src/assets/song1.mp3" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HEJZ_front/android/app/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/HEJZ_front/android/app/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HEJZ_front/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/HEJZ_front/src/App.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HEJZ_front/src/screens/Community/EditProfileScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/HEJZ_front/src/screens/Community/EditProfileScreen.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HEJZ_front/src/screens/Community/FeedsScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/HEJZ_front/src/screens/Community/FeedsScreen.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HEJZ_front/src/screens/Community/MySongScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/HEJZ_front/src/screens/Community/MySongScreen.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HEJZ_front/src/screens/Community/SelectScreen.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/HEJZ_front/src/screens/Community/UserContext.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/HEJZ_front/src/screens/EditProfileScreen.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/HEJZ_front/src/screens/MainScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/HEJZ_front/src/screens/MainScreen.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HEJZ_front/src/screens/SelectScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/HEJZ_front/src/screens/SelectScreen.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HEJZ_front/src/screens/UserContext.tsx" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 1
+}]]></component>
+  <component name="ProjectId" id="2xUYj6i8Q4W6HoclWYvP37m46su" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "com.google.services.firebase.aqiPopupShown": "true",
+    "git-widget-placeholder": "test",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/USER/Desktop/capstoneDesign_HEJZ/HEJZ_front",
+    "settings.editor.selected.configurable": "device.mirroring"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\USER\Desktop\capstoneDesign_HEJZ\HEJZ_front\android\app\src\main\res\raw" />
+      <recent name="C:\Users\USER\Desktop\capstoneDesign_HEJZ\HEJZ_front\src\assets" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\USER\Desktop\capstoneDesign_HEJZ\HEJZ_front\src\screens\Community" />
+      <recent name="C:\Users\USER\Desktop\capstoneDesign_HEJZ\HEJZ_front\src\context" />
+      <recent name="C:\Users\USER\Desktop\capstoneDesign_HEJZ\HEJZ_front\src\screens\Feeds" />
+    </key>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="57627266-73ca-409b-b8e7-6aab0568547c" name="Changes" comment="" />
+      <created>1747994251885</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1747994251885</updated>
+    </task>
+    <servers />
+  </component>
+</project>

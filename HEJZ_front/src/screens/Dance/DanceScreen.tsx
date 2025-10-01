@@ -14,10 +14,11 @@ import RNFS from 'react-native-fs';
 import songTitleMap from '../../assets/Document/SongTitleName.json';
 
 const dummySongs = [
-  { id: '1', title: '나는야 장지혜야', prompt: '강렬하고 자유로운 느낌' , filepath: '../../assets/songs/song1.mp3'},
+  { id: '1', title: 'U-STAR', prompt: '강렬하고 자유로운 느낌' , filepath: '../../assets/songs/song1.mp3'},
   { id: '2', title: '아프잘 아프지마', prompt: '걱정하는 느낌' },
   { id: '3', title: '영은아 young하게 살자', prompt: '신나고 터지는 분위기' },
   { id: '4', title: '혜미가 아니라 해미라구요', prompt: '이름을 잘못불러서 분노에 가득참' },
+  { id: '5', title: '나는야 장지혜야', prompt: '이름을 잘못불러서 분노에 가득참' },
 ];
 
 const DanceScreen = ({ navigation }: any) => {

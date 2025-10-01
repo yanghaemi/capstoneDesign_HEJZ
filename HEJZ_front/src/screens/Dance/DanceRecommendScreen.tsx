@@ -15,6 +15,7 @@ import SoundPlayer from 'react-native-sound-player';
 import { useNavigation } from '@react-navigation/native';
 import { parseLyricsTiming } from '../../../src/parseLyricsTiming';
 import lyricsTiming from '../../../src/assets/Document/lyricsTiming3.json';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
 const videoWidth = width * 0.8;
@@ -41,7 +42,7 @@ const VideoSelectionScreen = () => {
 
   useEffect(() => {
     if (!isLoading) {
-      SoundPlayer.loadSoundFile('fire', 'mp3');
+      SoundPlayer.loadSoundFile('ustar', 'mp3');
       SoundPlayer.play();
 
       pollingRef.current = setInterval(async () => {
@@ -70,10 +71,23 @@ const VideoSelectionScreen = () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ lyrics }),
         });
+
         const data = await res.json();
+
+        // ✅ 로그 출력: 감정(emotion)과 motionIds
+        if (Array.isArray(data)) {
+          data.forEach((d: any, index: number) => {
+            console.log(`🧠 [${i}] 감정(emotion):`, d.emotion);
+            console.log(`🎯 [${i}] motionIds:`, d.motionIds);
+          });
+        } else {
+          console.warn(`⚠️ [${i}] 예상과 다른 응답 형식:`, data);
+        }
+
         const ids = Array.isArray(data) ? data.flatMap((d: any) => d.motionIds || []) : [];
         all.push(ids);
       } catch (e) {
+        console.error(`❌ [${i}] fetchMotionIds 실패:`, e);
         all.push([]);
       }
     }
@@ -89,6 +103,7 @@ const VideoSelectionScreen = () => {
         try {
           const res = await fetch(`http://52.78.174.239:8080/api/motion/${id}`);
           const text = await res.text();
+
           if (text.startsWith('http')) return text.trim();
           const data = JSON.parse(text);
           return data.videoUrl?.startsWith('http') ? data.videoUrl : '';
@@ -147,15 +162,27 @@ const VideoSelectionScreen = () => {
     }
   };
 
-  useEffect(() => {
-    if (currentIndex >= lyricsBlocks.length && selections.length > 0) {
-      fetch('http://52.78.174.239:8080/api/emotion/selection/bulk', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(selections),
-      });
-    }
-  }, [currentIndex]);
+
+useEffect(() => {
+  if (currentIndex >= lyricsBlocks.length && selections.length > 0) {
+    // motionId들만 뽑아내기
+    const selectedMotionIds = selections.map(sel => sel.selectedMotionIds[0]);
+
+    // 1. 로컬 저장
+    AsyncStorage.setItem('selectedMotionIds', JSON.stringify(selectedMotionIds))
+      .then(() => console.log('✅ motionId 배열 저장 완료'))
+      .catch((err) => console.error('❌ 저장 실패:', err));
+
+    // 2. 서버에도 저장 (필요 시)
+    fetch('http://52.78.174.239:8080/api/emotion/selections/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(selectedMotionIds),
+    })
+      .then(() => console.log('✅ 서버 저장 완료'))
+      .catch((err) => console.error('❌ 서버 저장 실패:', err));
+  }
+}, [currentIndex]);
 
   const handleSeek = (value: number) => {
     SoundPlayer.seek(value);
@@ -209,7 +236,7 @@ const VideoSelectionScreen = () => {
                   muted={false}
                 />
               ) : (
-                <View style={[styles.video, { justifyContent: 'center', alignItems: 'center' }]}>\n                  <Text style={{ color: '#fff' }}>⚠️ 영상 없음</Text>
+                <View style={[styles.video, { justifyContent: 'center', alignItems: 'center' }]}>
                 </View>
               )}
               {selected && (
