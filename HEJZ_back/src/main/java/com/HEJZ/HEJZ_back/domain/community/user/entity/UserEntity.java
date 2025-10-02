@@ -46,4 +46,12 @@ public class UserEntity {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Builder.Default // 기본값 설정
+    @Column(nullable = false)
+    private Long follower = 0L;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private Long following = 0L;
+
 }

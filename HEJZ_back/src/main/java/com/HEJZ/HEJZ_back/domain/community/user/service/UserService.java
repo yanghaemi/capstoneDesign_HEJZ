@@ -2,10 +2,12 @@ package com.HEJZ.HEJZ_back.domain.community.user.service;
 
 import java.time.LocalDateTime;
 
+import org.apache.catalina.security.SecurityUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.HEJZ.HEJZ_back.domain.community.user.dto.SignUpRequest;
+import com.HEJZ.HEJZ_back.domain.community.user.dto.UserDto;
 import com.HEJZ.HEJZ_back.domain.community.user.entity.UserEntity;
 import com.HEJZ.HEJZ_back.domain.community.user.repository.UserRepository;
 import com.HEJZ.HEJZ_back.global.jwt.JwtTokenProvider;
@@ -91,4 +93,25 @@ public class UserService {
     }
 
     // 로그아웃은 프론트에서 토큰 삭제로 처리
+
+    public ApiResponse<Object> getMyInfo(String username) {
+
+        try {
+            UserEntity user = userRepository.findByUsername(username);
+            if (user == null) {
+                return new ApiResponse<Object>(404, null, "유저를 찾을 수 없습니다.");
+            }
+
+            UserDto myinfo = new UserDto();
+            myinfo.setUsername(user.getUsername());
+            myinfo.setEmail(user.getEmail());
+            myinfo.setNickname(user.getNickname());
+            myinfo.setProfileImageUrl(user.getProfileImageUrl());
+            myinfo.setBio(user.getBio());
+
+            return new ApiResponse<Object>(200, myinfo, "내 정보 조회 성공!");
+        } catch (Exception e) {
+            return new ApiResponse<Object>(500, null, "서버 오류: " + e.getMessage());
+        }
+    }
 }

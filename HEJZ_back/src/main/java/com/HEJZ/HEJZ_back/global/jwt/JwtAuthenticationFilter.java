@@ -12,6 +12,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 
 @Component
@@ -20,6 +21,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     // JWT 인증 필터 구현
     private final JwtTokenProvider jwtTokenProvider;
 
+    @NotNull
     @Override
     protected void doFilterInternal(HttpServletRequest request,
             HttpServletResponse response,
