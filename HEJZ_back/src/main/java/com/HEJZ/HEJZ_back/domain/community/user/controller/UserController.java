@@ -9,10 +9,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.HEJZ.HEJZ_back.domain.community.user.dto.FollowRequest;
+import com.HEJZ.HEJZ_back.domain.community.follow.service.FollowService;
 import com.HEJZ.HEJZ_back.domain.community.user.dto.LoginRequest;
 import com.HEJZ.HEJZ_back.domain.community.user.dto.SignUpRequest;
-import com.HEJZ.HEJZ_back.domain.community.user.service.FollowService;
 import com.HEJZ.HEJZ_back.domain.community.user.service.UserService;
 import com.HEJZ.HEJZ_back.global.response.ApiResponse;
 
@@ -24,7 +23,6 @@ import lombok.RequiredArgsConstructor;
 public class UserController {
 
     private final UserService userService;
-    private final FollowService followService;
 
     /*
      * 호출 url : http://localhost:8080/api/user/signup
@@ -75,31 +73,4 @@ public class UserController {
         return ResponseEntity.ok(result);
     }
 
-    @PostMapping("/follow")
-    public ResponseEntity<ApiResponse<Object>> followUser(@RequestBody FollowRequest followRequest) {
-
-        Authentication authentication = SecurityContextHolder.getContext()
-                .getAuthentication();
-        String myUsername = authentication.getName(); // jwt 토큰으로 내 아이디 받기
-
-        String followedUsername = followRequest.getUsername();
-
-        ApiResponse<Object> result = followService.followUser(myUsername, followedUsername);
-
-        return ResponseEntity.ok(result);
-    }
-
-    @PostMapping("/unfollow")
-    public ResponseEntity<ApiResponse<Object>> unfollowUser(@RequestBody FollowRequest unfollowRequest) {
-
-        Authentication authentication = SecurityContextHolder.getContext()
-                .getAuthentication();
-        String myUsername = authentication.getName(); // jwt 토큰으로 내 아이디 받기
-
-        String unfollowedUsername = unfollowRequest.getUsername();
-
-        ApiResponse<Object> result = followService.unfollowUser(myUsername, unfollowedUsername);
-
-        return ResponseEntity.ok(result);
-    }
 }

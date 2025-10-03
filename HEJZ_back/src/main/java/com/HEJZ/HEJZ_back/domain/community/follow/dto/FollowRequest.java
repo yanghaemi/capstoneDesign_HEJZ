@@ -1,4 +1,4 @@
-package com.HEJZ.HEJZ_back.domain.community.user.dto;
+package com.HEJZ.HEJZ_back.domain.community.follow.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
