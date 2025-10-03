@@ -2,18 +2,51 @@
 import React, { useState } from 'react';
 import {
   View, ImageBackground, StyleSheet, Text, TouchableOpacity, TextInput,
-  SafeAreaView, KeyboardAvoidingView, Platform, ScrollView
+  SafeAreaView, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator, Alert
 } from 'react-native';
+import { login } from '../api/auth';
 
 export default function LoginScreen({ navigation }: any) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState(''); // 아이디
+  const [password, setPassword] = useState(''); // 비밀번호
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => navigation.navigate('Main');
+  const handleLogin = async () => {
+    if (!username || !password) {
+      Alert.alert('로그인', '아이디와 비밀번호를 입력해주세요');
+      return;
+    }
+    setLoading(true);
+    try {
+      // 서버 DTO(LoginRequest)와 1:1 매핑
+      const data = await login({ username, password });
+
+      // 서버가 토큰을 준다면 여기서 저장 (응답 형태 유동적 처리)
+      // 예: accessToken/token/jwt 등 키 대응
+      const token =
+        data?.accessToken ?? data?.token ?? data?.jwt ?? null;
+      if (token) {
+        console.log('로그인 토큰:', token);
+      }
+
+      // 성공 이동
+      navigation.replace('Main');
+    } catch (e: any) {
+      const msg = String(e?.message ?? '').trim();
+      if (msg.startsWith('401')) {
+        Alert.alert('로그인 실패', '아이디와 비밀번호를 확인해주세요.');
+      } else {
+        Alert.alert('로그인 실패', msg || '서버 오류가 발생했어요.');
+      }
+      console.log('[LOGIN ERROR]', e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <ImageBackground
-      source={require('../assets/background/newback.png')} // ← 로고+배경 합친 이미지
+      source={require('../assets/background/newback.png')}
       style={styles.bg}
       resizeMode="cover"
     >
@@ -26,15 +59,15 @@ export default function LoginScreen({ navigation }: any) {
             contentContainerStyle={styles.content}
             keyboardShouldPersistTaps="handled"
           >
-            {/* ↑ 배경에 이미 로고가 있으므로, 별도 <Image> 필요 없음 */}
-
             <View style={styles.form}>
               <TextInput
                 style={styles.input}
-                placeholder="이메일"
-                value={email}
-                onChangeText={setEmail}
+                placeholder="아이디 (username)"
+                value={username}
+                onChangeText={setUsername}
                 placeholderTextColor="#666"
+                autoCapitalize="none"
+                returnKeyType="next"
               />
               <TextInput
                 style={styles.input}
@@ -43,10 +76,20 @@ export default function LoginScreen({ navigation }: any) {
                 onChangeText={setPassword}
                 secureTextEntry
                 placeholderTextColor="#666"
+                returnKeyType="done"
+                onSubmitEditing={handleLogin}
               />
 
-              <TouchableOpacity style={styles.button} onPress={handleLogin}>
-                <Text style={styles.buttonText}>로그인</Text>
+              <TouchableOpacity
+                style={[styles.button, loading && { opacity: 0.6 }]}
+                onPress={handleLogin}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator />
+                ) : (
+                  <Text style={styles.buttonText}>로그인</Text>
+                )}
               </TouchableOpacity>
 
               <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
@@ -64,13 +107,13 @@ const styles = StyleSheet.create({
   bg: { flex: 1 },
   content: {
     flexGrow: 1,
-    justifyContent: 'flex-end', // 폼을 아래로
+    justifyContent: 'flex-end',
     paddingHorizontal: 24,
-    paddingBottom: 32,          // 하단 여백
+    paddingBottom: 32,
   },
   form: {
-    gap: 14,                    // RN 0.79: gap/rowGap 지원
-    backgroundColor: 'rgba(255,255,255,0.0)', // 필요시 반투명 박스 넣어도 OK
+    gap: 14,
+    backgroundColor: 'rgba(255,255,255,0.0)',
   },
   input: {
     width: '100%',

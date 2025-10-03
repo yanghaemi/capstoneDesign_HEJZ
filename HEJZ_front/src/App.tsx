@@ -15,10 +15,10 @@ import CommunityNavigator from './screens/Community/CommunityStack';
 import StatsScreen from './screens/StatesScreen';
 import SelectScreen from './screens/SelectScreen';
 import SignUpScreen from './screens/SignUpScreen';
-import SongPlayScreen from './screens/Community/SongPlayScreen';
+import SongPlayScreen from './screens/SongPlayScreen';
+import SunoPreviewScreen from './screens/SunoPreviewScreen';
 import TestScreen from './TestScreen';
 import LoginScreen from './screens/LoginScreen'
-
 
 enableScreens(); 
 
@@ -57,6 +57,8 @@ const App = () => {
                   <Stack.Screen name="Community" component={CommunityNavigator} />
                   <Stack.Screen name="SongPlay" component={SongPlayScreen} />
                   <Stack.Screen name="Test" component={TestScreen} />
+
+                  <Stack.Screen name="SunoPreviewScreen" component={SunoPreviewScreen} />
 
 
                 </Stack.Navigator>

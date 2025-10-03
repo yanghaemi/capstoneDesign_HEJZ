@@ -1,207 +1,158 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+// 안무 추천 페이지 (정리 버전)
+import React, { useState, useEffect, useRef } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  Dimensions,
-  StyleSheet,
-  Image,
-  ImageBackground,
-  FlatList,
+  View, Text, TouchableOpacity, StyleSheet, ImageBackground, Alert, Image, ActivityIndicator,
 } from 'react-native';
 import Video from 'react-native-video';
-import Slider from '@react-native-community/slider';
-import SoundPlayer from 'react-native-sound-player';
-import { useNavigation } from '@react-navigation/native';
-import { parseLyricsTiming } from '../../../src/parseLyricsTiming';
-import lyricsTiming from '../../../src/assets/Document/lyricsTiming3.json';
+// 이름 충돌 방지 별칭
+import RNCSlider from '@react-native-community/slider';
+import RNSoundPlayer from 'react-native-sound-player';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 
-const { width } = Dimensions.get('window');
-const videoWidth = width * 0.8;
-const videoHeight = videoWidth * 1.3;
+// 필요 JSON/유틸 (없으면 주석 처리하고 빌드 먼저 통과)
+import lyricsTiming from '../../../src/assets/Document/lyricsTiming3.json';
+import { parseLyricsTiming } from '../../../src/parseLyricsTiming';
 
-const VideoSelectionScreen = () => {
-  const navigation = useNavigation();
-  const lyricsBlocks = useMemo(() => parseLyricsTiming(lyricsTiming), []);
+type Props = {
+  route: { params: { p_id: string; p_title: string; p_filepath: string } };
+  navigation: any;
+};
+
+const DanceRecommendScreen = ({ route, navigation }: Props) => {
+  const { p_id, p_title, p_filepath } = route.params;
+
+  // ─── 재생/진행 상태 ─────────────────────────────────────────────
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // ─── 곡/화면 기본 상태 ──────────────────────────────────────────
+  const [id] = useState(p_id);
+  const [title] = useState(p_title);
+  const [fileUrl] = useState(p_filepath); // 비디오 소스에 사용
+
+  // ─── 가사 블록(2줄 단위 가정) ───────────────────────────────────
+  const [lyricsBlocks, setLyricsBlocks] = useState<{ lines: string[] }[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [videoOffsetIndex, setVideoOffsetIndex] = useState(0);
+
+  // ─── 모션/영상 관련 상태(우선 빌드 통과용 기본값) ────────────────
+  const [isLoading, setIsLoading] = useState(true);
   const [motionIdGroups, setMotionIdGroups] = useState<string[][]>([]);
   const [videoUrls, setVideoUrls] = useState<string[][]>([]);
+  const [videoOffsetIndex, setVideoOffsetIndex] = useState(0);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [selections, setSelections] = useState<{ lyricsGroup: string; selectedMotionIds: string[] }[]>([]);
-  const [duration, setDuration] = useState(0);
-  const [position, setPosition] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
   const [isFinished, setIsFinished] = useState(false);
-  const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
+  // 현재 블록의 비디오 후보들
   const currentVideoOptions = videoUrls[currentIndex] || [];
-  const currentVideoUrl = currentVideoOptions[videoOffsetIndex] || '';
-  const selected = selectedIndex === videoOffsetIndex;
 
-  useEffect(() => {
-    if (!isLoading) {
-      SoundPlayer.loadSoundFile('ustar', 'mp3');
-      SoundPlayer.play();
-
-      pollingRef.current = setInterval(async () => {
-        try {
-          const info = await SoundPlayer.getInfo();
-          setPosition(info.currentTime);
-          setDuration(info.duration);
-        } catch {}
-      }, 500);
-    }
-
-    return () => {
-      if (pollingRef.current) clearInterval(pollingRef.current);
-      SoundPlayer.stop();
-    };
-  }, [isLoading]);
-
-  const fetchMotionIds = async () => {
-    const all: string[][] = [];
-
-    for (let i = 0; i < lyricsBlocks.length; i++) {
-      const lyrics = lyricsBlocks[i].lines.join('\n');
-      try {
-        const res = await fetch('http://52.78.174.239:8080/api/emotion/analyze', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ lyrics }),
-        });
-
-        const data = await res.json();
-
-        // ✅ 로그 출력: 감정(emotion)과 motionIds
-        if (Array.isArray(data)) {
-          data.forEach((d: any, index: number) => {
-            console.log(`🧠 [${i}] 감정(emotion):`, d.emotion);
-            console.log(`🎯 [${i}] motionIds:`, d.motionIds);
-          });
-        } else {
-          console.warn(`⚠️ [${i}] 예상과 다른 응답 형식:`, data);
-        }
-
-        const ids = Array.isArray(data) ? data.flatMap((d: any) => d.motionIds || []) : [];
-        all.push(ids);
-      } catch (e) {
-        console.error(`❌ [${i}] fetchMotionIds 실패:`, e);
-        all.push([]);
-      }
-    }
-
-    return all;
-  };
-
-  const fetchVideoUrls = async (motionIds: string[]) => {
-    if (!motionIds.length) return [''];
-
-    const urls = await Promise.all(
-      motionIds.map(async (id) => {
-        try {
-          const res = await fetch(`http://52.78.174.239:8080/api/motion/${id}`);
-          const text = await res.text();
-
-          if (text.startsWith('http')) return text.trim();
-          const data = JSON.parse(text);
-          return data.videoUrl?.startsWith('http') ? data.videoUrl : '';
-        } catch {
-          return '';
-        }
-      })
-    );
-
-    const validUrls = urls.filter(Boolean);
-    return validUrls.length > 0 ? validUrls : [''];
+  // ─── 초기화 ────────────────────────────────────────────────────
+  const resetCurrentTime = () => {
+    setCurrentTime(0);
+    setDuration(0);
   };
 
   useEffect(() => {
-    (async () => {
-      const motions = await fetchMotionIds();
-      setMotionIdGroups(motions);
-
-      const videos = await Promise.all(motions.map(fetchVideoUrls));
-      setVideoUrls(videos);
-
-      setIsLoading(false);
-    })();
+    resetCurrentTime();
+    // 가사 파싱 (없는 경우 안전 처리)
+    try {
+      const blocks = parseLyricsTiming
+        ? (parseLyricsTiming as any)(lyricsTiming)
+        : [];
+      // parse 결과 형태가 {lines:string[]} 배열이라고 가정
+      setLyricsBlocks(Array.isArray(blocks) ? blocks : []);
+    } catch (e) {
+      console.log('lyrics parse fail:', e);
+      setLyricsBlocks([]);
+    }
+    setIsLoading(false);
   }, []);
 
-  const handleVideoPress = () => {
-    setSelectedIndex((prev) => (prev === null ? videoOffsetIndex : null));
-  };
+  // ─── 재생/정지/탐색 ────────────────────────────────────────────
+  const handlePlay = async () => {
+    try {
+      if (intervalRef.current) clearInterval(intervalRef.current);
 
-  const handleRetry = () => {
-    if (!currentVideoOptions.length) return;
-    const next = (videoOffsetIndex + 1) % currentVideoOptions.length;
-    setVideoOffsetIndex(next);
-    setSelectedIndex(null);
-  };
+      // 로컬 리소스라면 (예: android/app/src/main/res/raw 에 song1.mp3 넣어둔 경우)
+      // RNSoundPlayer.playSoundFile('song1', 'mp3');
 
-  const handleFinalize = () => {
-    if (selectedIndex === null) return;
-    const selectedMotionId = motionIdGroups[currentIndex]?.[selectedIndex];
-    const lyricsGroup = lyricsBlocks[currentIndex]?.lines.join('\n');
-
-    if (selectedMotionId && lyricsGroup) {
-      const newSelection = { lyricsGroup, selectedMotionIds: [selectedMotionId] };
-      const newSelections = [...selections, newSelection];
-      setSelections(newSelections);
-
-      if (currentIndex + 1 >= lyricsBlocks.length) {
-        setIsFinished(true);
-        setCurrentIndex(currentIndex + 1);
+      // 파일 경로가 있을 때 URL로 재생 (필요에 맞게 선택)
+      if (fileUrl?.startsWith('http') || fileUrl?.startsWith('file')) {
+        await RNSoundPlayer.playUrl(fileUrl);
       } else {
-        setCurrentIndex(currentIndex + 1);
+        // 기본 예시: raw에 있는 song1.mp3
+        RNSoundPlayer.playSoundFile('song1', 'mp3');
       }
 
-      setSelectedIndex(null);
-      setVideoOffsetIndex(0);
+      setTimeout(() => {
+        RNSoundPlayer.seek(currentTime);
+      }, 300);
+
+      const id = setInterval(async () => {
+        try {
+          const info = await RNSoundPlayer.getInfo();
+          setCurrentTime(info.currentTime || 0);
+          setDuration(info.duration || 0);
+        } catch (e) {
+          console.log('getInfo 에러:', e);
+        }
+      }, 500);
+      intervalRef.current = id;
+    } catch (e) {
+      Alert.alert('재생 실패', '오디오 파일을 찾을 수 없어요.');
+      console.error('로컬 재생 실패:', e);
     }
   };
 
-
-useEffect(() => {
-  if (currentIndex >= lyricsBlocks.length && selections.length > 0) {
-    // motionId들만 뽑아내기
-    const selectedMotionIds = selections.map(sel => sel.selectedMotionIds[0]);
-
-    // 1. 로컬 저장
-    AsyncStorage.setItem('selectedMotionIds', JSON.stringify(selectedMotionIds))
-      .then(() => console.log('✅ motionId 배열 저장 완료'))
-      .catch((err) => console.error('❌ 저장 실패:', err));
-
-    // 2. 서버에도 저장 (필요 시)
-    fetch('http://52.78.174.239:8080/api/emotion/selections/save', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(selectedMotionIds),
-    })
-      .then(() => console.log('✅ 서버 저장 완료'))
-      .catch((err) => console.error('❌ 서버 저장 실패:', err));
-  }
-}, [currentIndex]);
-
-  const handleSeek = (value: number) => {
-    SoundPlayer.seek(value);
-    setPosition(value);
+  const handleStop = () => {
+    try {
+      RNSoundPlayer.stop();
+    } catch {}
+    if (intervalRef.current) clearInterval(intervalRef.current);
   };
 
+  const handleSeek = (value: number) => {
+    try {
+      RNSoundPlayer.seek(value);
+    } catch {}
+    setCurrentTime(value);
+  };
+
+  // ─── 모션/영상(나중에 API 붙일 때 활성화) ────────────────────────
+  // TODO: 누나가 쓰던 fetchMotionIds / fetchVideoUrls 복원 시, 아래 set*들 사용
+  // useEffect(() => { ... }, []);
+
+  // 완료 시 선택 결과 저장 (기존 로직 유지)
+  useEffect(() => {
+    if (currentIndex >= lyricsBlocks.length && selections.length > 0) {
+      const selectedMotionIds = selections.map((sel) => sel.selectedMotionIds[0]);
+
+      AsyncStorage.setItem('selectedMotionIds', JSON.stringify(selectedMotionIds))
+        .then(() => console.log('✅ motionId 배열 저장 완료'))
+        .catch((err) => console.error('❌ 저장 실패:', err));
+
+      fetch('http://52.78.174.239:8080/api/emotion/selections/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(selectedMotionIds),
+      })
+        .then(() => console.log('✅ 서버 저장 완료'))
+        .catch((err) => console.error('❌ 서버 저장 실패:', err));
+    }
+  }, [currentIndex]);
+
+  // ─── 녹화 화면 이동 ─────────────────────────────────────────────
   const goToRecordScreen = () => {
-    SoundPlayer.stop();
+    handleStop();
     navigation.navigate('RecordScreen');
   };
 
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <Image
-          source={require('../../../src/assets/background/Loadingbackground.png')}
-          style={styles.loadingImage}
-          resizeMode="cover"
-        />
+        <ActivityIndicator size="large" color="#4B9DFE" />
       </View>
     );
   }
@@ -212,142 +163,144 @@ useEffect(() => {
       style={styles.background}
       resizeMode="cover"
     >
-      <View style={styles.innerContainer}>
-        {isFinished ? (
-          <>
-            <Text style={styles.finishedText}>🎉 모든 선택이 완료됐어요!</Text>
-            <TouchableOpacity onPress={goToRecordScreen} style={{ marginTop: 20 }}>
-              <Image
-                source={require('../../../src/assets/icon/Record.png')}
-                style={styles.iconButton}
-              />
-            </TouchableOpacity>
-          </>
-        ) : (
-          <>
-            <TouchableOpacity onPress={handleVideoPress} activeOpacity={0.9}>
-              {currentVideoUrl ? (
-                <Video
-                  source={{ uri: currentVideoUrl }}
-                  style={styles.video}
-                  resizeMode="cover"
-                  repeat
-                  paused={false}
-                  muted={false}
-                />
-              ) : (
-                <View style={[styles.video, { justifyContent: 'center', alignItems: 'center' }]}>
-                </View>
-              )}
-              {selected && (
-                <View style={styles.overlay}>
-                  <Text style={styles.selectedText}>✔ 선택됨</Text>
-                </View>
-              )}
-            </TouchableOpacity>
+      {/* 비디오 미리보기(선택) */}
+      {fileUrl ? (
+        <Video
+          source={{ uri: fileUrl }}
+          style={styles.video}
+          controls
+          resizeMode="contain"
+          paused={false}
+        />
+      ) : null}
 
-            <View style={styles.lyricsContainer}>
-              {lyricsBlocks[currentIndex]?.lines.map((line, idx) => (
-                <Text key={idx} style={styles.lyricLine}>{line}</Text>
-              ))}
-            </View>
+      <View style={styles.playerCard}>
+        <Text style={styles.nowPlayingText}>⏱ 재생 중: {title}</Text>
 
-            <Slider
-              style={{ width: '90%', marginTop: 10 }}
-              minimumValue={0}
-              maximumValue={duration}
-              value={position}
-              onSlidingComplete={handleSeek}
-              minimumTrackTintColor="#FFFFFF"
-              maximumTrackTintColor="#888"
-            />
+        <View style={styles.controls}>
+          <TouchableOpacity onPress={handleStop} style={[styles.controlButton, styles.stopButton]}>
+            <Text style={styles.controlText}>⏸️</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handlePlay} style={[styles.controlButton, styles.playButton]}>
+            <Text style={styles.controlText}>▶️</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={resetCurrentTime} style={[styles.controlButton, styles.resetButton]}>
+            <Text style={styles.controlText}>⏹️</Text>
+          </TouchableOpacity>
+        </View>
 
-            <View style={styles.buttonRow}>
-              <TouchableOpacity onPress={handleFinalize} disabled={!selected}>
-                <Image
-                  source={require('../../../src/assets/icon/suntek.png')}
-                  style={[styles.iconButton, !selected && { opacity: 0.5 }]}
-                />
-              </TouchableOpacity>
+        <View style={styles.lyricsContainer}>
+          {lyricsBlocks[currentIndex]?.lines?.map((line, idx) => (
+            <Text key={idx} style={styles.lyricLine}>{line}</Text>
+          )) || <Text style={styles.lyricLine}>가사 없음</Text>}
+        </View>
 
-              <TouchableOpacity onPress={handleRetry}>
-                <Image
-                  source={require('../../../src/assets/icon/dasi.png')}
-                  style={styles.iconButton}
-                />
-              </TouchableOpacity>
-            </View>
-          </>
-        )}
+        <RNCSlider
+          value={currentTime}
+          minimumValue={0}
+          maximumValue={Math.max(duration, 0)}
+          onSlidingComplete={handleSeek}
+          minimumTrackTintColor="#4B9DFE"
+          maximumTrackTintColor="#E0E0E0"
+          thumbTintColor="#4B9DFE"
+          style={styles.slider}
+        />
+
+        <Text style={styles.timeText}>
+          {Math.floor(currentTime / 60)}:{Math.floor(currentTime % 60).toString().padStart(2, '0')} /
+          {Math.floor(duration / 60)}:{Math.floor(duration % 60).toString().padStart(2, '0')} 초
+        </Text>
       </View>
     </ImageBackground>
   );
 };
 
-export default VideoSelectionScreen;
+export default DanceRecommendScreen;
 
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-    resizeMode: 'cover',
-  },
-  innerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   video: {
-    width: videoWidth,
-    height: videoHeight,
+    width: '100%',
+    height: 220,
     backgroundColor: '#000',
+  },
+  playerCard: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4,
+    marginVertical: 20,
+    marginHorizontal: 16,
+    alignItems: 'center',
+  },
+  controls: {
+    flexDirection: 'row',
+    gap: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 12,
+  },
+  controlButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
     borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  overlay: {
-    position: 'absolute',
-    top: 20,
-    left: 20,
-    backgroundColor: 'rgba(255,255,255,0.8)',
-    padding: 8,
-    borderRadius: 8,
+  playButton: {
+    backgroundColor: '#4B9DFE',
   },
-  selectedText: {
-    color: '#000',
+  resetButton: {
+    backgroundColor: '#81C147',
+  },
+  stopButton: {
+    backgroundColor: '#FE4B4B',
+  },
+  controlText: {
+    color: '#fff',
     fontWeight: 'bold',
   },
   lyricsContainer: {
-    marginTop: 20,
-    alignItems: 'center',
+    width: '100%',
+    paddingVertical: 10,
+    marginTop: 8,
+    marginBottom: 8,
   },
   lyricLine: {
     fontSize: 16,
-    color: '#fff',
+    color: '#333',
     textAlign: 'center',
     marginVertical: 2,
   },
-  buttonRow: {
-    marginTop: 20,
-    flexDirection: 'row',
-    gap: 20,
-    justifyContent: 'space-around',
+  slider: {
     width: '100%',
+    height: 40,
+    marginBottom: 6,
   },
-  iconButton: {
-    width: 64,
-    height: 64,
-    resizeMode: 'contain',
+  timeText: {
+    fontSize: 13,
+    color: '#666',
+  },
+  nowPlayingText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    color: '#333',
   },
   loadingContainer: {
     flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#000',
-  },
-  loadingImage: {
-    width: '100%',
-    height: '100%',
-  },
-  finishedText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginTop: 24,
   },
 });

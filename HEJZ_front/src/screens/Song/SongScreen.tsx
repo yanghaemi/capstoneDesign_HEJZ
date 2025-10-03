@@ -18,7 +18,7 @@ const SongScreen = () => {
   const [instrumental, setInstrumental] = useState(false); // customMode가 false면 자동으로 false
   const [model, setModel] = useState("V3_5");               // 모델 별 프롬포트 길이 )
                                                         // V3_5 & V4: 3000 캐릭터, V4_5 : 5000 캐릭터
-  const [callBackUrl, setCallBackUrl] = useState("https://b88e-115-20-243-238.ngrok-free.app/api/suno/callback");   // 콜백 url
+  const [callBackUrl, setCallBackUrl] = useState("https://9f1c-115-20-243-238.ngrok-free.app/api/suno/callback");   // 콜백 url
   // ------------------------------------------------------------------------
 
 
@@ -71,7 +71,7 @@ const SongScreen = () => {
 
   return (
       <ImageBackground
-            source={require('../../assets/background/songbackground.png')}
+            source={require('../../assets/background/SongBackground3.png')}
             style={styles.background}
             resizeMode="cover"
        >

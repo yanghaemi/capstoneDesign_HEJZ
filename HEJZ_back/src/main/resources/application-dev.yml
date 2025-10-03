@@ -4,12 +4,14 @@ spring:
       on-profile: dev
 
   datasource:
-    url: jdbc:mysql://mysql_capstoneHEJZ:3306/${MYSQL_DATABASE}
+    url: jdbc:mysql://mysql:3310/${MYSQL_DATABASE}
     username: ${MYSQL_USER}
     password: ${MYSQL_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
-
+  web:
+    resources:
+      static-locations: file:./music/
 
   jpa:
     hibernate:
@@ -26,19 +28,37 @@ spring:
       name: none
       password: none
 
-song:
-  apikey: ${API_SUNO_KEY}
+  openai:
+    api:
+      key: ${OPENAI_API_KEY}
+      model: ${OPENAI_API_MODEL}
 
-#app:
-#  jwt:
-#    secret: ${APP_JWT_SECRET}
-#    expiration-ms: ${APP_JWT_EXPIRATION_MS}
-#
-#springdoc:
-#  swagger-ui:
-#    path: /swagger-ui.html
-#    operationsSorter: method
-#    tagsSorter: alpha
-#    display-request-duration: true
-#  api-docs:
-#    path: /v3/api-docs
+  suno:
+    api:
+      key: ${SUNO_API_KEY}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+    display-request-duration: true
+
+cloud:
+  aws:
+    s3:
+      bucket: ${CLOUD_AWS_S3_BUCKET}
+    credentials:
+      access-key: ${AWS_ACCESS_KEY}
+      secret-key: ${AWS_SECRET_KEY}
+    region:
+      static: ${CLOUD_AWS_REGION_STATIC}
+      auto: false
+    stack:
+      auto: false
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration-ms: ${JWT_EXPIRES_MS:3600000} # 기본값 1시간

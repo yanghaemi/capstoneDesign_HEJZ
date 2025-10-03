@@ -33,16 +33,25 @@ services:
     depends_on:
       - mysql
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql_capstoneHEJZ:3306/${MYSQL_DATABASE}
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
-      #APP_JWT_SECRET: ${APP_JWT_SECRET}
-      #APP_JWT_EXPIRATION_MS: ${APP_JWT_EXPIRATION_MS}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_API_MODEL: ${OPENAI_API_MODEL}
+      SPRING_PROFILES_ACTIVE: dev
+      SUNO_API_KEY: ${SUNO_API_KEY}
+      AWS_ACCESS_KEY: ${AWS_ACCESS_KEY}
+      AWS_SECRET_KEY: ${AWS_SECRET_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_MS: ${JWT_EXPIRES_MS}
     networks:
       - capstoneHEJZ_network
+    volumes:
+      - ./music:/app/music
 
 volumes:
   mysql_data:
+
 
 networks:
   capstoneHEJZ_network:

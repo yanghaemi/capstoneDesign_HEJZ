@@ -1,2 +1,9 @@
 HEJZ_front/android/app/.cxx/
 node_modules
+HEJZ_back/music/
+.idea/
+music/
+HEJZ_back/src/main/resources/application.properties
+HEJZ_front/android/app/src/main/res/raw/
+
+.vscode/
