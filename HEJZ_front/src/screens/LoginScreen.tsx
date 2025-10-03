@@ -1,4 +1,4 @@
-// LoginScreen.tsx
+// screens/LoginScreen.tsx
 import React, { useState } from 'react';
 import {
   View, ImageBackground, StyleSheet, Text, TouchableOpacity, TextInput,
@@ -7,34 +7,30 @@ import {
 import { login } from '../api/auth';
 
 export default function LoginScreen({ navigation }: any) {
-  const [username, setUsername] = useState(''); // 아이디
-  const [password, setPassword] = useState(''); // 비밀번호
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    if (!username || !password) {
+    const u = username.trim();
+    if (!u || !password) {
       Alert.alert('로그인', '아이디와 비밀번호를 입력해주세요');
       return;
     }
+
     setLoading(true);
     try {
-      // 서버 DTO(LoginRequest)와 1:1 매핑
-      const data = await login({ username, password });
+      // ⬇︎ 토큰 저장까지 login()이 처리함 (AsyncStorage)
+      await login({ username: u, password });
 
-      // 서버가 토큰을 준다면 여기서 저장 (응답 형태 유동적 처리)
-      // 예: accessToken/token/jwt 등 키 대응
-      const token =
-        data?.accessToken ?? data?.token ?? data?.jwt ?? null;
-      if (token) {
-        console.log('로그인 토큰:', token);
-      }
-
-      // 성공 이동
+      // 메인으로 진입 (원하면 reset으로 완전 초기화)
+      // navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
       navigation.replace('Main');
     } catch (e: any) {
-      const msg = String(e?.message ?? '').trim();
-      if (msg.startsWith('401')) {
-        Alert.alert('로그인 실패', '아이디와 비밀번호를 확인해주세요.');
+      const msg = (e?.message || '').toString();
+      // 서버가 401이면 보통 "HTTP 401" 또는 커스텀 메시지
+      if (/401/.test(msg)) {
+        Alert.alert('로그인 실패', '아이디/비밀번호를 확인해주세요.');
       } else {
         Alert.alert('로그인 실패', msg || '서버 오류가 발생했어요.');
       }
@@ -55,10 +51,7 @@ export default function LoginScreen({ navigation }: any) {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={{ flex: 1 }}
         >
-          <ScrollView
-            contentContainerStyle={styles.content}
-            keyboardShouldPersistTaps="handled"
-          >
+          <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
             <View style={styles.form}>
               <TextInput
                 style={styles.input}
@@ -67,6 +60,7 @@ export default function LoginScreen({ navigation }: any) {
                 onChangeText={setUsername}
                 placeholderTextColor="#666"
                 autoCapitalize="none"
+                autoCorrect={false}
                 returnKeyType="next"
               />
               <TextInput
@@ -74,8 +68,10 @@ export default function LoginScreen({ navigation }: any) {
                 placeholder="비밀번호"
                 value={password}
                 onChangeText={setPassword}
-                secureTextEntry
                 placeholderTextColor="#666"
+                secureTextEntry
+                autoCapitalize="none"
+                autoCorrect={false}
                 returnKeyType="done"
                 onSubmitEditing={handleLogin}
               />
@@ -84,12 +80,9 @@ export default function LoginScreen({ navigation }: any) {
                 style={[styles.button, loading && { opacity: 0.6 }]}
                 onPress={handleLogin}
                 disabled={loading}
+                activeOpacity={0.8}
               >
-                {loading ? (
-                  <ActivityIndicator />
-                ) : (
-                  <Text style={styles.buttonText}>로그인</Text>
-                )}
+                {loading ? <ActivityIndicator /> : <Text style={styles.buttonText}>로그인</Text>}
               </TouchableOpacity>
 
               <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
@@ -111,10 +104,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 32,
   },
-  form: {
-    gap: 14,
-    backgroundColor: 'rgba(255,255,255,0.0)',
-  },
+  form: { gap: 14, backgroundColor: 'rgba(255,255,255,0.0)' },
   input: {
     width: '100%',
     borderWidth: 1,
