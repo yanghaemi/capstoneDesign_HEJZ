@@ -1,3 +1,4 @@
+// screens/SignUpScreen.tsx
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
@@ -5,6 +6,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { signUp } from '../api/auth';
+import { cacheMyProfile } from '../api/user'; // ← 추가
 
 const SignUpScreen = () => {
   const [username, setUsername] = useState('');          // 아이디
@@ -17,13 +19,13 @@ const SignUpScreen = () => {
   const navigation = useNavigation();
 
   const handleSignUp = async () => {
-    // 필수값 체크 (백엔드가 요구하는 필드 기준)
     if (!username || !password || !email || !nickname) {
       Alert.alert('회원가입', '아이디/비밀번호/이메일/닉네임은 필수야!');
       return;
     }
     setLoading(true);
     try {
+      // 1) 서버 가입 요청
       await signUp({
         username,
         password,
@@ -32,6 +34,17 @@ const SignUpScreen = () => {
         profileImageUrl: profileImageUrl.trim(),
         bio: bio.trim(),
       });
+
+      // 2) 입력값을 로컬 캐시 (로그인 전에도 프로필 화면에서 보이게)
+      await cacheMyProfile({
+        username,
+        nickname,
+        bio: bio.trim(),
+        avatarUrl: profileImageUrl.trim(),
+        followers: 0,
+        following: 0,
+      });
+
       Alert.alert('회원가입 완료', '이제 로그인해줘!');
       // @ts-ignore
       navigation.replace?.('Login') ?? navigation.goBack();
