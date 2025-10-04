@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.HEJZ.HEJZ_back.domain.community.follow.service.FollowService;
 import com.HEJZ.HEJZ_back.domain.community.user.dto.LoginRequest;
 import com.HEJZ.HEJZ_back.domain.community.user.dto.SignUpRequest;
 import com.HEJZ.HEJZ_back.domain.community.user.service.UserService;
