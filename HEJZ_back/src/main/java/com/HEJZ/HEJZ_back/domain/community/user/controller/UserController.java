@@ -1,11 +1,15 @@
 package com.HEJZ.HEJZ_back.domain.community.user.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.HEJZ.HEJZ_back.domain.community.follow.service.FollowService;
 import com.HEJZ.HEJZ_back.domain.community.user.dto.LoginRequest;
 import com.HEJZ.HEJZ_back.domain.community.user.dto.SignUpRequest;
 import com.HEJZ.HEJZ_back.domain.community.user.service.UserService;
@@ -52,4 +56,21 @@ public class UserController {
 
         return ResponseEntity.ok(result);
     }
+
+    /*
+     * 호출 url : http://localhost:8080/api/user/myinfo
+     * 설명 : 내 정보 조회 api
+     * method : get
+     */
+    @GetMapping("/myinfo")
+    public ResponseEntity<ApiResponse<Object>> getMyInfo() {
+
+        Authentication authentication = SecurityContextHolder.getContext()
+                .getAuthentication();
+        String username = authentication.getName();
+        ApiResponse<Object> result = userService.getMyInfo(username);
+
+        return ResponseEntity.ok(result);
+    }
+
 }
