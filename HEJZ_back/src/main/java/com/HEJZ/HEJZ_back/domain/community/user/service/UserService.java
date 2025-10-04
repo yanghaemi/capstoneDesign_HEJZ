@@ -2,7 +2,6 @@ package com.HEJZ.HEJZ_back.domain.community.user.service;
 
 import java.time.LocalDateTime;
 
-import org.apache.catalina.security.SecurityUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 

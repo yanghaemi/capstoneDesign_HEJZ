@@ -92,4 +92,20 @@ public class FollowController {
 
         return ResponseEntity.ok(result);
     }
+
+    /*
+     * 호출 url : http://localhost:8080/api/follow/interfollow
+     * 설명: 맞팔 여부 획인
+     * method : post
+     */
+    @PostMapping("/interfollow")
+    public ResponseEntity<ApiResponse<Object>> isInterFollow(@RequestBody FollowRequest targetUsername) {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String myUsername = authentication.getName();
+
+        ApiResponse<Object> result = followService.isInterFollow(myUsername, targetUsername.getUsername());
+
+        return ResponseEntity.ok(result);
+    }
 }

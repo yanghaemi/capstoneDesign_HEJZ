@@ -4,11 +4,9 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.HEJZ.HEJZ_back.domain.community.follow.dto.FollowResponse;
-import com.HEJZ.HEJZ_back.domain.community.follow.entity.FollowerEntity;
-import com.HEJZ.HEJZ_back.domain.community.follow.entity.FollowingEntity;
-import com.HEJZ.HEJZ_back.domain.community.follow.repository.FollowerRepository;
-import com.HEJZ.HEJZ_back.domain.community.follow.repository.FollowingRepository;
+import com.HEJZ.HEJZ_back.domain.community.follow.dto.FollowDto;
+import com.HEJZ.HEJZ_back.domain.community.follow.entity.FollowEntity;
+import com.HEJZ.HEJZ_back.domain.community.follow.repository.FollowRepository;
 import com.HEJZ.HEJZ_back.domain.community.user.entity.UserEntity;
 import com.HEJZ.HEJZ_back.domain.community.user.repository.UserRepository;
 import com.HEJZ.HEJZ_back.global.response.ApiResponse;
@@ -25,84 +23,58 @@ import lombok.AllArgsConstructor;
 public class FollowService {
 
     private final UserRepository userRepository;
-    private final FollowerRepository followerRepository;
-    private final FollowingRepository followingRepository;
+    private final FollowRepository followRepository;
 
     @Transactional
-    public ApiResponse<Object> followUser(String myUsername, String followedUsername) {
+    public ApiResponse<Object> followUser(String myUsername, String targetUsername) {
         try {
 
             // 팔로우하려는 유저가 존재하는지 확인
-            UserEntity followedUser = userRepository.findByUsername(followedUsername);
+            UserEntity target = userRepository.findByUsername(targetUsername);
+            UserEntity me = userRepository.findByUsername(myUsername);
 
-            System.out.println("팔로우 시도: " + myUsername + " -> " + followedUsername);
+            System.out.println("팔로우 시도: " + myUsername + " -> " + targetUsername);
 
-            if (followedUser == null) {
+            if (target == null || me == null) {
                 return new ApiResponse<Object>(404, null, "팔로우하려는 유저를 찾을 수 없습니다.");
             }
 
-            if (followedUsername.equals(myUsername)) {
+            if (followRepository.existsByFollower_UsernameAndFollowing_Username(myUsername, targetUsername)) {
+                return new ApiResponse<Object>(409, null, "이미 팔로우 중입니다.");
+            }
+
+            if (targetUsername.equals(myUsername)) {
                 return new ApiResponse<Object>(400, null, "자기 자신은 팔로우할 수 없습니다.");
             }
 
             // DB에 팔로우 관계 저장
-            // int followerCount = userRepository.plusFollower(followedUsername);
-            // int followingCount = userRepository.plusFollowing(myUsername);
+            FollowEntity follow = new FollowEntity();
+            follow.setFollower(me);
+            follow.setFollowing(target);
+            followRepository.save(follow);
 
-            // System.out.println("팔로워 수: " + followerCount);
-            // System.out.println("팔로잉 수: " + followingCount);
-
-            // 팔로워 관계 저장
-            FollowerEntity followUserEntity = new FollowerEntity();
-            followUserEntity.setUsername(myUsername);
-            followUserEntity.setFollowed(followedUsername);
-
-            followerRepository.save(followUserEntity);
-
-            // 팔로잉 관계 저장
-            FollowingEntity followingEntity = new FollowingEntity();
-            followingEntity.setUsername(followedUsername);
-            followingEntity.setFollowing(myUsername);
-
-            followingRepository.save(followingEntity);
-
-            // 팔로우 응답 객체 생성
-            FollowResponse followResponse = new FollowResponse();
-            followResponse.setFollowerEntity(followUserEntity);
-            followResponse.setFollowingEntity(followingEntity);
-
-            return new ApiResponse<Object>(200, followResponse, "팔로우 성공");
+            return new ApiResponse<Object>(200, follow, "팔로우 성공");
         } catch (Exception e) {
             return new ApiResponse<Object>(500, null, "팔로우 실패: " + e.getMessage());
         }
     }
 
     @Transactional
-    public ApiResponse<Object> unfollowUser(String myUsername, String unfollowedUsername) {
+    public ApiResponse<Object> unfollowUser(String myUsername, String targetUsername) {
         try {
 
             // 언팔로우하려는 유저가 존재하는지 확인
-            UserEntity followedUser = userRepository.findByUsername(unfollowedUsername);
+            UserEntity target = userRepository.findByUsername(targetUsername);
 
-            if (followedUser == null) {
+            if (target == null) {
                 return new ApiResponse<Object>(404, null, "언팔로우하려는 유저를 찾을 수 없습니다.");
             }
 
-            if (unfollowedUsername.equals(myUsername)) {
+            if (targetUsername.equals(myUsername)) {
                 return new ApiResponse<Object>(400, null, "자기 자신은 언팔로우할 수 없습니다.");
             }
 
-            // int followerCount = userRepository.minusFollower(unfollowedUsername);
-            // int followingCount = userRepository.minusFollowing(myUsername);
-
-            // System.out.println("팔로워 수: " + followerCount);
-            // System.out.println("팔로잉 수: " + followingCount);
-
-            // 팔로워 관계 삭제
-            followerRepository.deleteByUsernameAndFollowed(myUsername, unfollowedUsername);
-
-            // 팔로잉 관계 삭제
-            followingRepository.deleteByUsernameAndFollowing(unfollowedUsername, myUsername);
+            followRepository.deleteByFollowerUsernameAndFollowingUsername(myUsername, targetUsername);
 
             return new ApiResponse<Object>(200, null, "언팔로우 성공");
         } catch (Exception e) {
@@ -110,31 +82,76 @@ public class FollowService {
         }
     }
 
+    @Transactional
     public ApiResponse<Object> getFollowers(String myUsername) {
         try {
-            List<FollowerEntity> follower = followerRepository.findFollowerByUsername(myUsername);
+            List<FollowEntity> followers = followRepository.findByFollowerUsername(myUsername);
 
-            if (follower == null) {
+            if (followers == null) {
                 return new ApiResponse<Object>(404, null, "팔로우한 유저가 없거나 유저를 찾을 수 없습니다.");
             }
 
-            return new ApiResponse<Object>(200, follower, "팔로워 목록 조회 성공");
+            // DB에서 가져온 Entity를 DTO에 담아 response
+            List<FollowDto> followersList = followers.stream()
+                    .map(f -> new FollowDto(
+                            f.getFollower().getUsername(),
+                            f.getFollower().getNickname(),
+                            f.getFollower().getProfileImageUrl()))
+                    .toList();
+
+            return new ApiResponse<Object>(200, followersList, "팔로워 목록 조회 성공");
         } catch (Exception e) {
             return new ApiResponse<Object>(500, null, "팔로워 목록 조회 실패: " + e.getMessage());
         }
     }
 
+    @Transactional
     public ApiResponse<Object> getFollowings(String myUsername) {
         try {
-            List<FollowingEntity> following = followingRepository.findFollowingByUsername(myUsername);
+            List<FollowEntity> followings = followRepository.findByFollowingUsername(myUsername);
 
-            if (following == null) {
-                return new ApiResponse<Object>(404, null, "팔로잉한 유저가 없거나 유저를 찾을 수 없습니다.");
+            if (followings == null) {
+                return new ApiResponse<Object>(404, null, "유저를 찾을 수 없습니다.");
             }
 
-            return new ApiResponse<Object>(200, following, "팔로잉 목록 조회 성공");
+            // DB에서 가져온 Entity를 DTO에 담아 response
+            List<FollowDto> followingsList = followings.stream()
+                    .map(f -> new FollowDto(
+                            f.getFollowing().getUsername(),
+                            f.getFollowing().getNickname(),
+                            f.getFollowing().getProfileImageUrl()))
+                    .toList();
+
+            return new ApiResponse<Object>(200, followingsList, "팔로잉 목록 조회 성공");
         } catch (Exception e) {
             return new ApiResponse<Object>(500, null, "팔로잉 목록 조회 실패: " + e.getMessage());
+        }
+    }
+
+    @Transactional
+    public ApiResponse<Object> isInterFollow(String myUsername, String targetUsername) {
+        try {
+
+            List<FollowEntity> followers = followRepository.findByFollowerUsername(myUsername);
+
+            if (followers == null) {
+                return new ApiResponse<Object>(404, null, "팔로워를 찾을 수 없습니다.");
+            }
+
+            // 내가 타겟을 팔로우 중?
+            boolean doIFollowTarget = followRepository
+                    .existsByFollower_UsernameAndFollowing_Username(myUsername, targetUsername);
+
+            // 타겟이 나를 팔로우 중?
+            boolean doesTargetFollowMe = followRepository
+                    .existsByFollower_UsernameAndFollowing_Username(targetUsername, myUsername);
+
+            boolean result = doIFollowTarget && doesTargetFollowMe;
+
+            return new ApiResponse<Object>(200, result, result ? "맞팔입니다." : "맞팔이 아닙니다.");
+
+        } catch (Exception e) {
+            return new ApiResponse<Object>(500, null, "맞팔 여부 조회 실패");
         }
     }
 }
