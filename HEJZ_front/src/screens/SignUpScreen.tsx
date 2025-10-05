@@ -1,22 +1,64 @@
+// screens/SignUpScreen.tsx
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ImageBackground } from 'react-native';
-import { useNavigation } from '@react-navigation/native'; // For navigation
+import {
+  View, Text, TextInput, TouchableOpacity, StyleSheet,
+  ImageBackground, Alert, ActivityIndicator, ScrollView
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { signUp } from '../api/auth';
+import { cacheMyProfile } from '../api/user'; // ← 추가
 
 const SignUpScreen = () => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const navigation = useNavigation(); // Navigation object
+  const [username, setUsername] = useState('');          // 아이디
+  const [password, setPassword] = useState('');          // 비밀번호
+  const [email, setEmail] = useState('');                // 이메일
+  const [nickname, setNickname] = useState('');          // 닉네임
+  const [profileImageUrl, setProfileImageUrl] = useState(''); // 프로필 이미지 URL
+  const [bio, setBio] = useState('');                    // 자기소개
+  const [loading, setLoading] = useState(false);
+  const navigation = useNavigation();
 
-  const handleSignUp = () => {
-    console.log('이름:', name);
-    console.log('이메일:', email);
-    console.log('비밀번호:', password);
-    // TODO: 회원가입 API 연결 예정
+  const handleSignUp = async () => {
+    if (!username || !password || !email || !nickname) {
+      Alert.alert('회원가입', '아이디/비밀번호/이메일/닉네임은 필수야!');
+      return;
+    }
+    setLoading(true);
+    try {
+      // 1) 서버 가입 요청
+      await signUp({
+        username,
+        password,
+        email,
+        nickname,
+        profileImageUrl: profileImageUrl.trim(),
+        bio: bio.trim(),
+      });
+
+      // 2) 입력값을 로컬 캐시 (로그인 전에도 프로필 화면에서 보이게)
+      await cacheMyProfile({
+        username,
+        nickname,
+        bio: bio.trim(),
+        avatarUrl: profileImageUrl.trim(),
+        followers: 0,
+        following: 0,
+      });
+
+      Alert.alert('회원가입 완료', '이제 로그인해줘!');
+      // @ts-ignore
+      navigation.replace?.('Login') ?? navigation.goBack();
+    } catch (err: any) {
+      Alert.alert('회원가입 실패', err?.message ?? '잠시 후 다시 시도해줘');
+      console.log('signup error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGoBack = () => {
-    navigation.goBack(); // Return to the previous page
+    // @ts-ignore
+    navigation.goBack?.();
   };
 
   return (
@@ -25,37 +67,30 @@ const SignUpScreen = () => {
       style={styles.background}
     >
       <View style={styles.overlay}>
-        <View style={styles.container}>
-          {/* Back button */}
+        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+          {/* Back */}
           <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
             <Text style={styles.backButtonText}>←</Text>
           </TouchableOpacity>
 
           <Text style={styles.title}>회원가입</Text>
 
+          {/* 아이디 */}
           <View style={styles.inputContainer}>
             <TextInput
-              placeholder="이름을 입력하세요"
+              placeholder="아이디 (username)"
               style={styles.input}
               placeholderTextColor="#A0A0A0"
-              value={name}
-              onChangeText={setName}
+              value={username}
+              onChangeText={setUsername}
+              autoCapitalize="none"
             />
           </View>
 
+          {/* 비밀번호 */}
           <View style={styles.inputContainer}>
             <TextInput
-              placeholder="이메일을 입력하세요"
-              style={styles.input}
-              placeholderTextColor="#A0A0A0"
-              value={email}
-              onChangeText={setEmail}
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <TextInput
-              placeholder="비밀번호를 입력하세요"
+              placeholder="비밀번호"
               secureTextEntry
               style={styles.input}
               placeholderTextColor="#A0A0A0"
@@ -64,10 +99,63 @@ const SignUpScreen = () => {
             />
           </View>
 
-          <TouchableOpacity style={styles.button} onPress={handleSignUp}>
-            <Text style={styles.buttonText}>회원가입</Text>
+          {/* 이메일 */}
+          <View style={styles.inputContainer}>
+            <TextInput
+              placeholder="이메일"
+              style={styles.input}
+              placeholderTextColor="#A0A0A0"
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
+            />
+          </View>
+
+          {/* 닉네임 */}
+          <View style={styles.inputContainer}>
+            <TextInput
+              placeholder="닉네임"
+              style={styles.input}
+              placeholderTextColor="#A0A0A0"
+              value={nickname}
+              onChangeText={setNickname}
+            />
+          </View>
+
+          {/* 프로필 이미지 URL (선택) */}
+          <View style={styles.inputContainer}>
+            <TextInput
+              placeholder="프로필 이미지 URL (선택)"
+              style={styles.input}
+              placeholderTextColor="#A0A0A0"
+              value={profileImageUrl}
+              onChangeText={setProfileImageUrl}
+              autoCapitalize="none"
+            />
+          </View>
+
+          {/* 자기소개 (선택, 멀티라인) */}
+          <View style={[styles.inputContainer, { height: 100 }]}>
+            <TextInput
+              placeholder="자기소개 (선택)"
+              style={[styles.input, { height: 100 }]}
+              placeholderTextColor="#A0A0A0"
+              value={bio}
+              onChangeText={setBio}
+              multiline
+              textAlignVertical="top"
+            />
+          </View>
+
+          <TouchableOpacity
+            style={[styles.button, loading && { opacity: 0.6 }]}
+            onPress={handleSignUp}
+            disabled={loading}
+          >
+            {loading ? <ActivityIndicator /> : <Text style={styles.buttonText}>회원가입</Text>}
           </TouchableOpacity>
-        </View>
+        </ScrollView>
       </View>
     </ImageBackground>
   );
@@ -76,80 +164,38 @@ const SignUpScreen = () => {
 export default SignUpScreen;
 
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-    resizeMode: 'cover',
-  },
-  overlay: {
-    flex: 1,
-  },
+  background: { flex: 1, resizeMode: 'cover' },
+  overlay: { flex: 1 },
   container: {
-    flex: 1,
-    justifyContent: 'center',
     paddingHorizontal: 24,
     paddingVertical: 20,
+    paddingTop: 60,
+    gap: 12,
   },
   backButton: {
     position: 'absolute',
-    top: 40,
+    top: 20,
     left: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    backgroundColor: 'rgba(255,255,255,0.8)',
     borderRadius: 20,
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
+    width: 40, height: 40, justifyContent: 'center', alignItems: 'center',
+    elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2, shadowRadius: 3,
   },
-  backButtonText: {
-    fontSize: 24,
-    color: '#333333',
-    fontWeight: 'bold',
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    marginBottom: 40,
-    textAlign: 'center',
-    color: '#3399FF',
-  },
+  backButtonText: { fontSize: 24, color: '#333', fontWeight: 'bold' },
+  title: { fontSize: 32, fontWeight: 'bold', marginBottom: 8, textAlign: 'center', color: '#3399FF' },
   inputContainer: {
-    marginBottom: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: 15,
-    overflow: 'hidden',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderRadius: 15, overflow: 'hidden',
+    elevation: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2, shadowRadius: 4,
   },
-  input: {
-    padding: 15,
-    fontSize: 16,
-    color: '#0080FF',
-  },
+  input: { padding: 15, fontSize: 16, color: '#0080FF' },
   button: {
-    backgroundColor: '#66B2FF',
-    paddingVertical: 16,
-    borderRadius: 15,
-    alignItems: 'center',
-    marginTop: 30,
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
+    backgroundColor: '#66B2FF', paddingVertical: 16, borderRadius: 15,
+    alignItems: 'center', marginTop: 10, elevation: 6,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1, shadowRadius: 5,
   },
-  buttonText: {
-    color: '#FFFFFF',
-    textAlign: 'center',
-    fontWeight: '700',
-    fontSize: 20,
-    textTransform: 'uppercase',
-  },
+  buttonText: { color: '#fff', fontWeight: '700', fontSize: 20, textTransform: 'uppercase' },
 });
