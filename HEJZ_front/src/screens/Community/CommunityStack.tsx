@@ -15,7 +15,9 @@ import BlockedUserScreen from './BlockedUserScreen';
 import BookmarkScreen from './BookmarkScreen';
 import LoginScreen from './LoginScreen'
 import MyRoomScreen from './MyRoomScreen';
-
+import ComposeFeedScreen from'./ComposeFeedScreen';
+import FeedDetailScreen from './FeedDetailScreen';
+import FeedCreateScreen from './FeedCreateScreen';
 const Stack = createNativeStackNavigator();
 
 export const CommunityNavigator = () => (
@@ -32,6 +34,9 @@ export const CommunityNavigator = () => (
     <Stack.Screen name="EditProfile" component={EditProfileScreen} />
     <Stack.Screen name="EditPassword" component={EditPasswordScreen} />
     <Stack.Screen name="MyRoom" component={MyRoomScreen} />
+    <Stack.Screen name="ComposeFeed" component={ComposeFeedScreen} />
+    <Stack.Screen name="FeedDetail" component={FeedDetailScreen} />
+    <Stack.Screen name="FeedCreate" component={FeedCreateScreen} />
   </Stack.Navigator>
 );
 

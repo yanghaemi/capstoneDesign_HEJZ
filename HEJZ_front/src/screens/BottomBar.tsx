@@ -1,19 +1,22 @@
+
 import React from 'react';
-import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, Text, StyleSheet, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
 const BottomBar = () => {
   const navigation = useNavigation();
 
-
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={() => navigation.navigate('Main')}>
-        <Text style={styles.button}>홈</Text>
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Main')}>
+        <Image source={require('../assets/icon/Home.png')} style={styles.icon} />
+        <Text style={styles.buttonText}>홈</Text>
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate('Community', { screen: 'MyRoom' })}>
-        <Text style={styles.button}>내 방</Text>
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Community', { screen: 'MyRoom' })}>
+        <Image source={require('../assets/icon/Room.png')} style={styles.icon} />
+        <Text style={styles.buttonText}>내 방</Text>
       </TouchableOpacity>
+
     </View>
   );
 };
@@ -25,11 +28,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     paddingVertical: 10,
+    backgroundColor: '#E6F0FA',
     borderTopWidth: 1,
-    borderTopColor: '#ccc',
-    backgroundColor: '#fff',
+    borderTopColor: '#B0C4DE',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+
   },
   button: {
-    fontSize: 16,
+    alignItems: 'center',
+  },
+  icon: {
+    width: 24,
+    height: 24,
+    marginBottom: 4,
+    tintColor: '#5B9BD5',
+  },
+  buttonText: {
+    fontSize: 12,
+    color: '#5B9BD5',
+    fontWeight: '600',
   },
 });

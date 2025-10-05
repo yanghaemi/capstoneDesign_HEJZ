@@ -17,8 +17,8 @@ import SelectScreen from './screens/SelectScreen';
 import SignUpScreen from './screens/SignUpScreen';
 import SongPlayScreen from './screens/SongPlayScreen';
 import SunoPreviewScreen from './screens/SunoPreviewScreen';
-
-
+import TestScreen from './TestScreen';
+import LoginScreen from './screens/LoginScreen'
 
 enableScreens(); 
 
@@ -45,7 +45,8 @@ const App = () => {
           <ApiContext.Provider value={{ apiUrl: API_URL, apiKey: API_SUNO_KEY }}>
             <UserProvider>
               <NavigationContainer>
-                <Stack.Navigator screenOptions={{ headerShown: false }}>
+                <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Login">
+                  <Stack.Screen name="Login" component={LoginScreen} />
                   <Stack.Screen name="Main" component={MainScreen} />
                   <Stack.Screen name="Stats" component={StatsScreen} />
                   <Stack.Screen name="Select" component={SelectScreen} />
@@ -55,6 +56,8 @@ const App = () => {
                   <Stack.Screen name="Dance" component={DanceNavigator} />
                   <Stack.Screen name="Community" component={CommunityNavigator} />
                   <Stack.Screen name="SongPlay" component={SongPlayScreen} />
+                  <Stack.Screen name="Test" component={TestScreen} />
+
                   <Stack.Screen name="SunoPreviewScreen" component={SunoPreviewScreen} />
 
 

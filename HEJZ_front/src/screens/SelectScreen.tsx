@@ -58,6 +58,7 @@ const SelectScreen = ({ navigation }: any) => {
       </ImageBackground>
 
       {/* ✅ 하단 바 추가 */}
+      <View style={{ height: 60 }} />
       <BottomBar />
     </View>
   );
@@ -79,6 +80,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     position: 'relative',
     marginTop: 60,
+
   },
   row: {
     flexDirection: 'row',
