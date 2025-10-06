@@ -1,6 +1,8 @@
 package com.HEJZ.HEJZ_back.domain.community.feed.entity;
 
 import com.HEJZ.HEJZ_back.domain.community.user.entity.UserEntity;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -10,13 +12,16 @@ import java.util.List;
 
 @Entity
 @Table(name = "feed", indexes = {
-        @Index(name = "idx_user_deleted_created_id",
-                columnList = "user_id, is_deleted, created_at DESC, id DESC")
+        @Index(name = "idx_user_deleted_created_id", columnList = "user_id, is_deleted, created_at DESC, id DESC")
 })
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Feed {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY) // 작성자
@@ -33,5 +38,6 @@ public class Feed {
     private boolean isDeleted = false;
 
     @OneToMany(mappedBy = "feed", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<FeedMedia> images = new ArrayList<>();
 }

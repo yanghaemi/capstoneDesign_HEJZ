@@ -46,10 +46,11 @@ public interface FeedRepository extends JpaRepository<Feed, Long> {
       @Param("cursorId") Long cursorId,
       Pageable pageable);
 
-  @EntityGraph(attributePaths = { "user", "images" })
   @Query("""
-        SELECT DISTINCT f FROM Feed f
+        SELECT DISTINCT f
+        FROM Feed f
         JOIN FETCH f.user u
+        LEFT JOIN FETCH f.images i
         WHERE LOWER(f.content) LIKE LOWER(CONCAT('%', :keyword, '%'))
       """)
   List<Feed> findFeedByKeyword(@Param("keyword") String keyword);
