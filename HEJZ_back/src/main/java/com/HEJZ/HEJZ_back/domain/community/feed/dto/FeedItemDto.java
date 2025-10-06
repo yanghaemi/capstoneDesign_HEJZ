@@ -7,6 +7,6 @@ public record FeedItemDto(
         Long id,
         Long userId,
         String content,
-        List<ImageDto> images,
+        List<MediaDto> medias,
         LocalDateTime createdAt
 ) {}

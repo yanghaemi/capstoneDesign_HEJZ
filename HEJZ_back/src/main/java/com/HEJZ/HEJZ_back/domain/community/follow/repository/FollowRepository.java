@@ -13,20 +13,18 @@ import jakarta.transaction.Transactional;
 @Repository
 public interface FollowRepository extends JpaRepository<FollowEntity, Long> {
 
-    // 이미 팔로우 했는지 확인
+    // 팔로우 관계 존재 여부: follower(나) -> following(상대)
     boolean existsByFollower_UsernameAndFollowing_Username(String followerUsername, String followingUsername);
 
-    // 언팔로우
-    @Modifying
-    @Transactional
-    int deleteByFollowerUsernameAndFollowingUsername(String followerUsername, String followingUsername);
+    // 언팔로우: follower(나) -> following(상대)
+    @Modifying @Transactional
+    int deleteByFollower_UsernameAndFollowing_Username(String followerUsername, String followingUsername);
 
-    long countByFollowingUsername(String username); // 그 사람의 팔로워 수
-
-    long countByFollowerUsername(String username); // 그 사람의 팔로잉 수
+    // 카운트
+    long countByFollowing_Username(String username); // 그 사람의 팔로워 수
+    long countByFollower_Username(String username);  // 그 사람의 팔로잉 수
 
     // 목록
-    List<FollowEntity> findByFollowerUsername(String username); // 내가 팔로우하는 사람들
-
-    List<FollowEntity> findByFollowingUsername(String username); // 나를 팔로우하는 사람들
+    List<FollowEntity> findByFollower_Username(String username);   // 내가 팔로우하는 사람들(= followings)
+    List<FollowEntity> findByFollowing_Username(String username);  // 나를 팔로우하는 사람들(= followers)
 }
