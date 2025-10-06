@@ -44,13 +44,13 @@ public class FeedService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        List<FeedMedia> medias = new ArrayList<>();
+        List<FeedMedia> media = new ArrayList<>();
 
-        // 신규 포맷 우선 (medias[])
-        if (request.medias() != null && !request.medias().isEmpty()) {
-            for (int i = 0; i < request.medias().size(); i++) {
-                var m = request.medias().get(i);
-                medias.add(FeedMedia.builder()
+        // 신규 포맷 우선 (media[])
+        if (request.media() != null && !request.media().isEmpty()) {
+            for (int i = 0; i < request.media().size(); i++) {
+                var m = request.media().get(i);
+                media.add(FeedMedia.builder()
                         .feed(feed)
                         .url(m.url())
                         .ord(i)
@@ -64,7 +64,7 @@ public class FeedService {
         // 레거시 호환 (imageUrls[])
         else if (request.imageUrls() != null && !request.imageUrls().isEmpty()) {
             for (int i = 0; i < request.imageUrls().size(); i++) {
-                medias.add(FeedMedia.builder()
+                media.add(FeedMedia.builder()
                         .feed(feed)
                         .url(request.imageUrls().get(i))
                         .ord(i)
@@ -73,7 +73,7 @@ public class FeedService {
             }
         }
 
-        feed.setImages(medias);
+        feed.setImages(media);
         Feed saved = feedRepository.save(feed);
         return toDto(saved);
     }
@@ -88,8 +88,7 @@ public class FeedService {
                 userId,
                 c.createdAt(),
                 c.id(),
-                PageRequest.of(0, clamp(limit, 1, 100))
-        );
+                PageRequest.of(0, clamp(limit, 1, 100)));
         return buildListResponse(feeds);
     }
 
@@ -103,8 +102,7 @@ public class FeedService {
                 userId,
                 c.createdAt(),
                 c.id(),
-                PageRequest.of(0, clamp(limit, 1, 100))
-        );
+                PageRequest.of(0, clamp(limit, 1, 100)));
         return buildListResponse(feeds);
     }
 
@@ -133,8 +131,7 @@ public class FeedService {
                         m.getType(),
                         m.getThumbnailUrl(),
                         m.getDurationMs(),
-                        m.getMimeType()
-                ))
+                        m.getMimeType()))
                 .toList();
 
         return new FeedItemDto(
@@ -142,8 +139,7 @@ public class FeedService {
                 feed.getUser().getId(),
                 feed.getContent(),
                 mediaDtos,
-                feed.getCreatedAt()
-        );
+                feed.getCreatedAt());
     }
 
     private String toCursor(Feed last) {
@@ -160,14 +156,16 @@ public class FeedService {
         return new FeedListResponse(items, nextCursor);
     }
 
-    private record Cursor(LocalDateTime createdAt, Long id) {}
+    private record Cursor(LocalDateTime createdAt, Long id) {
+    }
 
     private Cursor parseCursor(String cursor) {
         if (cursor != null && cursor.contains("_") && !"null".equalsIgnoreCase(cursor)) {
             String[] parts = cursor.split("_", 2);
             if (parts.length == 2) {
                 String ts = parts[0];
-                if (ts.length() > 19) ts = ts.substring(0, 19); // trim nanos if any
+                if (ts.length() > 19)
+                    ts = ts.substring(0, 19); // trim nanos if any
                 try {
                     return new Cursor(LocalDateTime.parse(ts, CURSOR_FMT), Long.parseLong(parts[1]));
                 } catch (Exception e) {
