@@ -130,7 +130,7 @@ export default function MainScreen({ navigation }: any) {
             }
             activeOpacity={0.8}
           >
-            <Text style={styles.recordText}>📹 테스트 녹화</Text>
+
           </TouchableOpacity>
         </Animated.View>
       </ImageBackground>
