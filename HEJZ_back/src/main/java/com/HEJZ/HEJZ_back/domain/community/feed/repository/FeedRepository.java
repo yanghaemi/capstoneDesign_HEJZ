@@ -10,10 +10,6 @@ import java.util.List;
 
 public interface FeedRepository extends JpaRepository<Feed, Long> {
 
-<<<<<<< HEAD
-  /**
-   * 최신순(Keyset 페이징)으로 유저 피드 조회
-   */
   @Query("""
       SELECT f FROM Feed f
       WHERE f.user.id = :userId
@@ -31,6 +27,25 @@ public interface FeedRepository extends JpaRepository<Feed, Long> {
       @Param("cursorId") Long cursorId,
       Pageable pageable);
 
+  @Query("""
+      SELECT f FROM Feed f
+      JOIN com.HEJZ.HEJZ_back.domain.community.follow.entity.FollowEntity fol
+           ON fol.following.id = f.user.id
+      WHERE fol.follower.id = :userId
+        AND f.isDeleted = false
+        AND (
+             :cursorCreatedAt IS NULL
+             OR (f.createdAt < :cursorCreatedAt)
+             OR (f.createdAt = :cursorCreatedAt AND f.id < :cursorId)
+        )
+      ORDER BY f.createdAt DESC, f.id DESC
+      """)
+  List<Feed> findTimelineFeeds(
+      @Param("userId") Long userId,
+      @Param("cursorCreatedAt") LocalDateTime cursorCreatedAt,
+      @Param("cursorId") Long cursorId,
+      Pageable pageable);
+
   @EntityGraph(attributePaths = { "user", "images" })
   @Query("""
         SELECT DISTINCT f FROM Feed f
@@ -38,45 +53,4 @@ public interface FeedRepository extends JpaRepository<Feed, Long> {
         WHERE LOWER(f.content) LIKE LOWER(CONCAT('%', :keyword, '%'))
       """)
   List<Feed> findFeedByKeyword(@Param("keyword") String keyword);
-
-  // List<Feed> findByContentContainingIgnoreCase(String keyword);
-=======
-    @Query("""
-        SELECT f FROM Feed f
-        WHERE f.user.id = :userId
-          AND f.isDeleted = false
-          AND (
-               :cursorCreatedAt IS NULL
-               OR (f.createdAt < :cursorCreatedAt)
-               OR (f.createdAt = :cursorCreatedAt AND f.id < :cursorId)
-          )
-        ORDER BY f.createdAt DESC, f.id DESC
-        """)
-    List<Feed> findMyFeeds(
-            @Param("userId") Long userId,
-            @Param("cursorCreatedAt") LocalDateTime cursorCreatedAt,
-            @Param("cursorId") Long cursorId,
-            Pageable pageable
-    );
-
-    @Query("""
-        SELECT f FROM Feed f
-        JOIN com.HEJZ.HEJZ_back.domain.community.follow.entity.FollowEntity fol
-             ON fol.following.id = f.user.id
-        WHERE fol.follower.id = :userId
-          AND f.isDeleted = false
-          AND (
-               :cursorCreatedAt IS NULL
-               OR (f.createdAt < :cursorCreatedAt)
-               OR (f.createdAt = :cursorCreatedAt AND f.id < :cursorId)
-          )
-        ORDER BY f.createdAt DESC, f.id DESC
-        """)
-    List<Feed> findTimelineFeeds(
-            @Param("userId") Long userId,
-            @Param("cursorCreatedAt") LocalDateTime cursorCreatedAt,
-            @Param("cursorId") Long cursorId,
-            Pageable pageable
-    );
->>>>>>> ee13a56724c6913876a16cbfa34bce98d20af4f2
 }

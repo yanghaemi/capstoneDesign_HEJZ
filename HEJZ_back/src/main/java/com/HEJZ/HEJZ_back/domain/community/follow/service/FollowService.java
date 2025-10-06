@@ -70,12 +70,8 @@ public class FollowService {
     @Transactional
     public ApiResponse<Object> getFollowers(String myUsername) {
         try {
-<<<<<<< HEAD
-            List<FollowEntity> followers = followRepository.findByFollowingUsername(myUsername);
-=======
             // 나를 팔로우하는 사람들 = following == 나
             List<FollowEntity> rows = followRepository.findByFollowing_Username(myUsername);
->>>>>>> ee13a56724c6913876a16cbfa34bce98d20af4f2
 
             // JPA는 리스트를 null로 주지 않으므로 null 체크 불필요(빈 리스트면 0건)
             var list = rows.stream()
@@ -94,12 +90,8 @@ public class FollowService {
     @Transactional
     public ApiResponse<Object> getFollowings(String myUsername) {
         try {
-<<<<<<< HEAD
-            List<FollowEntity> followings = followRepository.findByFollowerUsername(myUsername);
-=======
             // 내가 팔로우하는 사람들 = follower == 나
             List<FollowEntity> rows = followRepository.findByFollower_Username(myUsername);
->>>>>>> ee13a56724c6913876a16cbfa34bce98d20af4f2
 
             var list = rows.stream()
                     .map(f -> new FollowDto(
