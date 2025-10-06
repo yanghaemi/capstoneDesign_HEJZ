@@ -85,7 +85,7 @@ public class FollowService {
     @Transactional
     public ApiResponse<Object> getFollowers(String myUsername) {
         try {
-            List<FollowEntity> followers = followRepository.findByFollowerUsername(myUsername);
+            List<FollowEntity> followers = followRepository.findByFollowingUsername(myUsername);
 
             if (followers == null) {
                 return new ApiResponse<Object>(404, null, "팔로우한 유저가 없거나 유저를 찾을 수 없습니다.");
@@ -108,7 +108,7 @@ public class FollowService {
     @Transactional
     public ApiResponse<Object> getFollowings(String myUsername) {
         try {
-            List<FollowEntity> followings = followRepository.findByFollowingUsername(myUsername);
+            List<FollowEntity> followings = followRepository.findByFollowerUsername(myUsername);
 
             if (followings == null) {
                 return new ApiResponse<Object>(404, null, "유저를 찾을 수 없습니다.");

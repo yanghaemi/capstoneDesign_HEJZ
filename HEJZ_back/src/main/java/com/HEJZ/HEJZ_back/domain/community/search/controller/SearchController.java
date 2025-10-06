@@ -17,10 +17,12 @@ import lombok.RequiredArgsConstructor;
 public class SearchController {
     // 검색 관련 컨트롤러
 
-    private SearchService searchService;
+    private final SearchService searchService;
 
     /*
      * 호출 url : http://localhost:8080/api/search?{param}
+     * 설명 : 검색
+     * method : get
      */
     @GetMapping
     public ResponseEntity<ApiResponse<Object>> search(@Param("keyword") String keyword) {
