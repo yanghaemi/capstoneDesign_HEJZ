@@ -1,5 +1,5 @@
 // MainScreen.tsx
-import React, { useRef, useCallback, useEffect } from 'react';
+import React, { useRef, useCallback } from 'react';
 import {
   View,
   ImageBackground,
@@ -9,11 +9,12 @@ import {
   Animated,
   PanResponder,
   Dimensions,
+  Platform,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 
 const { width: W, height: H } = Dimensions.get('window');
-
+const HEADER_TOUCH_BLOCK = 80; // 상단 80px는 제스처 비활성화 (테스트 버튼 영역)
 /** cloud2.png 원본 비율 (예: 768x855) */
 const CLOUD_ASPECT = 768 / 855;
 
@@ -50,12 +51,11 @@ export default function MainScreen({ navigation }: any) {
     extrapolate: 'clamp',
   });
 
-  /** 클라우드 이미지 트랜스폼 */
+  /** ⛅️ 클라우드 이미지 트랜스폼 */
   const cloudStyle = {
     width: CLOUD_W0,
     height: CLOUD_H0,
     position: 'absolute' as const,
-    // 시작: 좌하단 밖 / 끝: 화면 중앙 (오프셋 적용)
     left: progress.interpolate({
       inputRange: [0, 1],
       outputRange: [
@@ -66,7 +66,7 @@ export default function MainScreen({ navigation }: any) {
     bottom: progress.interpolate({
       inputRange: [0, 1],
       outputRange: [
-        -CLOUD_H0 * 0.35 - CLOUD_OFFSET_Y, // 아래로 내리려면 값 더 작게(음수 증가)
+        -CLOUD_H0 * 0.35 - CLOUD_OFFSET_Y,
         H / 2 - (CLOUD_H0 * COVER_SCALE) / 2 - CLOUD_OFFSET_Y,
       ],
     }),
@@ -80,19 +80,20 @@ export default function MainScreen({ navigation }: any) {
       {
         rotate: progress.interpolate({
           inputRange: [0, 1],
-          outputRange: ['0deg', '-2deg'], // 필요 없으면 둘 다 '0deg'
+          outputRange: ['0deg', '-2deg'],
         }),
       },
     ],
   };
 
-  // 제스처: 루트가 직접 받음
+  // 제스처: 상단 HEADER_TOUCH_BLOCK 영역에서는 시작/이동 모두 무시
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onStartShouldSetPanResponderCapture: () => true,
-      onMoveShouldSetPanResponderCapture: () => true,
+      onStartShouldSetPanResponder: (e) => e.nativeEvent.pageY > HEADER_TOUCH_BLOCK,
+      onMoveShouldSetPanResponder: (e, g) =>
+        e.nativeEvent.pageY > HEADER_TOUCH_BLOCK && Math.abs(g.dy) > 4,
+      onStartShouldSetPanResponderCapture: () => false,
+      onMoveShouldSetPanResponderCapture: () => false,
       onPanResponderMove: (_e, g) => {
         const dy = Math.max(0, -g.dy);          // 위로만
         const p = Math.min(1, dy / (H * 0.8));  // 80% 끌면 1
@@ -113,7 +114,14 @@ export default function MainScreen({ navigation }: any) {
   ).current;
 
   return (
-    <View style={styles.container} {...panResponder.panHandlers}>
+    <View style={styles.container}>
+      {/* 제스처 레이어: 상단 HEADER_TOUCH_BLOCK 아래부터만 드래그 활성화 */}
+      <View
+        style={styles.gestureLayer}
+        pointerEvents="box-only"
+        {...panResponder.panHandlers}
+      />
+
       {/* 배경 */}
       <ImageBackground
         source={require('../assets/background/newback.png')}
@@ -121,28 +129,30 @@ export default function MainScreen({ navigation }: any) {
         resizeMode="cover"
         pointerEvents="box-none"
       >
-        {/* 드래그 중 페이드되는 UI */}
-        <Animated.View style={[styles.uiLayer, { opacity: uiOpacity }]}>
-          <TouchableOpacity
-            style={styles.recordButton}
-            onPress={() =>
-              navigation.navigate('Dance', { screen: 'RecordScreen' }, { fileName: 'song1' })
-            }
-            activeOpacity={0.8}
-          >
-
-          </TouchableOpacity>
-        </Animated.View>
+        <Animated.View style={[styles.uiLayer, { opacity: uiOpacity }]} />
       </ImageBackground>
 
-      {/* ⛅️ 클라우드 이미지 (좌하단→오른쪽 살짝/아래 조금 위치 오프셋 적용) */}
+      {/* [TEST HEADER] 상단 고정 테스트 버튼 */}
+      <View pointerEvents="auto" style={styles.testHeaderWrap}>
+        <TouchableOpacity
+          style={styles.testButton}
+          //onPress={() => navigation.navigate('Test')}
+          onPress={() => navigation.navigate('Dance', { screen: 'RecordScreen' })}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.testText}>카메라 테스트</Text>
+        </TouchableOpacity>
+      </View>
+      {/* [/TEST HEADER] */}
+
+      {/* 클라우드 */}
       <Animated.Image
         source={require('../assets/icon/cloud2.png')}
         style={cloudStyle}
         resizeMode="contain"
       />
 
-      {/* 안전 오버레이: 90% 이후 빈틈 제거 */}
+      {/* 90% 이후 오버레이 */}
       <Animated.View
         pointerEvents="none"
         style={[StyleSheet.absoluteFillObject, { backgroundColor: '#FFF', opacity: overlayOpacity }]}
@@ -155,14 +165,30 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0E1220' },
   background: { ...StyleSheet.absoluteFillObject, justifyContent: 'flex-end' },
   uiLayer: { padding: 16 },
-  recordButton: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ccc',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
+
+  // [TEST HEADER]
+  testHeaderWrap: {
+    position: 'absolute',
+    top: Platform.select({ ios: 0, android: 0 }),
+    left: 0,
+    right: 0,
+    // 상단 80px은 제스처 비활성화 영역과 정확히 맞춤
+    paddingTop: Platform.select({ ios: 44, android: 16 }), // 대충 안전 영역 보정
+    height: HEADER_TOUCH_BLOCK,
+    justifyContent: 'center',
+    alignItems: 'flex-end', // 우측 상단 정렬 (원하면 'flex-start'로 바꿔)
+    paddingHorizontal: 12,
+    zIndex: 10,
   },
-  recordText: { color: '#000' },
+  testButton: {
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+  },
+  testText: {
+    color: '#0E1220',
+    fontWeight: '600',
+  },
+  // [/TEST HEADER]
 });
