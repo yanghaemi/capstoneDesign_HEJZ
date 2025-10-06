@@ -3,6 +3,11 @@ spring:
     activate:
       on-profile: dev
 
+  servlet:
+    multipart:
+      max-file-size: 200MB
+      max-request-size: 200MB
+
   datasource:
     url: jdbc:mysql://mysql:3310/${MYSQL_DATABASE}
     username: ${MYSQL_USER}

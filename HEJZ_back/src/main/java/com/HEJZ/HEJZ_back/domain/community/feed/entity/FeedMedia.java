@@ -1,5 +1,6 @@
 package com.HEJZ.HEJZ_back.domain.community.feed.entity;
 
+import com.HEJZ.HEJZ_back.domain.community.feed.dto.MediaType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -8,15 +9,23 @@ import lombok.*;
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor @Builder
 public class FeedMedia {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "feed_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "feed_id", nullable = false)
     private Feed feed;
 
-    @Column(nullable = false, length = 512)
-    private String url;
-
+    @Column(nullable = false, length = 512) private String url;
     private int ord;
+
+    @Enumerated(EnumType.STRING) @Column(nullable = false)
+    private MediaType type = MediaType.IMAGE;
+
+    @Column(name = "thumbnail_url", length = 512)
+    private String thumbnailUrl;
+
+    @Column(name = "duration_ms")
+    private Integer durationMs;
+
+    @Column(name = "mime_type", length = 100)
+    private String mimeType;
 }

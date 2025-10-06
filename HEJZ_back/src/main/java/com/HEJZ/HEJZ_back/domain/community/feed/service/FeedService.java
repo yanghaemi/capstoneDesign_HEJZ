@@ -3,7 +3,8 @@ package com.HEJZ.HEJZ_back.domain.community.feed.service;
 import com.HEJZ.HEJZ_back.domain.community.feed.dto.FeedCreateRequest;
 import com.HEJZ.HEJZ_back.domain.community.feed.dto.FeedItemDto;
 import com.HEJZ.HEJZ_back.domain.community.feed.dto.FeedListResponse;
-import com.HEJZ.HEJZ_back.domain.community.feed.dto.ImageDto;
+import com.HEJZ.HEJZ_back.domain.community.feed.dto.MediaDto;
+import com.HEJZ.HEJZ_back.domain.community.feed.dto.MediaType;
 import com.HEJZ.HEJZ_back.domain.community.feed.entity.Feed;
 import com.HEJZ.HEJZ_back.domain.community.feed.entity.FeedMedia;
 import com.HEJZ.HEJZ_back.domain.community.feed.repository.FeedRepository;
@@ -29,6 +30,9 @@ public class FeedService {
 
     private static final DateTimeFormatter CURSOR_FMT = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
+    // =========================
+    // Create
+    // =========================
     @Transactional
     public FeedItemDto createFeed(Long userId, FeedCreateRequest request) {
         UserEntity user = userRepository.findById(userId)
@@ -41,62 +45,72 @@ public class FeedService {
                 .build();
 
         List<FeedMedia> medias = new ArrayList<>();
-        if (request.imageUrls() != null) {
+
+        // 신규 포맷 우선 (medias[])
+        if (request.medias() != null && !request.medias().isEmpty()) {
+            for (int i = 0; i < request.medias().size(); i++) {
+                var m = request.medias().get(i);
+                medias.add(FeedMedia.builder()
+                        .feed(feed)
+                        .url(m.url())
+                        .ord(i)
+                        .type(m.type() == null ? MediaType.IMAGE : m.type())
+                        .thumbnailUrl(m.thumbnailUrl())
+                        .durationMs(m.durationMs())
+                        .mimeType(m.mimeType())
+                        .build());
+            }
+        }
+        // 레거시 호환 (imageUrls[])
+        else if (request.imageUrls() != null && !request.imageUrls().isEmpty()) {
             for (int i = 0; i < request.imageUrls().size(); i++) {
                 medias.add(FeedMedia.builder()
                         .feed(feed)
                         .url(request.imageUrls().get(i))
                         .ord(i)
+                        .type(MediaType.IMAGE)
                         .build());
             }
         }
-        feed.setImages(medias);
 
+        feed.setImages(medias);
         Feed saved = feedRepository.save(feed);
         return toDto(saved);
     }
 
+    // =========================
+    // Read: My feeds (keyset)
+    // =========================
     @Transactional(readOnly = true)
     public FeedListResponse getMyFeeds(Long userId, int limit, String cursor) {
-        LocalDateTime cursorCreatedAt = null;
-        Long cursorId = null;
-
-        if (cursor != null && cursor.contains("_") && !"null".equalsIgnoreCase(cursor)) {
-            String[] parts = cursor.split("_", 2);
-            if (parts.length == 2) {
-                String ts = parts[0];
-                if (ts.length() > 19) ts = ts.substring(0, 19); // yyyy-MM-ddTHH:mm:ss
-                try {
-                    cursorCreatedAt = LocalDateTime.parse(ts, CURSOR_FMT);
-                    cursorId = Long.parseLong(parts[1]);
-                } catch (Exception e) {
-                    throw new RuntimeException("Invalid cursor: " + cursor, e);
-                }
-            }
-        }
-
+        Cursor c = parseCursor(cursor);
         List<Feed> feeds = feedRepository.findMyFeeds(
                 userId,
-                cursorCreatedAt,
-                cursorId,
-                PageRequest.of(0, Math.max(1, Math.min(100, limit)))
+                c.createdAt(),
+                c.id(),
+                PageRequest.of(0, clamp(limit, 1, 100))
         );
-
-        String nextCursor = null;
-        if (!feeds.isEmpty()) {
-            Feed last = feeds.get(feeds.size() - 1);
-            // 응답 커서는 초 단위까지만
-            String ts = last.getCreatedAt().format(CURSOR_FMT);
-            nextCursor = ts + "_" + last.getId();
-        }
-
-        List<FeedItemDto> items = feeds.stream()
-                .map(this::toDto)
-                .toList();
-
-        return new FeedListResponse(items, nextCursor);
+        return buildListResponse(feeds);
     }
 
+    // =========================
+    // Read: Timeline (people I follow)
+    // =========================
+    @Transactional(readOnly = true)
+    public FeedListResponse getTimelineFeeds(Long userId, int limit, String cursor) {
+        Cursor c = parseCursor(cursor);
+        List<Feed> feeds = feedRepository.findTimelineFeeds(
+                userId,
+                c.createdAt(),
+                c.id(),
+                PageRequest.of(0, clamp(limit, 1, 100))
+        );
+        return buildListResponse(feeds);
+    }
+
+    // =========================
+    // Delete (soft delete)
+    // =========================
     @Transactional
     public void deleteFeed(Long userId, Long feedId) {
         Feed feed = feedRepository.findById(feedId)
@@ -107,19 +121,64 @@ public class FeedService {
         feed.setDeleted(true);
     }
 
+    // =========================
+    // DTO mapping / Cursor utils
+    // =========================
     private FeedItemDto toDto(Feed feed) {
-        List<ImageDto> imgs = feed.getImages().stream()
-                .sorted(Comparator.comparingInt(FeedMedia::getOrd))  // ← 여기!
-                .map(m -> new ImageDto(m.getUrl(), m.getOrd()))
+        List<MediaDto> mediaDtos = feed.getImages().stream()
+                .sorted(Comparator.comparingInt(FeedMedia::getOrd))
+                .map(m -> new MediaDto(
+                        m.getUrl(),
+                        m.getOrd(),
+                        m.getType(),
+                        m.getThumbnailUrl(),
+                        m.getDurationMs(),
+                        m.getMimeType()
+                ))
                 .toList();
 
         return new FeedItemDto(
                 feed.getId(),
                 feed.getUser().getId(),
                 feed.getContent(),
-                imgs,
+                mediaDtos,
                 feed.getCreatedAt()
         );
     }
 
+    private String toCursor(Feed last) {
+        String ts = last.getCreatedAt().format(CURSOR_FMT); // yyyy-MM-ddTHH:mm:ss
+        return ts + "_" + last.getId();
+    }
+
+    private FeedListResponse buildListResponse(List<Feed> feeds) {
+        String nextCursor = null;
+        if (!feeds.isEmpty()) {
+            nextCursor = toCursor(feeds.get(feeds.size() - 1));
+        }
+        List<FeedItemDto> items = feeds.stream().map(this::toDto).toList();
+        return new FeedListResponse(items, nextCursor);
+    }
+
+    private record Cursor(LocalDateTime createdAt, Long id) {}
+
+    private Cursor parseCursor(String cursor) {
+        if (cursor != null && cursor.contains("_") && !"null".equalsIgnoreCase(cursor)) {
+            String[] parts = cursor.split("_", 2);
+            if (parts.length == 2) {
+                String ts = parts[0];
+                if (ts.length() > 19) ts = ts.substring(0, 19); // trim nanos if any
+                try {
+                    return new Cursor(LocalDateTime.parse(ts, CURSOR_FMT), Long.parseLong(parts[1]));
+                } catch (Exception e) {
+                    throw new RuntimeException("Invalid cursor: " + cursor, e);
+                }
+            }
+        }
+        return new Cursor(null, null);
+    }
+
+    private int clamp(int v, int lo, int hi) {
+        return Math.max(lo, Math.min(hi, v));
+    }
 }
