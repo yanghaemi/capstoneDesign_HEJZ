@@ -34,9 +34,11 @@ public class Feed {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Builder.Default
     @Column(nullable = false)
     private boolean isDeleted = false;
 
+    @Builder.Default
     @OneToMany(mappedBy = "feed", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<FeedMedia> images = new ArrayList<>();

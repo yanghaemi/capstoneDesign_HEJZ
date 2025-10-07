@@ -28,6 +28,7 @@ public class FeedMedia {
     private String url;
     private int ord;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private MediaType type = MediaType.IMAGE;
