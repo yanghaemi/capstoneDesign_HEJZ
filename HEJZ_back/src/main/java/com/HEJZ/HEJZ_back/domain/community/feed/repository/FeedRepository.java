@@ -10,41 +10,60 @@ import java.util.List;
 
 public interface FeedRepository extends JpaRepository<Feed, Long> {
 
-    @Query("""
-        SELECT f FROM Feed f
-        WHERE f.user.id = :userId
-          AND f.isDeleted = false
-          AND (
-               :cursorCreatedAt IS NULL
-               OR (f.createdAt < :cursorCreatedAt)
-               OR (f.createdAt = :cursorCreatedAt AND f.id < :cursorId)
-          )
-        ORDER BY f.createdAt DESC, f.id DESC
-        """)
-    List<Feed> findMyFeeds(
-            @Param("userId") Long userId,
-            @Param("cursorCreatedAt") LocalDateTime cursorCreatedAt,
-            @Param("cursorId") Long cursorId,
-            Pageable pageable
-    );
+  @Query("""
+      SELECT f FROM Feed f
+      WHERE f.user.id = :userId
+        AND f.isDeleted = false
+        AND (
+             :cursorCreatedAt IS NULL
+             OR (f.createdAt < :cursorCreatedAt)
+             OR (f.createdAt = :cursorCreatedAt AND f.id < :cursorId)
+        )
+      ORDER BY f.createdAt DESC, f.id DESC
+      """)
+  List<Feed> findMyFeeds(
+      @Param("userId") Long userId,
+      @Param("cursorCreatedAt") LocalDateTime cursorCreatedAt,
+      @Param("cursorId") Long cursorId,
+      Pageable pageable);
 
-    @Query("""
-        SELECT f FROM Feed f
-        JOIN com.HEJZ.HEJZ_back.domain.community.follow.entity.FollowEntity fol
-             ON fol.following.id = f.user.id
-        WHERE fol.follower.id = :userId
-          AND f.isDeleted = false
+  @Query("""
+      SELECT f FROM Feed f
+      JOIN com.HEJZ.HEJZ_back.domain.community.follow.entity.FollowEntity fol
+           ON fol.following.id = f.user.id
+      WHERE fol.follower.id = :userId
+        AND f.isDeleted = false
+        AND (
+             :cursorCreatedAt IS NULL
+             OR (f.createdAt < :cursorCreatedAt)
+             OR (f.createdAt = :cursorCreatedAt AND f.id < :cursorId)
+        )
+      ORDER BY f.createdAt DESC, f.id DESC
+      """)
+  List<Feed> findTimelineFeeds(
+      @Param("userId") Long userId,
+      @Param("cursorCreatedAt") LocalDateTime cursorCreatedAt,
+      @Param("cursorId") Long cursorId,
+      Pageable pageable);
+
+  @EntityGraph(attributePaths = "images") // images를 즉시 로딩
+  @Query("""
+        SELECT f
+        FROM Feed f
+        WHERE f.isDeleted = false
+          AND LOWER(f.content) LIKE LOWER(CONCAT('%', :keyword, '%'))
           AND (
-               :cursorCreatedAt IS NULL
-               OR (f.createdAt < :cursorCreatedAt)
-               OR (f.createdAt = :cursorCreatedAt AND f.id < :cursorId)
+            :followingOnly = false OR EXISTS (
+              SELECT 1 FROM FollowEntity fol
+              WHERE fol.follower.id = :viewerId
+                AND fol.following.id = f.user.id
+            )
           )
         ORDER BY f.createdAt DESC, f.id DESC
-        """)
-    List<Feed> findTimelineFeeds(
-            @Param("userId") Long userId,
-            @Param("cursorCreatedAt") LocalDateTime cursorCreatedAt,
-            @Param("cursorId") Long cursorId,
-            Pageable pageable
-    );
+      """)
+  List<Feed> findFeedByKeyword(
+      @Param("keyword") String keyword,
+      @Param("viewerId") Long viewerId,
+      @Param("followingOnly") boolean followingOnly,
+      Pageable pageable);
 }

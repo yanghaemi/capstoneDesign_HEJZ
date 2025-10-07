@@ -1,23 +1,36 @@
 package com.HEJZ.HEJZ_back.domain.community.feed.entity;
 
 import com.HEJZ.HEJZ_back.domain.community.feed.dto.MediaType;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
 @Table(name = "feed_media")
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class FeedMedia {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "feed_id", nullable = false)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "feed_id", nullable = false)
+    @JsonBackReference
     private Feed feed;
 
-    @Column(nullable = false, length = 512) private String url;
+    @Column(nullable = false, length = 512)
+    private String url;
     private int ord;
 
-    @Enumerated(EnumType.STRING) @Column(nullable = false)
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private MediaType type = MediaType.IMAGE;
 
     @Column(name = "thumbnail_url", length = 512)
