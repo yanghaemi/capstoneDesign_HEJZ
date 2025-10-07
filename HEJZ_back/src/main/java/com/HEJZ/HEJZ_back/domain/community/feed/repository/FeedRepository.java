@@ -46,12 +46,24 @@ public interface FeedRepository extends JpaRepository<Feed, Long> {
       @Param("cursorId") Long cursorId,
       Pageable pageable);
 
+  @EntityGraph(attributePaths = "images") // images를 즉시 로딩
   @Query("""
-        SELECT DISTINCT f
+        SELECT f
         FROM Feed f
-        JOIN FETCH f.user u
-        LEFT JOIN FETCH f.images i
-        WHERE LOWER(f.content) LIKE LOWER(CONCAT('%', :keyword, '%'))
+        WHERE f.isDeleted = false
+          AND LOWER(f.content) LIKE LOWER(CONCAT('%', :keyword, '%'))
+          AND (
+            :followingOnly = false OR EXISTS (
+              SELECT 1 FROM FollowEntity fol
+              WHERE fol.follower.id = :viewerId
+                AND fol.following.id = f.user.id
+            )
+          )
+        ORDER BY f.createdAt DESC, f.id DESC
       """)
-  List<Feed> findFeedByKeyword(@Param("keyword") String keyword);
+  List<Feed> findFeedByKeyword(
+      @Param("keyword") String keyword,
+      @Param("viewerId") Long viewerId,
+      @Param("followingOnly") boolean followingOnly,
+      Pageable pageable);
 }

@@ -122,7 +122,7 @@ public class FeedService {
     // =========================
     // DTO mapping / Cursor utils
     // =========================
-    private FeedItemDto toDto(Feed feed) {
+    public FeedItemDto toDto(Feed feed) {
         List<MediaDto> mediaDtos = feed.getImages().stream()
                 .sorted(Comparator.comparingInt(FeedMedia::getOrd))
                 .map(m -> new MediaDto(
