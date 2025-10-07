@@ -13,7 +13,7 @@ import SignUpScreen from './SignUpScreen';
 import FeedsScreen from './FeedsScreen';
 import BlockedUserScreen from './BlockedUserScreen';
 import BookmarkScreen from './BookmarkScreen';
-import LoginScreen from './LoginScreen'
+
 import MyRoomScreen from './MyRoomScreen';
 import ComposeFeedScreen from'./ComposeFeedScreen';
 import FeedDetailScreen from './FeedDetailScreen';
@@ -26,7 +26,7 @@ export const CommunityNavigator = () => (
     <Stack.Screen name="Feeds" component={FeedsScreen} />
     <Stack.Screen name="Bookmark" component={BookmarkScreen} />
     <Stack.Screen name="Comments" component={MyCommentsScreen} />
-    <Stack.Screen name="Login" component={LoginScreen} />
+
     <Stack.Screen name="BlockedUser" component={BlockedUserScreen} />
     <Stack.Screen name="MyVideos" component={MyVideoScreen} />
     <Stack.Screen name="MySongs" component={MySongScreen} />

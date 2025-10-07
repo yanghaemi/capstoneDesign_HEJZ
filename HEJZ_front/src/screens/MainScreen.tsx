@@ -107,7 +107,11 @@ export default function MainScreen({ navigation }: any) {
           duration: passed ? 320 : 220,
           useNativeDriver: false, // left/bottom 보간이라 false
         }).start(() => {
-          if (passed) navigation.navigate('Community', { screen: 'MyRoom' });
+          if (passed) navigation.navigate('Community', {
+                        screen: 'MyRoom',
+                        params: { refresh: Date.now() },
+                        merge: true,
+                      });
         });
       },
     })
@@ -144,7 +148,7 @@ export default function MainScreen({ navigation }: any) {
       <View style={styles.testHeaderWrap} pointerEvents="auto">
         <TouchableOpacity
           style={styles.testButton}
-          onPress={() => navigation.navigate('TestScreen')}
+          onPress={() => navigation.navigate('Test')}
           activeOpacity={0.85}
         >
           <Text style={styles.testText}>카메라 테스트</Text>

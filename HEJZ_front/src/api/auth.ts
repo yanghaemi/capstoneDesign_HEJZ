@@ -69,3 +69,7 @@ export async function login(req: { username: string; password: string }) {
   await saveToken(token);
   return { accessToken: token };
 }
+export async function logoutLocalOnly() {
+  await clearToken();              // from ../auth/token
+  // 서버 로그아웃 API 쓰면 여기서 호출 추가 가능
+}

@@ -1,4 +1,3 @@
-// screens/MyProfileScreen.tsx
 import React, { useCallback, useRef, useState } from 'react';
 import {
   View, Text, StyleSheet, SafeAreaView, FlatList, Image,
@@ -454,22 +453,22 @@ const s = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
   },
   appbarLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  logo: { width: 22, height: 22 },
-  title: { fontSize: 16, fontWeight: '800', letterSpacing: 0.4, color: '#0B1020' },
-  burger: { fontSize: 24, color: '#111827', paddingHorizontal: 4 },
+  logo: { width: 60, height: 60 },
+  title: { fontSize: 25, fontWeight: '800', letterSpacing: 0.4, color: '#0B1020' },
+  burger: { fontSize: 35, color: '#111827', paddingHorizontal: 4 },
 
   profileWrap: {
     paddingHorizontal: H_PADDING, paddingTop: 12, paddingBottom: 10,
     backgroundColor: '#FFFFFF', borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E7EB',
   },
   profileRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  avatar: { width: 60, height: 60, borderRadius: 30, backgroundColor: '#E5E7EB' },
-  nickname: { fontSize: 16, fontWeight: '800', color: '#111827' },
+  avatar: { width: 70, height: 70, borderRadius: 30, backgroundColor: '#E5E7EB' },
+  nickname: { fontSize: 20, fontWeight: '800', color: '#111827' },
   meta: { fontSize: 12, color: '#6B7280', marginTop: 4 },
   btnCol: { marginLeft: 6 },
   editBtn: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, backgroundColor: '#111827' },
   editTxt: { color: '#fff', fontSize: 12, fontWeight: '700' },
-  bio: { marginTop: 10, marginLeft: 72, marginRight: 12, fontSize: 12.5, color: '#374151' },
+  bio: { marginTop: 10, marginLeft: 20, marginRight: 12, fontSize: 15, color: '#374151' },
 
   gridItem: { width: THUMB, height: THUMB, backgroundColor: '#FFF', borderRadius: 10, overflow: 'hidden' },
   thumbImg: { width: '100%', height: '100%' },
@@ -486,7 +485,7 @@ const s = StyleSheet.create({
   footer: { textAlign: 'center', color: '#6B7280', paddingVertical: 10 },
 
   tabbar: {
-    position: 'absolute', left: 0, right: 0, bottom: 0, height: TAB_H,
+    position: 'absolute', left:-15 , right: 20, bottom: 0, height: TAB_H,
     backgroundColor: '#FFFFFF', borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#E5E7EB',
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', paddingHorizontal: 16,
   },
