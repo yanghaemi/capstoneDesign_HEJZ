@@ -1,4 +1,3 @@
-// screens/MyProfileScreen.tsx
 import React, { useCallback, useRef, useState } from 'react';
 import {
   View, Text, StyleSheet, SafeAreaView, FlatList, Image,
@@ -19,6 +18,10 @@ const deleteFeedSafe =
 import UserApiDefault, * as UserApiNS from '../../api/user';
 const fetchMyProfileSafe =
   (UserApiNS as any).fetchMyProfile ?? (UserApiDefault as any)?.fetchMyProfile;
+
+// ===== follow (fetch 기반) =====
+import FollowButton from '../../components/FollowButton';
+import { getFollowers, getFollowings } from '../../api/follow';
 
 // ====== assets (require + null 가드) ======
 const USTAR_BLACK = (() => { try { return require('../../assets/icon/U-STAR_black.png'); } catch { return null; } })();
@@ -96,6 +99,11 @@ export default function MyProfileScreen() {
   // === 프로필 상태 (route → API → local 순서로 채움)
   const [me, setMe] = useState<Profile | null>(null);
 
+  // === 내/남 프로필 분기 & 카운트
+  const [isMe, setIsMe] = useState<boolean>(true);
+  const [followerCount, setFollowerCount] = useState<number>(0);
+  const [followingCount, setFollowingCount] = useState<number>(0);
+
   // === 피드 상태
   const [items, setItems] = useState<FeedItemDto[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
@@ -111,7 +119,7 @@ export default function MyProfileScreen() {
   const lastPageTsRef = useRef(0);
   const now = () => Date.now();
 
-  // ===== 초기 로드: 프로필 → 피드 =====
+  // ===== 초기 로드: 프로필 → 카운트 → 피드 =====
   useFocusEffect(
     useCallback(() => {
       if (didInitRef.current) return;
@@ -134,11 +142,12 @@ export default function MyProfileScreen() {
           setMe(fromParams);
         }
 
-        // 2) /me API
+        // 2) /me API 시도
+        let mapped: Profile | null = null;
         try {
           if (!fetchMyProfileSafe) throw new Error('fetchMyProfile API 없음');
           const p = await fetchMyProfileSafe();
-          const mapped: Profile = {
+          mapped = {
             username: p?.username ?? fromParams?.username ?? 'username',
             nickname: p?.nickname ?? fromParams?.nickname ?? 'nickname',
             bio: p?.bio ?? fromParams?.bio ?? '',
@@ -148,7 +157,7 @@ export default function MyProfileScreen() {
           };
           setMe(mapped);
 
-          // 캐시 저장 (실패해도 무시)
+          // 캐시 저장 (실패 무시)
           await AsyncStorage.multiSet([
             [SK.username, mapped.username ?? ''],
             [SK.nickname, mapped.nickname ?? ''],
@@ -157,28 +166,54 @@ export default function MyProfileScreen() {
             [SK.followers, String(mapped.followers ?? 0)],
             [SK.following, String(mapped.following ?? 0)],
           ]);
-          return;
         } catch (e: any) {
           console.log('fetchMyProfile failed:', e?.message);
         }
 
-        // 3) AsyncStorage fallback
-        try {
-          const [
-            u, n, b, a, f1, f2
-          ] = await AsyncStorage.multiGet([
-            SK.username, SK.nickname, SK.bio, SK.avatarUrl, SK.followers, SK.following
-          ]);
-          const mapped: Profile = {
-            username: (u?.[1] || fromParams?.username || 'username'),
-            nickname: (n?.[1] || fromParams?.nickname || 'nickname'),
-            bio: (b?.[1] ?? fromParams?.bio ?? ''),
-            avatarUrl: (a?.[1] || fromParams?.avatarUrl || null),
-            followers: Number(f1?.[1] ?? fromParams?.followers ?? 0),
-            following: Number(f2?.[1] ?? fromParams?.following ?? 0),
-          };
-          setMe(mapped);
-        } catch {}
+        // 3) API 실패 시 AsyncStorage fallback
+        if (!mapped) {
+          try {
+            const [u, n, b, a, f1, f2] = await AsyncStorage.multiGet([
+              SK.username, SK.nickname, SK.bio, SK.avatarUrl, SK.followers, SK.following
+            ]);
+            mapped = {
+              username: (u?.[1] || fromParams?.username || 'username'),
+              nickname: (n?.[1] || fromParams?.nickname || 'nickname'),
+              bio: (b?.[1] ?? fromParams?.bio ?? ''),
+              avatarUrl: (a?.[1] || fromParams?.avatarUrl || null),
+              followers: Number(f1?.[1] ?? fromParams?.followers ?? 0),
+              following: Number(f2?.[1] ?? fromParams?.following ?? 0),
+            };
+            setMe(mapped);
+          } catch {}
+        }
+
+        // 4) 내/남 프로필 판별 + 카운트 갱신
+        if (mapped) {
+          try {
+            const myU = (await AsyncStorage.getItem(SK.username)) || mapped.username;
+            const targetU = route.params?.username || mapped.username;
+            const itsMe = myU === targetU;
+            setIsMe(itsMe);
+
+            if (itsMe) {
+              // 내 프로필이면 서버에서 최신 카운트
+              const [followersList, followingsList] = await Promise.all([
+                getFollowers().catch(() => []),
+                getFollowings().catch(() => []),
+              ]);
+              setFollowerCount(followersList.length);
+              setFollowingCount(followingsList.length);
+            } else {
+              // 남의 프로필이면 파라미터 or mapped 값 사용
+              setFollowerCount(route.params?.followers ?? (mapped.followers ?? 0));
+              setFollowingCount(route.params?.following ?? (mapped.following ?? 0));
+            }
+          } catch {
+            setFollowerCount(mapped.followers ?? 0);
+            setFollowingCount(mapped.following ?? 0);
+          }
+        }
       };
 
       (async () => {
@@ -228,11 +263,22 @@ export default function MyProfileScreen() {
       lastCursorRef.current = null;
       setCursor(null);
       setHasMore(true);
+
+      // 내 프로필일 때 카운트도 리프레시
+      if (isMe) {
+        const [followersList, followingsList] = await Promise.all([
+          getFollowers().catch(() => []),
+          getFollowings().catch(() => []),
+        ]);
+        setFollowerCount(followersList.length);
+        setFollowingCount(followingsList.length);
+      }
+
       await load(true);
     } finally {
       setRefreshing(false);
     }
-  }, [load]);
+  }, [load, isMe]);
 
   const onEndReached = useCallback(() => {
     if (onEndGuardRef.current) return;
@@ -312,8 +358,6 @@ export default function MyProfileScreen() {
   const nickname = me?.nickname ?? 'nickname';
   const bio = me?.bio ?? '';
   const avatarUri = absUrl(me?.avatarUrl) ?? 'https://picsum.photos/200/200';
-  const followers = me?.followers ?? 0;
-  const following = me?.following ?? 0;
 
   return (
     <View style={s.screen}>
@@ -330,7 +374,7 @@ export default function MyProfileScreen() {
           )}
           <Text style={s.title}>{username}</Text>
         </View>
-        <TouchableOpacity onPress={() => (navigation as any).navigate('Settings')}>
+        <TouchableOpacity onPress={() => (navigation as any).navigate('MyPageOptions')}>
           <Text style={s.burger}>≡</Text>
         </TouchableOpacity>
       </View>
@@ -341,19 +385,25 @@ export default function MyProfileScreen() {
           <Image source={{ uri: avatarUri }} style={s.avatar} />
           <View style={{ flex: 1 }}>
             <Text style={s.nickname}>{nickname}</Text>
-            <Text style={s.meta}>팔로워 {followers} · 팔로잉 {following} · Works {items.length}</Text>
+            <Text style={s.meta}>팔로워 {followerCount} · 팔로잉 {followingCount} · Works {items.length}</Text>
           </View>
-          <View style={s.btnCol}>
-            <TouchableOpacity style={s.editBtn} onPress={() => (navigation as any).navigate('EditProfile')}>
-              <Text style={s.editTxt}>프로필 편집</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[s.editBtn, { backgroundColor: '#0B1020', marginTop: 6 }]}
-              onPress={() => (navigation as any).navigate('FeedCreate')}
-            >
-              <Text style={s.editTxt}>새 게시글</Text>
-            </TouchableOpacity>
-          </View>
+
+          {/* 내 프로필이면 편집/새 글, 남 프로필이면 Follow 버튼 */}
+          {isMe ? (
+            <View style={s.btnCol}>
+              <TouchableOpacity style={s.editBtn} onPress={() => (navigation as any).navigate('EditProfile')}>
+                <Text style={s.editTxt}>프로필 편집</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[s.editBtn, { backgroundColor: '#0B1020', marginTop: 6 }]}
+                onPress={() => (navigation as any).navigate('FeedCreate')}
+              >
+                <Text style={s.editTxt}>새 게시글</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <FollowButton username={username} />
+          )}
         </View>
 
         {bio ? <Text style={s.bio} numberOfLines={2}>{bio}</Text> : null}
@@ -403,22 +453,22 @@ const s = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
   },
   appbarLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  logo: { width: 22, height: 22 },
-  title: { fontSize: 16, fontWeight: '800', letterSpacing: 0.4, color: '#0B1020' },
-  burger: { fontSize: 24, color: '#111827', paddingHorizontal: 4 },
+  logo: { width: 60, height: 60 },
+  title: { fontSize: 25, fontWeight: '800', letterSpacing: 0.4, color: '#0B1020' },
+  burger: { fontSize: 35, color: '#111827', paddingHorizontal: 4 },
 
   profileWrap: {
     paddingHorizontal: H_PADDING, paddingTop: 12, paddingBottom: 10,
     backgroundColor: '#FFFFFF', borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E7EB',
   },
   profileRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  avatar: { width: 60, height: 60, borderRadius: 30, backgroundColor: '#E5E7EB' },
-  nickname: { fontSize: 16, fontWeight: '800', color: '#111827' },
+  avatar: { width: 70, height: 70, borderRadius: 30, backgroundColor: '#E5E7EB' },
+  nickname: { fontSize: 20, fontWeight: '800', color: '#111827' },
   meta: { fontSize: 12, color: '#6B7280', marginTop: 4 },
   btnCol: { marginLeft: 6 },
   editBtn: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, backgroundColor: '#111827' },
   editTxt: { color: '#fff', fontSize: 12, fontWeight: '700' },
-  bio: { marginTop: 10, marginLeft: 72, marginRight: 12, fontSize: 12.5, color: '#374151' },
+  bio: { marginTop: 10, marginLeft: 20, marginRight: 12, fontSize: 15, color: '#374151' },
 
   gridItem: { width: THUMB, height: THUMB, backgroundColor: '#FFF', borderRadius: 10, overflow: 'hidden' },
   thumbImg: { width: '100%', height: '100%' },
@@ -435,7 +485,7 @@ const s = StyleSheet.create({
   footer: { textAlign: 'center', color: '#6B7280', paddingVertical: 10 },
 
   tabbar: {
-    position: 'absolute', left: 0, right: 0, bottom: 0, height: TAB_H,
+    position: 'absolute', left:-15 , right: 20, bottom: 0, height: TAB_H,
     backgroundColor: '#FFFFFF', borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#E5E7EB',
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', paddingHorizontal: 16,
   },

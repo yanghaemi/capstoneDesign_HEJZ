@@ -1,3 +1,4 @@
+import '../src/polyfills/urlsearchparams';
 import React, { useState, useEffect } from 'react';
 import { View, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
