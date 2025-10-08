@@ -58,13 +58,20 @@ public class EmotionAnalyzerService {
 
     private String buildPrompt(String lyricsChunk) {
         return String.format("""
-                감정 키워드: %s
+            다음 감정 키워드 중 하나만 골라서 출력해줘.  
+            🚫 아래 키워드 외의 단어는 절대 사용하지 마!
 
-                가사:
-                %s
+            감정 키워드 목록: [%s]
 
-                가장 어울리는 감정 키워드 하나만 정확히 출력해줘. 다른 설명 없이 감정 단어만!
-                """, String.join(", ", EMOTIONS), lyricsChunk);
+            가사:
+            %s
+
+            응답 형식 예시:
+            열정
+
+            위 목록 중에서 하나만 골라서 정확히 감정 키워드만 출력해줘. 다른 설명 없이 감정 하나만!
+""", String.join(", ", EMOTIONS), lyricsChunk);
+
     }
 
     private String extractReply(ResponseEntity<Map> response) {
