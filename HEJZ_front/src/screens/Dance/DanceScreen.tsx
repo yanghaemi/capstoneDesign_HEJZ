@@ -52,7 +52,7 @@ const DanceScreen = ({ navigation }: any) => {
 
   return (
     <ImageBackground
-      source={require('../../assets/background/mainbackground.png')}
+      source={require('../../assets/background/whitebackground.png')}
       style={styles.background}
       resizeMode="cover"
     >

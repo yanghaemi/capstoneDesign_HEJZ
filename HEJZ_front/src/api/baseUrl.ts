@@ -15,7 +15,7 @@ const DEV_PORT = 8080;
 const LAN_IP = '192.168.0.6';
 
 // 🔀 모드 스위치 (상황에 맞게 true/false만 바꾸면 됨)
-const USE_LAN = true;          // 실기기(Wi-Fi)에서 PC로 직접 붙기
+const USE_LAN = false;          // 실기기(Wi-Fi)에서 PC로 직접 붙기
 const USE_ADB_REVERSE = false; // USB 연결 + `adb reverse` 쓸 때
 
 // 🔗 개발용 URL들

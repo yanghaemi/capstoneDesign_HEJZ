@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, SafeAreaView, FlatList, Image,
   Dimensions, TouchableOpacity, StatusBar, Alert, RefreshControl,
 } from 'react-native';
-import { useNavigation, useFocusEffect, useRoute, RouteProp } from '@react-navigation/native';
+import {  useFocusEffect, RouteProp } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BASE_URL } from '../../api/baseUrl';
 
@@ -92,9 +92,8 @@ const SK = {
   following: 'user.following',
 } as const;
 
-export default function MyProfileScreen() {
-  const navigation = useNavigation();
-  const route = useRoute<RouteP>();
+export default function MyProfileScreen({navigation, route}:any) {
+
 
   // === 프로필 상태 (route → API → local 순서로 채움)
   const [me, setMe] = useState<Profile | null>(null);
@@ -395,10 +394,10 @@ export default function MyProfileScreen() {
                 <Text style={s.editTxt}>프로필 편집</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[s.editBtn, { backgroundColor: '#0B1020', marginTop: 6 }]}
+                style={[s.editBtn, { backgroundColor: '#587dc4', marginTop: 6 }]}
                 onPress={() => (navigation as any).navigate('FeedCreate')}
               >
-                <Text style={s.editTxt}>새 게시글</Text>
+                <Text style={s.editTxt}> 새 게시글</Text>
               </TouchableOpacity>
             </View>
           ) : (
@@ -455,7 +454,7 @@ const s = StyleSheet.create({
   appbarLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   logo: { width: 60, height: 60 },
   title: { fontSize: 25, fontWeight: '800', letterSpacing: 0.4, color: '#0B1020' },
-  burger: { fontSize: 35, color: '#111827', paddingHorizontal: 4 },
+  burger: { fontSize: 35, color: '#587dc4', paddingHorizontal: 4 },
 
   profileWrap: {
     paddingHorizontal: H_PADDING, paddingTop: 12, paddingBottom: 10,
@@ -466,7 +465,7 @@ const s = StyleSheet.create({
   nickname: { fontSize: 20, fontWeight: '800', color: '#111827' },
   meta: { fontSize: 12, color: '#6B7280', marginTop: 4 },
   btnCol: { marginLeft: 6 },
-  editBtn: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, backgroundColor: '#111827' },
+  editBtn: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, backgroundColor: '#587dc4' },
   editTxt: { color: '#fff', fontSize: 12, fontWeight: '700' },
   bio: { marginTop: 10, marginLeft: 20, marginRight: 12, fontSize: 15, color: '#374151' },
 
