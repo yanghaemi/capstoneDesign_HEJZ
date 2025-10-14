@@ -1,5 +1,6 @@
 package com.HEJZ.HEJZ_back.domain.dance.controller;
 
+import com.HEJZ.HEJZ_back.domain.dance.dto.IntegratedRecommendationResponse;
 import com.HEJZ.HEJZ_back.domain.dance.dto.LyricsRequest;
 import com.HEJZ.HEJZ_back.domain.dance.dto.RecommendationResult;
 import com.HEJZ.HEJZ_back.domain.dance.dto.SelectionGroupDto;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -40,33 +42,75 @@ public class LyricsEmotionController {
 
     @PostMapping("/analyze")
     @Operation(
-            summary = "가사 감정 분석 및 안무 추천",
-            description = "2줄씩 끊은 가사에 대해 감정을 분석하고, 감정에 맞는 안무 motionId 4개를 추천합니다."
+            summary = "통합 안무 추천 (4가지 로직)",
+            description = "1.선택 감정, 2.선택 장르, 3,4.가사 분석 기반으로 안무를 추천합니다. 각 로직마다 최고 점수 안무 1개씩 추천합니다."
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "감정 분석 및 안무 추천 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청 (가사 누락, 형식 오류 등)",
+            @ApiResponse(responseCode = "200", description = "통합 안무 추천 성공",
+                    content = @Content(schema = @Schema(implementation = IntegratedRecommendationResponse.class))),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 (가사, 감정, 장르 누락 등)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "서버 내부 오류",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    public ResponseEntity<List<RecommendationResult>> analyzeLyrics(@RequestBody LyricsRequest request) {
+    public ResponseEntity<IntegratedRecommendationResponse> analyzeLyrics(@RequestBody LyricsRequest request) {
+
         if (request.getLyrics() == null || request.getLyrics().isBlank()) {
             throw new CustomException(ErrorCode.EMPTY_LYRICS);
         }
-
-        String[] lines = request.getLyrics().split("\\r?\\n");
-        if (lines.length < 2) {
+        if (request.getSelectedEmotion() == null || request.getSelectedEmotion().isBlank()) {
+            throw new CustomException(ErrorCode.INVALID_LYRICS_FORMAT);
+        }
+        if (request.getSelectedGenre() == null || request.getSelectedGenre().isBlank()) {
             throw new CustomException(ErrorCode.INVALID_LYRICS_FORMAT);
         }
 
-        List<RecommendationResult> results = new ArrayList<>();
+        // 1. 선택 감정 기반 추천 (로직 1)
+        EmotionEnum selectedEmotion = EmotionEnum.fromString(request.getSelectedEmotion());
+        List<String> emotionMotions = motionRecommenderService.recommendTopMotionsByEmotion(selectedEmotion, 1);
 
-        for (int i = 0; i < lines.length - 1; i += 2) {
-            String chunk = lines[i] + "\n" + lines[i + 1];
+        RecommendationResult selectedEmotionResult = new RecommendationResult(
+                "선택 감정 기반 추천: " + request.getSelectedEmotion(),
+                selectedEmotion,
+                emotionMotions
+        );
+
+        // 2. 안무 장르 기반 추천 (로직 2)
+        String selectedGenre = request.getSelectedGenre();
+        List<String> genreMotions = motionRecommenderService.recommendTopMotionsByGenre(selectedGenre, 1);
+
+        Map<String, List<String>> genreMapping = MotionRecommenderService.getGenreEmotionMapping();
+        String representativeEmotionName = genreMapping.getOrDefault(selectedGenre, List.of(selectedEmotion.name())).get(0);
+        EmotionEnum representativeEmotion = EmotionEnum.fromString(representativeEmotionName);
+
+        RecommendationResult genreResult = new RecommendationResult(
+                "선택 장르 기반 추천: " + selectedGenre,
+                representativeEmotion,
+                genreMotions
+        );
+
+        // 3 & 4. 가사 분석 기반 추천 (로직 3, 4)
+        List<RecommendationResult> lyricsAnalysisResults = new ArrayList<>();
+        String[] lines = request.getLyrics().split("\\r?\\n");
+
+        int lineCount = lines.length;
+
+        for (int i = 0; i < lineCount; i += 2) {
+            String chunk;
+            boolean isLastLine = (i + 1 >= lineCount);
+
+            if (isLastLine) {
+                // 마지막 1줄 처리
+                chunk = lines[i];
+            } else {
+                // 2줄 청크 처리
+                chunk = lines[i] + "\n" + lines[i + 1];
+            }
+
+            if (chunk.trim().isEmpty()) continue;
 
             EmotionEnum emotion = emotionAnalyzerService.analyzeEmotion(chunk);
-            List<String> motions = motionRecommenderService.recommendTopMotionsByEmotion(emotion, 4);
+            List<String> motions = motionRecommenderService.recommendTopMotionsByEmotion(emotion, 1);
 
             EmotionResult result = EmotionResult.builder()
                     .lyrics(chunk)
@@ -75,33 +119,22 @@ public class LyricsEmotionController {
                     .build();
             emotionResultService.save(result);
 
-            results.add(new RecommendationResult(chunk, emotion, motions));
+            lyricsAnalysisResults.add(new RecommendationResult(chunk, emotion, motions));
+
+            if (isLastLine) break;
         }
 
-        if (lines.length % 2 == 1) {
-            String lastLine = lines[lines.length - 1];
+        // 5. 통합 응답 반환
+        IntegratedRecommendationResponse response = new IntegratedRecommendationResponse(
+                selectedEmotionResult,
+                genreResult,
+                lyricsAnalysisResults
+        );
 
-            EmotionEnum emotion = emotionAnalyzerService.analyzeEmotion(lastLine);
-            List<String> motions = motionRecommenderService.recommendTopMotionsByEmotion(emotion, 4);
-
-            EmotionResult result = EmotionResult.builder()
-                    .lyrics(lastLine)
-                    .emotion(emotion)
-                    .motionIds(motions)
-                    .build();
-            emotionResultService.save(result);
-
-            results.add(new RecommendationResult(lastLine, emotion, motions));
-        }
-
-        return ResponseEntity.ok(results);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/selection/bulk")
-    @Operation(
-            summary = "안무 선택 저장",
-            description = "사용자가 선택한 감정-안무 쌍을 bulk로 저장합니다."
-    )
     public ResponseEntity<?> saveEmotionSelections(@RequestBody List<SelectionGroupDto> request) {
         emotionSelectionService.saveSelections(request);
         return ResponseEntity.ok("선택한 안무가 저장되었습니다.");
