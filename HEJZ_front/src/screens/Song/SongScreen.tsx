@@ -43,7 +43,7 @@ const SongScreen = () => {
   const [instrumental, setInstrumental] = useState(false);
   const [model, setModel] = useState<'V3_5' | 'V4' | 'V4_5'>('V3_5');
   const [callBackUrl, setCallBackUrl] = useState(
-    'https://9f1c-115-20-243-238.ngrok-free.app/api/suno/callback',
+    'https://nonpurposive-herpetologic-lynwood.ngrok-free.dev/api/suno/callback',
   );
 
   // ====== 감정(무드) 태그 선택 ======
@@ -70,8 +70,10 @@ const SongScreen = () => {
     const finalPrompt = buildFinalPrompt();
 
     try {
+//         `${apiUrl}/api/suno/generate`,
+
       const response = await axios.post(
-        `${apiUrl}/api/suno/generate`,
+         "https://nonpurposive-herpetologic-lynwood.ngrok-free.dev/api/suno/generate",
         {
           prompt: finalPrompt,       // ✅ 감정이 합쳐진 프롬프트
           style: style,
