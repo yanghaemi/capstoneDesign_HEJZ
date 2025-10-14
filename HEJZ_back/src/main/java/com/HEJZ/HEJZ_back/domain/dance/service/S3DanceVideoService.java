@@ -27,7 +27,7 @@ public class S3DanceVideoService {
 
     public String getPresignedUrl(String motionId) {
         try {
-            String key = "videos/videos/" + motionId + ".mp4";
+            String key = "final_videos/" + motionId + "_body.mp4";
 
             GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                     .bucket(bucketName)
