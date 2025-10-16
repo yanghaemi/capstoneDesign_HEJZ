@@ -28,7 +28,7 @@ const USTAR_BLACK = (() => { try { return require('../../assets/icon/U-STAR_blac
 const ICON_MUSIC  = (() => { try { return require('../../assets/icon/music.png'); } catch { return null; } })();
 const ICON_SHORT  = (() => { try { return require('../../assets/icon/short.png'); } catch { return null; } })();
 const ICON_DANCE  = (() => { try { return require('../../assets/icon/dance.png'); } catch { return null; } })();
-
+const ICON_SEARCH = (() => { try { return require('../../assets/icon/search.png'); } catch { return null; } })();
 const { width } = Dimensions.get('window');
 const COLS = 3;
 const GAP = 4;
@@ -373,10 +373,31 @@ export default function MyProfileScreen({navigation, route}:any) {
           )}
           <Text style={s.title}>{username}</Text>
         </View>
-        <TouchableOpacity onPress={() => (navigation as any).navigate('MyPageOptions')}>
-          <Text style={s.burger}>≡</Text>
-        </TouchableOpacity>
+        <View style={s.appbarRight}>
+            <TouchableOpacity
+              onPress={() => (navigation as any).navigate('Search', { screen: 'search' })}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              style={s.iconBtn}
+              activeOpacity={0.8}
+            >
+              {ICON_SEARCH ? (
+                <Image source={ICON_SEARCH} style={s.rightIcon} resizeMode="contain" />
+              ) : (
+                <View style={[s.rightIcon, { backgroundColor: '#eee', borderRadius: 999 }]} />
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => (navigation as any).navigate('MyPageOptions')}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              style={s.iconBtn}
+              activeOpacity={0.8}
+            >
+              <Text style={s.burger}>≡</Text>
+            </TouchableOpacity>
+          </View>
       </View>
+
 
       {/* Profile */}
       <View style={s.profileWrap}>
@@ -447,11 +468,14 @@ function TabImg({ src, onPress }: { src: any; onPress: () => void }) {
 const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#FFFFFF' },
   appbar: {
-    height: 56, paddingHorizontal: 12, backgroundColor: '#FFFFFF',
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E7EB',
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+     height: 56, paddingHorizontal: 12, backgroundColor: '#FFFFFF',
+      borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E7EB',
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
   },
   appbarLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  appbarRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  iconBtn: { paddingHorizontal: 4, paddingVertical: 4 },
+  rightIcon: { width: 22, height: 22 },
   logo: { width: 60, height: 60 },
   title: { fontSize: 25, fontWeight: '800', letterSpacing: 0.4, color: '#0B1020' },
   burger: { fontSize: 35, color: '#587dc4', paddingHorizontal: 4 },

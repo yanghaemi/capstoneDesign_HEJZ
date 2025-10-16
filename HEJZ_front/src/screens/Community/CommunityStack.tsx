@@ -13,11 +13,12 @@ import SignUpScreen from './SignUpScreen';
 import FeedsScreen from './FeedsScreen';
 import BlockedUserScreen from './BlockedUserScreen';
 import BookmarkScreen from './BookmarkScreen';
-
+import SearchScreen from './SearchScreen';
 import MyRoomScreen from './MyRoomScreen';
 import ComposeFeedScreen from'./ComposeFeedScreen';
 import FeedDetailScreen from './FeedDetailScreen';
 import FeedCreateScreen from './FeedCreateScreen';
+import UserRoomScreen from './UserRoomScreen';
 const Stack = createNativeStackNavigator();
 
 export const CommunityNavigator = () => (
@@ -37,6 +38,8 @@ export const CommunityNavigator = () => (
     <Stack.Screen name="ComposeFeed" component={ComposeFeedScreen} />
     <Stack.Screen name="FeedDetail" component={FeedDetailScreen} />
     <Stack.Screen name="FeedCreate" component={FeedCreateScreen} />
+    <Stack.Screen name="Search" component={SearchScreen} />
+    <Stack.Screen name="UserRoom" component={UserRoomScreen} />
   </Stack.Navigator>
 );
 
