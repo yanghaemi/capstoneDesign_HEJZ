@@ -5,6 +5,8 @@ export type FollowUser = {
   username: string;
   nickname?: string;
   profileImageUrl?: string | null;
+  id?: number;
+  userId?: number;
 };
 
 export async function follow(username: string) {
