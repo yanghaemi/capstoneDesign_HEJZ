@@ -9,25 +9,26 @@ import {
   ScrollView,
   ImageBackground,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 import axios from 'axios';
 import { useApi } from '../../context/ApiContext';
 
 const EMOTIONS = [
-  '행복',
-  '슬픔',
-  '분노',
-  '공포',
-  '놀람',
-  '혐오',
-  '사랑',
-  '희망',
-  '열정',
-  '자신감',
-  '매혹',
-  '도전',
-  '차분함',
+  '행복','슬픔','분노','공포','놀람','혐오','사랑',
+  '희망','열정','자신감','매혹','도전','차분함',
 ];
+
+// ✅ 캐릭터/말풍선 문구
+const MESSAGES = [
+  '원하는 분위기를 입력해보세요',
+  '오늘 기분은 어때요?',
+  '무드를 고르면 노래가 따라와요',
+  '한 줄 프롬프트로 장면을 상상해봐요',
+  '감정 칩도 눌러볼래요?',
+];
+
+const pixelImg = require('../../assets/icon/pixel.png');
 
 const SongScreen = () => {
   const { apiUrl, apiKey } = useApi();
@@ -36,7 +37,7 @@ const SongScreen = () => {
   const [songResult, setSongResult] = useState<string | null>(null);
 
   // ====== 기존 필드 ======
-  const [prompt, setPrompt] = useState(''); // 사용자가 쓰는 추가 설명
+  const [prompt, setPrompt] = useState('');
   const [style, setStyle] = useState('');
   const [title, setTitle] = useState('');
   const [customMode, setCustomMode] = useState(false);
@@ -55,33 +56,40 @@ const SongScreen = () => {
     );
   };
 
-  // Suno로 보낼 최종 프롬프트 구성
+  // 최종 프롬프트
   const buildFinalPrompt = () => {
-    // 선택된 감정들을 프롬프트 앞에 태그처럼 붙임
-    // 예: [Mood: 행복, 사랑, 희망] 여름밤 해변에서 춤추는 느낌
     const mood = selectedEmotions.length ? `[Mood: ${selectedEmotions.join(', ')}] ` : '';
     return `${mood}${prompt}`.trim();
+  };
+
+  // ✅ 말풍선 문구 상태 & 랜덤 변경
+  const [bubbleText, setBubbleText] = useState(
+    MESSAGES[Math.floor(Math.random() * MESSAGES.length)]
+  );
+  const shuffleBubble = () => {
+    let next = bubbleText;
+    while (next === bubbleText) {
+      next = MESSAGES[Math.floor(Math.random() * MESSAGES.length)];
+    }
+    setBubbleText(next);
   };
 
   const handleGenerateSong = async () => {
     setLoading(true);
     setSongResult(null);
-
     const finalPrompt = buildFinalPrompt();
 
     try {
-//         `${apiUrl}/api/suno/generate`,
-
-      const response = await axios.post(
-         "https://nonpurposive-herpetologic-lynwood.ngrok-free.dev/api/suno/generate",
+      await axios.post(
+        'https://nonpurposive-herpetologic-lynwood.ngrok-free.dev/api/suno/generate',
         {
-          prompt: finalPrompt,       // ✅ 감정이 합쳐진 프롬프트
-          style: style,
-          title: title,
-          customMode: customMode,
-          instrumental: customMode ? instrumental : false, // customMode가 false면 자동 false
-          model: model,
-          callBackUrl: callBackUrl,
+          prompt: finalPrompt,
+          style,
+          title,
+          customMode,
+          instrumental: customMode ? instrumental : false,
+          model,
+          callBackUrl,
         },
         {
           headers: {
@@ -90,8 +98,7 @@ const SongScreen = () => {
           },
         }
       );
-
-      console.log('Suno 응답:', response.data);
+      console.log('Suno 응답: OK');
       setSongResult('노래 생성 요청 완료!');
     } catch (error) {
       console.error('노래 생성 실패:', error);
@@ -131,7 +138,7 @@ const SongScreen = () => {
           })}
         </View>
 
-        {/* 사용자가 추가로 설명할 자유 입력 프롬프트 */}
+        {/* 사용자 프롬프트 */}
         <TextInput
           style={styles.input}
           placeholder="추가 프롬프트를 입력하세요 (예: 여름밤 해변에서 춤추는 느낌)"
@@ -142,13 +149,18 @@ const SongScreen = () => {
           textAlignVertical="top"
         />
 
-        {/* 미리보기(최종 프롬프트) */}
+        {/* 미리보기 */}
         <View style={styles.previewBox}>
           <Text style={styles.previewLabel}>최종 프롬프트 미리보기</Text>
           <Text style={styles.previewText}>{buildFinalPrompt() || '선택/입력 대기...'}</Text>
         </View>
 
-        <Button title="노래 생성하기" onPress={handleGenerateSong} disabled={isSubmitDisabled} />
+        <Button
+          title="노래 생성하기"
+          onPress={handleGenerateSong}
+          disabled={isSubmitDisabled}
+          color="#587dc4"
+        />
 
         {loading && <ActivityIndicator size="large" style={{ marginTop: 20 }} />}
 
@@ -158,6 +170,21 @@ const SongScreen = () => {
             <Text style={styles.resultText}>{songResult}</Text>
           </View>
         )}
+
+        {/* ✅ 캐릭터 + 말풍선 (노래 생성 버튼 하단, 좌측 정렬) */}
+        <TouchableOpacity
+          style={styles.assistantWrap}
+          activeOpacity={0.85}
+          onPress={shuffleBubble}
+        >
+          <Image source={pixelImg} style={styles.pixel} resizeMode="contain" />
+          <View style={styles.bubble}>
+            <Text style={styles.bubbleText}>{bubbleText}</Text>
+            {/* 말풍선 꼬리 */}
+            <View style={styles.tail} />
+          </View>
+        </TouchableOpacity>
+
       </ScrollView>
     </ImageBackground>
   );
@@ -243,5 +270,53 @@ const styles = StyleSheet.create({
   background: {
     flex: 1,
     resizeMode: 'cover',
+  },
+
+  // ✅ 캐릭터 + 말풍선
+  assistantWrap: {
+    marginTop: 5,
+    alignSelf: 'flex-start',      // 왼쪽 정렬
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+  },
+  pixel: {
+    width: 150,
+    height: 150,
+    marginRight: 10,
+  },
+  bubble: {
+    maxWidth: 240,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderWidth: 2,
+    borderColor: '#587dc4',
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    position: 'relative',
+    top: -90,
+    left: -35,
+  },
+  bubbleText: {
+    color: '#333',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  // 말풍선 꼬리: 작은 네모를 45도 회전해서 사용
+  tail: {
+    position: 'absolute',
+    left: -6,
+    bottom: 6,
+    width: 12,
+    height: 12,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderLeftWidth: 2,
+    borderBottomWidth: 2,
+    borderColor: '#587dc4',
+    transform: [{ rotate: '45deg' }],
+  },
+  tip: {
+    marginTop: 6,
+    fontSize: 12,
+    color: '#8aa6d6', // #587dc4 톤다운
   },
 });

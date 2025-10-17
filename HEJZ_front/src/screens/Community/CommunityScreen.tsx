@@ -137,17 +137,32 @@ const CommunityScreen = () => {
         </View>
 
         <View style={styles.actionsContainer}>
-          <TouchableOpacity onPress={() => toggleLike(item.id)}>
-            <Text style={styles.actionIcon}>{item.liked ? '💖' : '🤍'}{item.likes}</Text>
+          <TouchableOpacity onPress={() => toggleLike(item.id)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <View style={styles.actionRow}>
+                  <Image
+                    source={
+                      item.liked
+                        ? require('../../assets/icon/star.png')
+                        : require('../../assets/icon/star-outline.png')
+                    }
+                    style={styles.icon}
+                  />
+                  <Text style={styles.count}>{item.likes}</Text>
+                </View>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => toggleBookmark(item.id)}>
-            <Text style={styles.actionIcon}>{item.bookmarked ? '📌' : '🔖'}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => {
-            setSelectedId(item.id);
-            setCommentModalVisible(true);
-          }}>
-            <Text style={styles.actionIcon}>💬{item.comments.length}</Text>
+
+          <TouchableOpacity
+            onPress={() => { setSelectedId(item.id); setCommentModalVisible(true); }}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <View style={styles.actionRow}>
+              <Image
+                source={require('../../assets/icon/comments.png')}  // ← 파일명/경로 맞게
+                style={styles.icon}                                 // 아이콘 스타일 재사용
+                resizeMode="contain"
+              />
+              <Text style={styles.count}>{item.comments.length}</Text>
+            </View>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => {
             setSelectedId(item.userId);
@@ -382,5 +397,22 @@ const styles = StyleSheet.create({
     closeButtonText: {
       fontSize: 16,
       color: '#007AFF',
+    },
+    actionRow: {
+        alignItems: 'center',
+          justifyContent: 'center',
+          minWidth: 36,               // RN 0.71+ 지원. 아니면 marginRight로 대체
+    },
+    icon: {
+      width: 30,
+      height: 30,
+      // 단색 PNG면 브랜드 컬러로 물들이기 가능
+      tintColor: '#587dc4',
+    },
+    count: {
+      marginTop: 4,
+        fontSize: 12,
+        color: '#fff',
+        textAlign: 'center',
     },
 });
