@@ -20,7 +20,21 @@ spring:
       enabled: true
       path: /h2-console
 
-#app:
-  #jwt:
-    #secret: ${APP_JWT_SECRET:test-secret-dummy-value-just-test-test}
-    #expiration-ms: 86400000
+openai:
+  api:
+    key: test-key-dummy
+    model: gpt-3.5-turbo
+
+cloud:
+  aws:
+    credentials:
+      access-key: test-access-key
+      secret-key: test-secret-key
+    region:
+      static: ap-northeast-2
+    s3:
+      bucket: test-bucket
+
+jwt:
+  secret: FY+eYv3SiYg9UROpgdb3oZUbSXQEoG7C9DPkmqeL3ItNs8hD9u+MvTz1iyxXpO1YHCrqp1IkMxAsGprIN74FJA==
+  expires-ms: 3600000
