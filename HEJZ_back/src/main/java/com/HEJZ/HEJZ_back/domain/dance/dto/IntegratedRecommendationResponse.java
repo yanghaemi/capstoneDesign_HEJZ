@@ -12,12 +12,6 @@ import java.util.List;
 @AllArgsConstructor
 public class IntegratedRecommendationResponse {
 
-    @Schema(description = "1. 선택 감정 기반 추천 결과 (하나의 그룹)")
-    private RecommendationResult selectedEmotionResult;
-
-    @Schema(description = "2. 장르 기반 추천 결과 (하나의 그룹)")
-    private RecommendationResult genreResult;
-
-    @Schema(description = "3, 4. 가사 분석 기반 추천 결과 목록 (가사 덩어리별)")
-    private List<RecommendationResult> lyricsAnalysisResults;
+    @Schema(description = "가사 덩어리별 통합 추천 결과 목록 (각 덩어리당 4개 안무)")
+    private List<LyricsGroupRecommendation> lyricsRecommendations;
 }
