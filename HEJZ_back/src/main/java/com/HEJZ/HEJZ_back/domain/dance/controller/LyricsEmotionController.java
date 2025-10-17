@@ -1,8 +1,8 @@
 package com.HEJZ.HEJZ_back.domain.dance.controller;
 
 import com.HEJZ.HEJZ_back.domain.dance.dto.IntegratedRecommendationResponse;
+import com.HEJZ.HEJZ_back.domain.dance.dto.LyricsGroupRecommendation;
 import com.HEJZ.HEJZ_back.domain.dance.dto.LyricsRequest;
-import com.HEJZ.HEJZ_back.domain.dance.dto.RecommendationResult;
 import com.HEJZ.HEJZ_back.domain.dance.dto.SelectionGroupDto;
 import com.HEJZ.HEJZ_back.domain.dance.dto.SelectionGroupResponseDto;
 import com.HEJZ.HEJZ_back.domain.dance.model.EmotionEnum;
@@ -15,6 +15,7 @@ import com.HEJZ.HEJZ_back.global.exception.CustomException;
 import com.HEJZ.HEJZ_back.global.exception.ErrorCode;
 import com.HEJZ.HEJZ_back.global.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -24,8 +25,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -43,7 +45,7 @@ public class LyricsEmotionController {
     @PostMapping("/analyze")
     @Operation(
             summary = "통합 안무 추천 (4가지 로직)",
-            description = "1.선택 감정, 2.선택 장르, 3,4.가사 분석 기반으로 안무를 추천합니다. 각 로직마다 최고 점수 안무 1개씩 추천합니다."
+            description = "각 가사 덩어리마다 4가지 로직으로 안무를 추천합니다. 같은 덩어리 내에서는 중복 없이 4개의 다른 안무를 추천합니다."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "통합 안무 추천 성공",
@@ -65,34 +67,11 @@ public class LyricsEmotionController {
             throw new CustomException(ErrorCode.INVALID_LYRICS_FORMAT);
         }
 
-        // 1. 선택 감정 기반 추천 (로직 1)
         EmotionEnum selectedEmotion = EmotionEnum.fromString(request.getSelectedEmotion());
-        List<String> emotionMotions = motionRecommenderService.recommendTopMotionsByEmotion(selectedEmotion, 1);
-
-        RecommendationResult selectedEmotionResult = new RecommendationResult(
-                "선택 감정 기반 추천: " + request.getSelectedEmotion(),
-                selectedEmotion,
-                emotionMotions
-        );
-
-        // 2. 안무 장르 기반 추천 (로직 2)
         String selectedGenre = request.getSelectedGenre();
-        List<String> genreMotions = motionRecommenderService.recommendTopMotionsByGenre(selectedGenre, 1);
 
-        Map<String, List<String>> genreMapping = MotionRecommenderService.getGenreEmotionMapping();
-        String representativeEmotionName = genreMapping.getOrDefault(selectedGenre, List.of(selectedEmotion.name())).get(0);
-        EmotionEnum representativeEmotion = EmotionEnum.fromString(representativeEmotionName);
-
-        RecommendationResult genreResult = new RecommendationResult(
-                "선택 장르 기반 추천: " + selectedGenre,
-                representativeEmotion,
-                genreMotions
-        );
-
-        // 3 & 4. 가사 분석 기반 추천 (로직 3, 4)
-        List<RecommendationResult> lyricsAnalysisResults = new ArrayList<>();
+        List<LyricsGroupRecommendation> recommendations = new ArrayList<>();
         String[] lines = request.getLyrics().split("\\r?\\n");
-
         int lineCount = lines.length;
 
         for (int i = 0; i < lineCount; i += 2) {
@@ -100,47 +79,100 @@ public class LyricsEmotionController {
             boolean isLastLine = (i + 1 >= lineCount);
 
             if (isLastLine) {
-                // 마지막 1줄 처리
                 chunk = lines[i];
             } else {
-                // 2줄 청크 처리
                 chunk = lines[i] + "\n" + lines[i + 1];
             }
 
             if (chunk.trim().isEmpty()) continue;
 
-            EmotionEnum emotion = emotionAnalyzerService.analyzeEmotion(chunk);
-            List<String> motions = motionRecommenderService.recommendTopMotionsByEmotion(emotion, 1);
+            // 각 가사 덩어리마다 중복 방지를 위한 Set
+            Set<String> usedMotions = new HashSet<>();
+
+            // 로직 1: 선택 감정 기반 추천
+            List<String> emotionMotions = motionRecommenderService.recommendTopMotionsByEmotionExcluding(
+                    selectedEmotion, 1, usedMotions);
+            String selectedEmotionMotion = emotionMotions.isEmpty() ? null : emotionMotions.get(0);
+            if (selectedEmotionMotion != null) {
+                usedMotions.add(selectedEmotionMotion);
+            }
+
+            // 로직 2: 장르 기반 추천
+            List<String> genreMotions = motionRecommenderService.recommendTopMotionsByGenreExcluding(
+                    selectedGenre, 1, usedMotions);
+            String selectedGenreMotion = genreMotions.isEmpty() ? null : genreMotions.get(0);
+            if (selectedGenreMotion != null) {
+                usedMotions.add(selectedGenreMotion);
+            }
+
+            // 로직 3, 4: 가사 분석 감정 기반 추천 (2개)
+            EmotionEnum analyzedEmotion = emotionAnalyzerService.analyzeEmotion(chunk);
+            List<String> analyzedMotions = motionRecommenderService.recommendTopMotionsByEmotionExcluding(
+                    analyzedEmotion, 2, usedMotions);
+
+            String analyzedMotion1 = analyzedMotions.size() > 0 ? analyzedMotions.get(0) : null;
+            String analyzedMotion2 = analyzedMotions.size() > 1 ? analyzedMotions.get(1) : null;
+
+            // DB 저장용
+            List<String> allMotions = new ArrayList<>();
+            if (selectedEmotionMotion != null) allMotions.add(selectedEmotionMotion);
+            if (selectedGenreMotion != null) allMotions.add(selectedGenreMotion);
+            if (analyzedMotion1 != null) allMotions.add(analyzedMotion1);
+            if (analyzedMotion2 != null) allMotions.add(analyzedMotion2);
 
             EmotionResult result = EmotionResult.builder()
                     .lyrics(chunk)
-                    .emotion(emotion)
-                    .motionIds(motions)
+                    .emotion(analyzedEmotion)
+                    .motionIds(allMotions)
                     .build();
             emotionResultService.save(result);
 
-            lyricsAnalysisResults.add(new RecommendationResult(chunk, emotion, motions));
+            // 응답 DTO 생성
+            LyricsGroupRecommendation recommendation = new LyricsGroupRecommendation(
+                    chunk,
+                    analyzedEmotion,
+                    selectedEmotionMotion,
+                    selectedGenreMotion,
+                    analyzedMotion1,
+                    analyzedMotion2
+            );
+            recommendations.add(recommendation);
 
             if (isLastLine) break;
         }
 
-        // 5. 통합 응답 반환
-        IntegratedRecommendationResponse response = new IntegratedRecommendationResponse(
-                selectedEmotionResult,
-                genreResult,
-                lyricsAnalysisResults
-        );
-
+        IntegratedRecommendationResponse response = new IntegratedRecommendationResponse(recommendations);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/selection/bulk")
+    @Operation(
+            summary = "가사 그룹별 선택 안무 저장",
+            description = "가사 덩어리별로 사용자가 선택한 안무 목록을 DB에 저장합니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "안무 선택 저장 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     public ResponseEntity<?> saveEmotionSelections(@RequestBody List<SelectionGroupDto> request) {
         emotionSelectionService.saveSelections(request);
         return ResponseEntity.ok("선택한 안무가 저장되었습니다.");
     }
 
     @GetMapping("/selection")
+    @Operation(
+            summary = "저장된 안무 선택 조회",
+            description = "가사 그룹별로 저장된 선택 안무 목록과 영상 URL을 조회합니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = SelectionGroupResponseDto.class)))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     public ResponseEntity<List<SelectionGroupResponseDto>> getAllEmotionSelections() {
         List<SelectionGroupResponseDto> results = emotionSelectionService.getAllSelections();
         return ResponseEntity.ok(results);

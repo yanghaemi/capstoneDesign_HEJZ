@@ -152,6 +152,138 @@ public class MotionRecommenderService {
         return topMotions.stream().limit(count).collect(Collectors.toList());
     }
 
+    /**
+     * 특정 감정에 해당하는 안무를 추천하되, 제외 목록을 고려합니다.
+     */
+    public List<String> recommendTopMotionsByEmotionExcluding(
+            EmotionEnum targetEmotion,
+            int count,
+            Set<String> excludeIds) {
+
+        Map<String, List<EmotionEnum>> genreMap = csvLoader.getGenreEmotionMap();
+        Map<String, List<EmotionEnum>> jointMap = csvLoader.getJointEmotionMap();
+
+        Map<String, Double> scoreMap = new HashMap<>();
+
+        for (String motionId : genreMap.keySet()) {
+            // 제외 목록에 있으면 스킵
+            if (excludeIds.contains(motionId)) {
+                continue;
+            }
+
+            double score = 0;
+            List<EmotionEnum> genreEmotions = genreMap.getOrDefault(motionId, new ArrayList<>());
+            List<EmotionEnum> jointEmotions = jointMap.getOrDefault(motionId, new ArrayList<>());
+
+            for (EmotionEnum e : genreEmotions) {
+                if (e == targetEmotion) score += 1.0;
+            }
+            for (EmotionEnum e : jointEmotions) {
+                if (e == targetEmotion) score += 1.5;
+            }
+
+            if (score > 0) {
+                scoreMap.put(motionId, score);
+            }
+        }
+
+        List<Map.Entry<String, Double>> topEntries = scoreMap.entrySet().stream()
+                .sorted(Map.Entry.<String, Double>comparingByValue().reversed())
+                .collect(Collectors.toList());
+
+        if (topEntries.isEmpty()) {
+            Set<String> allMotions = new HashSet<>(genreMap.keySet());
+            allMotions.removeAll(excludeIds); // 제외 목록 제거
+
+            if (allMotions.isEmpty()) {
+                throw new CustomException(ErrorCode.RECOMMENDATION_FAILED);
+            }
+
+            List<String> randomMotions = new ArrayList<>(allMotions);
+            Collections.shuffle(randomMotions, random);
+            return randomMotions.stream().limit(count).collect(Collectors.toList());
+        }
+
+        double maxScore = topEntries.get(0).getValue();
+        List<String> topMotions = topEntries.stream()
+                .filter(e -> e.getValue() == maxScore)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+
+        Collections.shuffle(topMotions, random);
+        return topMotions.stream().limit(count).collect(Collectors.toList());
+    }
+
+    /**
+     * 장르 기반 추천
+     */
+    public List<String> recommendTopMotionsByGenreExcluding(
+            String genreName,
+            int count,
+            Set<String> excludeIds) {
+
+        String standardizedGenreName = genreName.trim();
+        List<String> emotionNames = GENRE_EMOTION_MAPPING.getOrDefault(standardizedGenreName, Collections.emptyList());
+
+        if (emotionNames.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<EmotionEnum> targetEmotions = emotionNames.stream()
+                .map(EmotionEnum::fromString)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        if (targetEmotions.isEmpty()) {
+            throw new CustomException(ErrorCode.RECOMMENDATION_FAILED);
+        }
+
+        Map<String, List<EmotionEnum>> genreMap = csvLoader.getGenreEmotionMap();
+        Map<String, List<EmotionEnum>> jointMap = csvLoader.getJointEmotionMap();
+        Map<String, Double> scoreMap = new HashMap<>();
+
+        for (String motionId : genreMap.keySet()) {
+            // 제외 목록에 있으면 스킵
+            if (excludeIds.contains(motionId)) {
+                continue;
+            }
+
+            double totalScore = 0;
+            List<EmotionEnum> motionGenreEmotions = genreMap.getOrDefault(motionId, Collections.emptyList());
+            List<EmotionEnum> motionJointEmotions = jointMap.getOrDefault(motionId, Collections.emptyList());
+
+            for (EmotionEnum targetEmotion : targetEmotions) {
+                if (motionGenreEmotions.contains(targetEmotion)) {
+                    totalScore += 1.0;
+                }
+                if (motionJointEmotions.contains(targetEmotion)) {
+                    totalScore += 1.5;
+                }
+            }
+
+            if (totalScore > 0) {
+                scoreMap.put(motionId, totalScore);
+            }
+        }
+
+        List<Map.Entry<String, Double>> topEntries = scoreMap.entrySet().stream()
+                .sorted(Map.Entry.<String, Double>comparingByValue().reversed())
+                .collect(Collectors.toList());
+
+        if (topEntries.isEmpty()) {
+            throw new CustomException(ErrorCode.RECOMMENDATION_FAILED);
+        }
+
+        double maxScore = topEntries.get(0).getValue();
+        List<String> topMotions = topEntries.stream()
+                .filter(e -> e.getValue() == maxScore)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+
+        Collections.shuffle(topMotions, random);
+        return topMotions.stream().limit(count).collect(Collectors.toList());
+    }
+
     public EmotionEnum determineDominantEmotion(List<EmotionEnum> genreEmotions, List<EmotionEnum> jointEmotions) {
         Map<EmotionEnum, Double> scoreMap = new HashMap<>();
 
