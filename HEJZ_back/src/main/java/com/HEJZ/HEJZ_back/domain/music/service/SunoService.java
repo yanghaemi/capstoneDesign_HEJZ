@@ -36,7 +36,8 @@ public class SunoService {
 
     public String generateSong(SunoRequest request) {
         // Suno API로 HTTP 요청 보내는 코드
-        String url = "https://apibox.erweima.ai/api/v1/generate";
+        // String url = "https://apibox.erweima.ai/api/v1/generate";
+        String url = "https://api.sunoapi.org/api/v1/generate";
         HttpURLConnection conn = null;
 
         HttpUtils httpUtils = new HttpUtils();

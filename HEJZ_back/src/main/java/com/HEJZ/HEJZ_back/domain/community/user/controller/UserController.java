@@ -1,5 +1,6 @@
 package com.HEJZ.HEJZ_back.domain.community.user.controller;
 
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.HEJZ.HEJZ_back.domain.community.user.dto.InfoRequest;
 import com.HEJZ.HEJZ_back.domain.community.user.dto.LoginRequest;
 import com.HEJZ.HEJZ_back.domain.community.user.dto.SignUpRequest;
 import com.HEJZ.HEJZ_back.domain.community.user.service.UserService;
@@ -67,7 +69,21 @@ public class UserController {
         Authentication authentication = SecurityContextHolder.getContext()
                 .getAuthentication();
         String username = authentication.getName();
-        ApiResponse<Object> result = userService.getMyInfo(username);
+        ApiResponse<Object> result = userService.getInfo(username);
+
+        return ResponseEntity.ok(result);
+    }
+
+    /*
+     * 호출 url : http://localhost:8080/api/user/info
+     * 설명 : 유저 정보 조회 api
+     * method : post
+     */
+    @PostMapping("/info")
+    public ResponseEntity<ApiResponse<Object>> getInfo(@RequestBody InfoRequest req) {
+
+        System.out.println(req.getUsername() + "님의 정보를 조회합니다.");
+        ApiResponse<Object> result = userService.getInfo(req.getUsername());
 
         return ResponseEntity.ok(result);
     }
