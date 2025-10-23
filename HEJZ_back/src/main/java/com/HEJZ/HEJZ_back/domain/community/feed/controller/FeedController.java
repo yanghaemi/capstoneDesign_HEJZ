@@ -25,11 +25,13 @@ public class FeedController {
 
     private Long getCurrentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || auth.getName() == null) throw new RuntimeException("인증 필요");
+        if (auth == null || auth.getName() == null)
+            throw new RuntimeException("인증 필요");
         String username = auth.getName();
         UserEntity user = userRepository.findByUsername(username);
-        if (user == null) throw new RuntimeException("유저 없음: " + username);
-        return user.getId();
+        if (user == null)
+            throw new RuntimeException("유저 없음: " + username);
+        return user.getUserId();
     }
 
     @PostMapping
@@ -71,7 +73,7 @@ public class FeedController {
             return ResponseEntity.status(404).body(new ApiResponse<>(404, null, "유저 없음"));
         }
 
-        boolean allowed = viewer.getId().equals(target.getId()); // 본인은 항상 허용
+        boolean allowed = viewer.getUserId().equals(target.getUserId()); // 본인은 항상 허용
         if (!allowed) {
             boolean isFollower = followRepository
                     .existsByFollower_UsernameAndFollowing_Username(viewer.getUsername(), username);
@@ -87,7 +89,7 @@ public class FeedController {
                     .body(new ApiResponse<>(429, null, "요청 횟수 초과. 1분 후 다시 시도해주세요."));
         }
 
-        var resp = feedService.getMyFeeds(target.getId(), limit, cursor);
+        var resp = feedService.getMyFeeds(target.getUserId(), limit, cursor);
         return ResponseEntity.ok(new ApiResponse<>(200, resp, "조회 성공"));
     }
 

@@ -22,7 +22,8 @@ import java.util.List;
 public class Feed {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "feed_id", nullable = false)
+    private Long feedId;
 
     @ManyToOne(fetch = FetchType.LAZY) // 작성자
     @JoinColumn(name = "user_id", nullable = false)
@@ -42,4 +43,8 @@ public class Feed {
     @OneToMany(mappedBy = "feed", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<FeedMedia> images = new ArrayList<>();
+
+    @Column(nullable = false)
+    private Long feedLikesCount;
+
 }

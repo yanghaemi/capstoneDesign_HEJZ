@@ -113,7 +113,7 @@ public class FeedService {
     public void deleteFeed(Long userId, Long feedId) {
         Feed feed = feedRepository.findById(feedId)
                 .orElseThrow(() -> new RuntimeException("Feed not found"));
-        if (!feed.getUser().getId().equals(userId)) {
+        if (!feed.getUser().getUserId().equals(userId)) {
             throw new RuntimeException("권한 없음");
         }
         feed.setDeleted(true);
@@ -135,8 +135,8 @@ public class FeedService {
                 .toList();
 
         return new FeedItemDto(
-                feed.getId(),
-                feed.getUser().getId(),
+                feed.getFeedId(),
+                feed.getUser().getUserId(),
                 feed.getContent(),
                 mediaDtos,
                 feed.getCreatedAt());
@@ -144,7 +144,7 @@ public class FeedService {
 
     private String toCursor(Feed last) {
         String ts = last.getCreatedAt().format(CURSOR_FMT); // yyyy-MM-ddTHH:mm:ss
-        return ts + "_" + last.getId();
+        return ts + "_" + last.getFeedId();
     }
 
     private FeedListResponse buildListResponse(List<Feed> feeds) {
