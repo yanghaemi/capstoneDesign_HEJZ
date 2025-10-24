@@ -1,6 +1,7 @@
 package com.HEJZ.HEJZ_back.domain.community.feed.entity;
 
 import com.HEJZ.HEJZ_back.domain.community.user.entity.UserEntity;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.*;
@@ -44,8 +45,10 @@ public class FeedEntity {
     private List<FeedMediaEntity> images = new ArrayList<>();
 
     @OneToMany(mappedBy = "feed")
-    @Column(nullable = false)
     @JsonManagedReference
     private List<FeedLikeEntity> feedLikes;
 
+    @OneToMany(mappedBy = "feed")
+    @JsonManagedReference
+    private List<CommentEntity> comments;
 }

@@ -7,11 +7,10 @@ import com.HEJZ.HEJZ_back.domain.community.feed.entity.FeedEntity;
 import com.HEJZ.HEJZ_back.domain.community.user.entity.UserEntity;
 import com.HEJZ.HEJZ_back.domain.community.feed.entity.CommentLikeEntity;
 
-public class CommentDto {
-    Long commentId;
-    String comment;
-    UserEntity user;
-    FeedEntity feed;
-    List<CommentLikeEntity> commentLike;
-    LocalDateTime createdAt;
-}
+public record CommentDto (
+    Long id,
+    String comment,
+    FeedEntity feed,
+    List<CommentLikeEntity> commentLike,
+    LocalDateTime createdAt
+){}

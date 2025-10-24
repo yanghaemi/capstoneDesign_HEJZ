@@ -3,11 +3,7 @@ package com.HEJZ.HEJZ_back.domain.community.feed.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.HEJZ.HEJZ_back.domain.community.feed.dto.CommentDeleteRequest;
 import com.HEJZ.HEJZ_back.domain.community.feed.dto.CommentCreateRequest;
@@ -23,6 +19,14 @@ public class CommentController {
     // 댓글 컨트롤러
 
     private final CommentService commentService;
+
+    private String getMyUsername(){
+
+        Authentication authentication = SecurityContextHolder.getContext()
+                .getAuthentication();
+
+        return authentication.getName();
+    }
 
     /*
      * 호출 url: http://localhost:8080/api/comments/create
@@ -40,6 +44,20 @@ public class CommentController {
 
         return ResponseEntity.ok(result);
     }
+
+    /*
+     * 호출 url: http://localhost:8080/api/comments/getmycomments
+     * 설명: 내 댓글 조회
+     * method: get
+
+    @GetMapping("/getmycomments")
+    public ResponseEntity<ApiResponse<Object>> getMyComments(){
+
+        String username = getMyUsername();
+        ApiResponse<Object> result = commentService.getMyComments(username);
+
+        return ResponseEntity.ok(result);
+    }*/
 
     /*
      * 호출 url: http://localhost:8080/api/comments/delete

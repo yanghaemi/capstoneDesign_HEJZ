@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import com.HEJZ.HEJZ_back.domain.community.feed.dto.CommentCreateRequest;
@@ -62,14 +63,26 @@ public class CommentService {
         }
     }
 
+    public ApiResponse<Object> getMyComments(String username){
+        try{
+
+            List<CommentEntity> comments = commentRepository.findComment_ByUsername(username);
+
+            return new ApiResponse<>(200, comments, "댓글 조회 성공");
+        }catch (Exception e){
+            return new ApiResponse<>(500, null,"댓글 조회 실패");
+        }
+    }
+
+    @Transactional
     public ApiResponse<Object> deleteComment(Long commentId) {
         try {
             if (commentId == null) {
                 return new ApiResponse<Object>(404, null, "댓글은 비울 수 없습니다.");
-
             }
 
-            // TODO: comment DTO 만들어서 return data에 넣기
+            commentRepository.deleteByCommentId(commentId);
+
             return new ApiResponse<Object>(200, commentId, "댓글 삭제 성공");
 
         } catch (Exception e) {
