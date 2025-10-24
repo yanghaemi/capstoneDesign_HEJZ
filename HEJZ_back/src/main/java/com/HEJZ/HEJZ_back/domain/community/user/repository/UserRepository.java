@@ -13,7 +13,7 @@ import com.HEJZ.HEJZ_back.domain.community.user.entity.UserEntity;
 public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
     @Query("select u.id from UserEntity u where u.username = :username")
-    Optional<Long> findIdByUsername(@Param("username") String username);
+    Long findIdByUsername(@Param("username") String username);
 
     public UserEntity findByUsername(String username);
 

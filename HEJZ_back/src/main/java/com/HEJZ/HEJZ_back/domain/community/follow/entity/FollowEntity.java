@@ -28,7 +28,6 @@ public class FollowEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "follow_id")
     Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

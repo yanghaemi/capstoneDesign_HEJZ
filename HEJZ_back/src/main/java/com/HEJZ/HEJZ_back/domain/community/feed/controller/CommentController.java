@@ -1,6 +1,8 @@
 package com.HEJZ.HEJZ_back.domain.community.feed.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,7 +32,11 @@ public class CommentController {
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<Object>> createComment(@RequestBody CommentCreateRequest createReq) {
 
-        ApiResponse<Object> result = commentService.createComment(createReq.getComment());
+        Authentication authentication = SecurityContextHolder.getContext()
+                .getAuthentication();
+        String username = authentication.getName();
+
+        ApiResponse<Object> result = commentService.createComment(createReq, username);
 
         return ResponseEntity.ok(result);
     }

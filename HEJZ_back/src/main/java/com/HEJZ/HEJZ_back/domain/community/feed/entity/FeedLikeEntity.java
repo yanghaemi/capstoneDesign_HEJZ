@@ -2,6 +2,9 @@ package com.HEJZ.HEJZ_back.domain.community.feed.entity;
 
 import java.time.LocalDateTime;
 
+import com.HEJZ.HEJZ_back.domain.community.user.entity.UserEntity;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -17,7 +20,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "feed_like")
+@Table(name = "feed_likes")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -25,15 +28,16 @@ import lombok.Setter;
 public class FeedLikeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long feedLikeId;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "feed_id", nullable = false)
-    private Long feedId;
+    @JsonBackReference // 자식 엔티티는 직렬화 제외
+    private FeedEntity feed;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private Long userId;
+    private UserEntity user;
 
     @Column(name = "create_at", nullable = false)
     private LocalDateTime createdAt;

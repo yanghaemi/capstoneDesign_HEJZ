@@ -25,30 +25,16 @@ public class SearchService {
     private FeedService feedService;
 
     public ApiResponse<Object> search(String username, String keyword, SearchScope scope, int limit) {
-        // try {
-        // if (keyword == null || keyword.isBlank())
-        // return new ApiResponse<Object>(400, List.of(), "검색어를 입력해주세요.");
 
-        // Long id = userRepository.findIdByUsername(username);
-
-        // var searchFeeds = feedRepository.findFeedByKeyword(keyword, id, scope ==
-        // SearchScope.FOLLOWING,
-        // PageRequest.of(0, clamp(limit, 1, 100)));
-
-        // if (searchFeeds.isEmpty())
-        // return new ApiResponse<Object>(404, searchFeeds, "검색 결과가 없습니다.");
-
-        // return new ApiResponse<Object>(200, searchFeeds, "검색 성공");
-        // } catch (Exception e) {
-        // // return new ApiResponse<Object>(500, null, "검색 실패" + e);
-        // throw new IllegalStateException("검색 실패", e); // 재던지기
-        // }
         if (keyword == null || keyword.isBlank()) {
             return new ApiResponse<>(400, List.of(), "검색어를 입력해주세요.");
         }
 
-        Long viewerId = userRepository.findIdByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자: " + username));
+        Long viewerId = userRepository.findIdByUsername(username);
+
+        if (viewerId == null) {
+            return new ApiResponse<Object>(404, null, "존재하지 않는 사용자");
+        }
 
         var feeds = feedRepository.findFeedByKeyword(
                 keyword, viewerId, scope == SearchScope.FOLLOWING,

@@ -7,5 +7,4 @@ import com.HEJZ.HEJZ_back.domain.community.feed.entity.CommentEntity;
 
 @Repository
 public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
-    void deleteComment(Long commentId);
 }

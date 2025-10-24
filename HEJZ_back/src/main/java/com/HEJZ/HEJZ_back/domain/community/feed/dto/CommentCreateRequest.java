@@ -12,4 +12,5 @@ import lombok.Setter;
 public class CommentCreateRequest {
 
     private String comment;
+    private Long feedId;
 }
