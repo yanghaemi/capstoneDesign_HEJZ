@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "feed", indexes = {
+@Table(name = "feeds", indexes = {
         @Index(name = "idx_user_deleted_created_id", columnList = "user_id, is_deleted, created_at DESC, id DESC")
 })
 @Getter
@@ -19,11 +19,10 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Feed {
+public class FeedEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "feed_id", nullable = false)
-    private Long feedId;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY) // 작성자
     @JoinColumn(name = "user_id", nullable = false)
@@ -42,9 +41,11 @@ public class Feed {
     @Builder.Default
     @OneToMany(mappedBy = "feed", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
-    private List<FeedMedia> images = new ArrayList<>();
+    private List<FeedMediaEntity> images = new ArrayList<>();
 
+    @OneToMany(mappedBy = "feed")
     @Column(nullable = false)
-    private Long feedLikesCount;
+    @JsonManagedReference
+    private List<FeedLikeEntity> feedLikes;
 
 }
