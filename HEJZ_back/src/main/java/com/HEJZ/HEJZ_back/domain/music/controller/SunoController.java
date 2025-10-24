@@ -46,7 +46,7 @@ public class SunoController {
     // method: post
     @PostMapping("/callback")
     public ResponseEntity<List<SavedSongDTO>> callbackSong(@RequestBody SunoResponse callback) {
-        System.out.println("taskId: " + callback.getData().getTask_id());
+        System.out.println("taskId: " + callback.getData().getTaskId());
         System.out.println("✅ 콜백 성공! data size: " + callback.getData().getData().size());
         List<SavedSongDTO> result = sunoService.callbackFromSuno(callback);
         // System.out.println("콜백: "+result);

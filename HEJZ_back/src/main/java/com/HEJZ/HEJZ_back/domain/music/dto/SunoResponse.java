@@ -5,16 +5,18 @@ import lombok.Setter;
 
 import java.util.List;
 
-@Getter @Setter
+@Getter
+@Setter
 public class SunoResponse {
     private int code;
     private String msg;
     private CallbackData data;
 
-    @Getter @Setter
+    @Getter
+    @Setter
     public static class CallbackData {
         private String callbackType;
-        private String task_id;
+        private String taskId;
         private List<AudioData> data;
     }
 
@@ -22,14 +24,14 @@ public class SunoResponse {
     @Setter
     public static class AudioData {
         private String id;
-        private String audio_url;
-        private String source_audio_url;
-        private String stream_audio_url;
-        private String source_stream_audio_url;
-        private String image_url;
-        private String source_image_url;
+        private String audioUrl;
+        private String sourceAudioUrl;
+        private String streamAudioUrl;
+        private String sourceStreamAudioUrl;
+        private String imageUrl;
+        private String sourceImageUrl;
         private String prompt;
-        private String model_name;
+        private String modelName;
         private String title;
         private String tags;
         private String createTime;
