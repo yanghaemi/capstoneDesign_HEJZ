@@ -1,6 +1,6 @@
 package com.HEJZ.HEJZ_back.domain.community.user.dto;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -18,5 +18,5 @@ public class UserDto {
     private String nickname;
     private String profileImageUrl;
     private String bio;
-    private LocalDate createdAt;
+    private LocalDateTime createdAt;
 }

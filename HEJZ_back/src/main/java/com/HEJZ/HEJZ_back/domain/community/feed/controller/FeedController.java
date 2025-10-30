@@ -25,10 +25,12 @@ public class FeedController {
 
     private Long getCurrentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || auth.getName() == null) throw new RuntimeException("인증 필요");
+        if (auth == null || auth.getName() == null)
+            throw new RuntimeException("인증 필요");
         String username = auth.getName();
         UserEntity user = userRepository.findByUsername(username);
-        if (user == null) throw new RuntimeException("유저 없음: " + username);
+        if (user == null)
+            throw new RuntimeException("유저 없음: " + username);
         return user.getId();
     }
 

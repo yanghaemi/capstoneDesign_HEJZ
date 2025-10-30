@@ -1,17 +1,19 @@
 package com.HEJZ.HEJZ_back.domain.community.feed.repository;
 
-import com.HEJZ.HEJZ_back.domain.community.feed.entity.Feed;
+import com.HEJZ.HEJZ_back.domain.community.feed.entity.FeedEntity;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
-public interface FeedRepository extends JpaRepository<Feed, Long> {
+public interface FeedRepository extends JpaRepository<FeedEntity, Long> {
 
   @Query("""
-      SELECT f FROM Feed f
+      SELECT f FROM FeedEntity f
       WHERE f.user.id = :userId
         AND f.isDeleted = false
         AND (
@@ -21,14 +23,14 @@ public interface FeedRepository extends JpaRepository<Feed, Long> {
         )
       ORDER BY f.createdAt DESC, f.id DESC
       """)
-  List<Feed> findMyFeeds(
+  List<FeedEntity> findMyFeeds(
       @Param("userId") Long userId,
       @Param("cursorCreatedAt") LocalDateTime cursorCreatedAt,
       @Param("cursorId") Long cursorId,
       Pageable pageable);
 
   @Query("""
-      SELECT f FROM Feed f
+      SELECT f FROM FeedEntity f
       JOIN com.HEJZ.HEJZ_back.domain.community.follow.entity.FollowEntity fol
            ON fol.following.id = f.user.id
       WHERE fol.follower.id = :userId
@@ -40,7 +42,7 @@ public interface FeedRepository extends JpaRepository<Feed, Long> {
         )
       ORDER BY f.createdAt DESC, f.id DESC
       """)
-  List<Feed> findTimelineFeeds(
+  List<FeedEntity> findTimelineFeeds(
       @Param("userId") Long userId,
       @Param("cursorCreatedAt") LocalDateTime cursorCreatedAt,
       @Param("cursorId") Long cursorId,
@@ -49,7 +51,7 @@ public interface FeedRepository extends JpaRepository<Feed, Long> {
   @EntityGraph(attributePaths = "images") // images를 즉시 로딩
   @Query("""
         SELECT f
-        FROM Feed f
+        FROM FeedEntity f
         WHERE f.isDeleted = false
           AND LOWER(f.content) LIKE LOWER(CONCAT('%', :keyword, '%'))
           AND (
@@ -61,9 +63,11 @@ public interface FeedRepository extends JpaRepository<Feed, Long> {
           )
         ORDER BY f.createdAt DESC, f.id DESC
       """)
-  List<Feed> findFeedByKeyword(
+  List<FeedEntity> findFeedByKeyword(
       @Param("keyword") String keyword,
       @Param("viewerId") Long viewerId,
       @Param("followingOnly") boolean followingOnly,
       Pageable pageable);
+
+  Optional<FeedEntity> findById(Long id);
 }

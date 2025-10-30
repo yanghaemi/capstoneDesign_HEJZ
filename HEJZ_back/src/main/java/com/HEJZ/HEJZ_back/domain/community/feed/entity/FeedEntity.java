@@ -1,6 +1,7 @@
 package com.HEJZ.HEJZ_back.domain.community.feed.entity;
 
 import com.HEJZ.HEJZ_back.domain.community.user.entity.UserEntity;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.*;
@@ -11,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "feed", indexes = {
+@Table(name = "feeds", indexes = {
         @Index(name = "idx_user_deleted_created_id", columnList = "user_id, is_deleted, created_at DESC, id DESC")
 })
 @Getter
@@ -19,7 +20,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Feed {
+public class FeedEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -41,5 +42,13 @@ public class Feed {
     @Builder.Default
     @OneToMany(mappedBy = "feed", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
-    private List<FeedMedia> images = new ArrayList<>();
+    private List<FeedMediaEntity> images = new ArrayList<>();
+
+    @OneToMany(mappedBy = "feed")
+    @JsonManagedReference
+    private List<FeedLikeEntity> feedLikes;
+
+    @OneToMany(mappedBy = "feed")
+    @JsonManagedReference
+    private List<CommentEntity> comments;
 }

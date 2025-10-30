@@ -2,8 +2,6 @@ package com.HEJZ.HEJZ_back.domain.community.follow.entity;
 
 import com.HEJZ.HEJZ_back.domain.community.user.entity.UserEntity;
 
-import jakarta.annotation.Generated;
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;

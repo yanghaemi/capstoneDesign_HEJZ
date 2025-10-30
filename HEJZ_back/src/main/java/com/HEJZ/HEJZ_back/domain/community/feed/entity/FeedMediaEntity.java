@@ -13,7 +13,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class FeedMedia {
+public class FeedMediaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,7 +22,7 @@ public class FeedMedia {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "feed_id", nullable = false)
     @JsonBackReference
-    private Feed feed;
+    private FeedEntity feed;
 
     @Column(nullable = false, length = 512)
     private String url;

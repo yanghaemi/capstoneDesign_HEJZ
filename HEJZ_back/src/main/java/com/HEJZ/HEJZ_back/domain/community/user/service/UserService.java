@@ -40,6 +40,7 @@ public class UserService {
             newUser.setEmail(signUpRequest.getEmail());
             newUser.setNickname(signUpRequest.getNickname());
             newUser.setProfileImageUrl(signUpRequest.getProfileImageUrl());
+            newUser.setBio(signUpRequest.getBio());
             newUser.setCreatedAt(LocalDateTime.now());
 
             userRepository.save(newUser);
@@ -93,7 +94,7 @@ public class UserService {
 
     // 로그아웃은 프론트에서 토큰 삭제로 처리
 
-    public ApiResponse<Object> getMyInfo(String username) {
+    public ApiResponse<Object> getInfo(String username) {
 
         try {
             UserEntity user = userRepository.findByUsername(username);
@@ -101,14 +102,15 @@ public class UserService {
                 return new ApiResponse<Object>(404, null, "유저를 찾을 수 없습니다.");
             }
 
-            UserDto myinfo = new UserDto();
-            myinfo.setUsername(user.getUsername());
-            myinfo.setEmail(user.getEmail());
-            myinfo.setNickname(user.getNickname());
-            myinfo.setProfileImageUrl(user.getProfileImageUrl());
-            myinfo.setBio(user.getBio());
+            UserDto info = new UserDto();
+            info.setUsername(user.getUsername());
+            info.setEmail(user.getEmail());
+            info.setNickname(user.getNickname());
+            info.setProfileImageUrl(user.getProfileImageUrl());
+            info.setBio(user.getBio());
+            info.setCreatedAt(user.getCreatedAt());
 
-            return new ApiResponse<Object>(200, myinfo, "내 정보 조회 성공!");
+            return new ApiResponse<Object>(200, info, "내 정보 조회 성공!");
         } catch (Exception e) {
             return new ApiResponse<Object>(500, null, "서버 오류: " + e.getMessage());
         }

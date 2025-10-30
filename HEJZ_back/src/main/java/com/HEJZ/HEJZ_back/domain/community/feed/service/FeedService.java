@@ -5,8 +5,8 @@ import com.HEJZ.HEJZ_back.domain.community.feed.dto.FeedItemDto;
 import com.HEJZ.HEJZ_back.domain.community.feed.dto.FeedListResponse;
 import com.HEJZ.HEJZ_back.domain.community.feed.dto.MediaDto;
 import com.HEJZ.HEJZ_back.domain.community.feed.dto.MediaType;
-import com.HEJZ.HEJZ_back.domain.community.feed.entity.Feed;
-import com.HEJZ.HEJZ_back.domain.community.feed.entity.FeedMedia;
+import com.HEJZ.HEJZ_back.domain.community.feed.entity.FeedEntity;
+import com.HEJZ.HEJZ_back.domain.community.feed.entity.FeedMediaEntity;
 import com.HEJZ.HEJZ_back.domain.community.feed.repository.FeedRepository;
 import com.HEJZ.HEJZ_back.domain.community.user.entity.UserEntity;
 import com.HEJZ.HEJZ_back.domain.community.user.repository.UserRepository;
@@ -38,19 +38,19 @@ public class FeedService {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Feed feed = Feed.builder()
+        FeedEntity feed = FeedEntity.builder()
                 .user(user)
                 .content(request.content())
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        List<FeedMedia> media = new ArrayList<>();
+        List<FeedMediaEntity> media = new ArrayList<>();
 
         // 신규 포맷 우선 (media[])
         if (request.media() != null && !request.media().isEmpty()) {
             for (int i = 0; i < request.media().size(); i++) {
                 var m = request.media().get(i);
-                media.add(FeedMedia.builder()
+                media.add(FeedMediaEntity.builder()
                         .feed(feed)
                         .url(m.url())
                         .ord(i)
@@ -64,7 +64,7 @@ public class FeedService {
         // 레거시 호환 (imageUrls[])
         else if (request.imageUrls() != null && !request.imageUrls().isEmpty()) {
             for (int i = 0; i < request.imageUrls().size(); i++) {
-                media.add(FeedMedia.builder()
+                media.add(FeedMediaEntity.builder()
                         .feed(feed)
                         .url(request.imageUrls().get(i))
                         .ord(i)
@@ -74,7 +74,7 @@ public class FeedService {
         }
 
         feed.setImages(media);
-        Feed saved = feedRepository.save(feed);
+        FeedEntity saved = feedRepository.save(feed);
         return toDto(saved);
     }
 
@@ -84,7 +84,7 @@ public class FeedService {
     @Transactional(readOnly = true)
     public FeedListResponse getMyFeeds(Long userId, int limit, String cursor) {
         Cursor c = parseCursor(cursor);
-        List<Feed> feeds = feedRepository.findMyFeeds(
+        List<FeedEntity> feeds = feedRepository.findMyFeeds(
                 userId,
                 c.createdAt(),
                 c.id(),
@@ -98,7 +98,7 @@ public class FeedService {
     @Transactional(readOnly = true)
     public FeedListResponse getTimelineFeeds(Long userId, int limit, String cursor) {
         Cursor c = parseCursor(cursor);
-        List<Feed> feeds = feedRepository.findTimelineFeeds(
+        List<FeedEntity> feeds = feedRepository.findTimelineFeeds(
                 userId,
                 c.createdAt(),
                 c.id(),
@@ -111,7 +111,7 @@ public class FeedService {
     // =========================
     @Transactional
     public void deleteFeed(Long userId, Long feedId) {
-        Feed feed = feedRepository.findById(feedId)
+        FeedEntity feed = feedRepository.findById(feedId)
                 .orElseThrow(() -> new RuntimeException("Feed not found"));
         if (!feed.getUser().getId().equals(userId)) {
             throw new RuntimeException("권한 없음");
@@ -122,9 +122,9 @@ public class FeedService {
     // =========================
     // DTO mapping / Cursor utils
     // =========================
-    public FeedItemDto toDto(Feed feed) {
+    public FeedItemDto toDto(FeedEntity feed) {
         List<MediaDto> mediaDtos = feed.getImages().stream()
-                .sorted(Comparator.comparingInt(FeedMedia::getOrd))
+                .sorted(Comparator.comparingInt(FeedMediaEntity::getOrd))
                 .map(m -> new MediaDto(
                         m.getUrl(),
                         m.getOrd(),
@@ -142,12 +142,12 @@ public class FeedService {
                 feed.getCreatedAt());
     }
 
-    private String toCursor(Feed last) {
+    private String toCursor(FeedEntity last) {
         String ts = last.getCreatedAt().format(CURSOR_FMT); // yyyy-MM-ddTHH:mm:ss
         return ts + "_" + last.getId();
     }
 
-    private FeedListResponse buildListResponse(List<Feed> feeds) {
+    private FeedListResponse buildListResponse(List<FeedEntity> feeds) {
         String nextCursor = null;
         if (!feeds.isEmpty()) {
             nextCursor = toCursor(feeds.get(feeds.size() - 1));

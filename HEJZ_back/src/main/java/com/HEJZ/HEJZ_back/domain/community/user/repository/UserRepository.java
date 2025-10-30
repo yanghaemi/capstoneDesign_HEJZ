@@ -1,7 +1,5 @@
 package com.HEJZ.HEJZ_back.domain.community.user.repository;
 
-import java.util.Optional;
-
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,7 +11,7 @@ import com.HEJZ.HEJZ_back.domain.community.user.entity.UserEntity;
 public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
     @Query("select u.id from UserEntity u where u.username = :username")
-    Optional<Long> findIdByUsername(@Param("username") String username);
+    Long findIdByUsername(@Param("username") String username);
 
     public UserEntity findByUsername(String username);
 

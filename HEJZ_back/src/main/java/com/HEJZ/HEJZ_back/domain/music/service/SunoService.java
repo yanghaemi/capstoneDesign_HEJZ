@@ -1,6 +1,7 @@
 package com.HEJZ.HEJZ_back.domain.music.service;
 
 import com.HEJZ.HEJZ_back.domain.music.dto.SavedSongDTO;
+import com.HEJZ.HEJZ_back.domain.music.dto.SunoLyricsDTO;
 import com.HEJZ.HEJZ_back.domain.music.dto.SunoRequest;
 import com.HEJZ.HEJZ_back.domain.music.dto.SunoResponse;
 import com.HEJZ.HEJZ_back.domain.music.entity.SavedSong;
@@ -36,7 +37,8 @@ public class SunoService {
 
     public String generateSong(SunoRequest request) {
         // Suno API로 HTTP 요청 보내는 코드
-        String url = "https://apibox.erweima.ai/api/v1/generate";
+        // String url = "https://apibox.erweima.ai/api/v1/generate";
+        String url = "https://api.sunoapi.org/api/v1/generate";
         HttpURLConnection conn = null;
 
         HttpUtils httpUtils = new HttpUtils();
@@ -103,10 +105,10 @@ public class SunoService {
             }
 
             for (SunoResponse.AudioData audio : audioList) {
-                String audioUrl = audio.getAudio_url();
-                String sourceAudioUrl = audio.getSource_audio_url();
-                String streamAudioUrl = audio.getStream_audio_url();
-                String sourceStreamAudioUrl = audio.getSource_stream_audio_url();
+                String audioUrl = audio.getAudioUrl();
+                String sourceAudioUrl = audio.getSourceAudioUrl();
+                String streamAudioUrl = audio.getStreamAudioUrl();
+                String sourceStreamAudioUrl = audio.getSourceStreamAudioUrl();
                 String prompt = audio.getPrompt();
                 String title = audio.getTitle().replaceAll("\\s+", "_");
                 String fileName = title + "_" + System.currentTimeMillis() + ".mp3";
@@ -123,7 +125,7 @@ public class SunoService {
                     SavedSong entity = new SavedSong();
                     entity.setTitle(title);
                     entity.setAudioUrl(publicUrl);
-                    entity.setTaskId(callback.getData().getTask_id());
+                    entity.setTaskId(callback.getData().getTaskId());
                     entity.setAudioId(audio.getId());
                     entity.setSourceAudioUrl(sourceAudioUrl);
                     entity.setStreamAudioUrl(streamAudioUrl);
@@ -138,7 +140,7 @@ public class SunoService {
                     savedSongs.add(new SavedSongDTO(
                             title,
                             publicUrl,
-                            callback.getData().getTask_id(),
+                            callback.getData().getTaskId(),
                             audio.getId(),
                             sourceAudioUrl,
                             streamAudioUrl,
@@ -185,9 +187,9 @@ public class SunoService {
     }
 
     // Get Timestamped Lyrics api 호출 함수
-    public String getTimestampLyrics(com.HEJZ.HEJZ_back.domain.music.dto.SunoLyricsDTO request) {
+    public String getTimestampLyrics(SunoLyricsDTO request) {
 
-        String url = "https://apibox.erweima.ai/api/v1/generate/get-timestamped-lyrics";
+        String url = "https://api.sunoapi.org/api/v1/generate/get-timestamped-lyrics";
 
         HttpURLConnection conn = null;
 
