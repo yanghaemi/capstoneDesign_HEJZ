@@ -1,6 +1,5 @@
 package com.HEJZ.HEJZ_back.domain.community.user.controller;
 
-import org.springframework.data.repository.query.Param;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;

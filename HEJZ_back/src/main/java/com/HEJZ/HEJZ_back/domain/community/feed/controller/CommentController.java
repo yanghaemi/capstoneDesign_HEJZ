@@ -20,14 +20,6 @@ public class CommentController {
 
     private final CommentService commentService;
 
-    private String getMyUsername(){
-
-        Authentication authentication = SecurityContextHolder.getContext()
-                .getAuthentication();
-
-        return authentication.getName();
-    }
-
     /*
      * 호출 url: http://localhost:8080/api/comments/create
      * 설명: 댓글 생성
@@ -49,15 +41,18 @@ public class CommentController {
      * 호출 url: http://localhost:8080/api/comments/getmycomments
      * 설명: 내 댓글 조회
      * method: get
-
+     */
     @GetMapping("/getmycomments")
-    public ResponseEntity<ApiResponse<Object>> getMyComments(){
+    public ResponseEntity<ApiResponse<Object>> getMyComments() {
 
-        String username = getMyUsername();
+        Authentication authentication = SecurityContextHolder.getContext()
+                .getAuthentication();
+
+        String username = authentication.getName();
         ApiResponse<Object> result = commentService.getMyComments(username);
 
         return ResponseEntity.ok(result);
-    }*/
+    }
 
     /*
      * 호출 url: http://localhost:8080/api/comments/delete

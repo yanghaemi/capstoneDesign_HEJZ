@@ -2,8 +2,6 @@ package com.HEJZ.HEJZ_back.domain.community.feed.repository;
 
 import com.HEJZ.HEJZ_back.domain.community.feed.entity.FeedEntity;
 
-import jakarta.annotation.Nonnull;
-
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;

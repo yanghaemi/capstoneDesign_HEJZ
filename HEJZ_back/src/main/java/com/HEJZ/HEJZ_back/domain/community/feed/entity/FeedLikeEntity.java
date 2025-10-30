@@ -2,11 +2,15 @@ package com.HEJZ.HEJZ_back.domain.community.feed.entity;
 
 import java.time.LocalDateTime;
 
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 import com.HEJZ.HEJZ_back.domain.community.user.entity.UserEntity;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -20,6 +24,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "feed_likes")
 @Getter
 @Setter
@@ -39,6 +44,7 @@ public class FeedLikeEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
 
-    @Column(name = "create_at", nullable = false)
+    @CreatedDate
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 }

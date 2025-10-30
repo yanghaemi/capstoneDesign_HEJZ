@@ -7,6 +7,8 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class LikeRequest {
-
+@AllArgsConstructor
+@NoArgsConstructor
+public class CommentLikeRequest {
+    Long CommentId;
 }

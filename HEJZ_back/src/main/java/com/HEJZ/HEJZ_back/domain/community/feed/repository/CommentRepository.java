@@ -14,12 +14,14 @@ import java.util.List;
 @Repository
 public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
 
+    @Transactional
     @Query("""
-            SELECT c From CommentEntity c
-            WHERE c.user.username = :username
-            ORDER BY c.createdAt DESC
+                select c from CommentEntity c
+                join fetch c.user u
+                where u.username = :username
+                order by c.createdAt desc
             """)
-    List<CommentEntity> findComment_ByUsername(@Param("username") String username);
+    List<CommentEntity> findByUsernameWithUser(String username);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Transactional

@@ -1,9 +1,7 @@
 package com.HEJZ.HEJZ_back.domain.community.feed.service;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -13,6 +11,7 @@ import com.HEJZ.HEJZ_back.domain.community.feed.dto.CommentDto;
 import com.HEJZ.HEJZ_back.domain.community.feed.entity.CommentEntity;
 import com.HEJZ.HEJZ_back.domain.community.feed.entity.CommentLikeEntity;
 import com.HEJZ.HEJZ_back.domain.community.feed.entity.FeedEntity;
+import com.HEJZ.HEJZ_back.domain.community.feed.repository.CommentLikeRepository;
 import com.HEJZ.HEJZ_back.domain.community.feed.repository.CommentRepository;
 import com.HEJZ.HEJZ_back.domain.community.feed.repository.FeedRepository;
 import com.HEJZ.HEJZ_back.domain.community.user.entity.UserEntity;
@@ -26,6 +25,7 @@ import lombok.AllArgsConstructor;
 public class CommentService {
 
     private final CommentRepository commentRepository;
+    private final CommentLikeRepository commentLikeRepository;
     private final UserRepository userRepository;
     private final FeedRepository feedRepository;
 
@@ -63,14 +63,24 @@ public class CommentService {
         }
     }
 
-    public ApiResponse<Object> getMyComments(String username){
-        try{
+    @Transactional
+    public ApiResponse<Object> getMyComments(String username) {
+        try {
 
-            List<CommentEntity> comments = commentRepository.findComment_ByUsername(username);
+            var comments = commentRepository.findByUsernameWithUser(username);
+            List<CommentDto> dto = comments.stream()
+                    .map(c -> new CommentDto(
+                            c.getId(),
+                            c.getComment(),
+                            c.getCreatedAt(),
+                            c.getUser().getId(),
+                            c.getUser().getUsername(),
+                            commentLikeRepository.countByComment_Id(c.getId())))
+                    .toList();
 
-            return new ApiResponse<>(200, comments, "댓글 조회 성공");
-        }catch (Exception e){
-            return new ApiResponse<>(500, null,"댓글 조회 실패");
+            return new ApiResponse<>(200, dto, "댓글 조회 성공");
+        } catch (Exception e) {
+            return new ApiResponse<>(500, null, "댓글 조회 실패");
         }
     }
 
@@ -90,4 +100,5 @@ public class CommentService {
 
         }
     }
+
 }
