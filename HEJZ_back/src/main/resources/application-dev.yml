@@ -9,7 +9,7 @@ spring:
       max-request-size: 200MB
 
   datasource:
-    url: jdbc:mysql://mysql:3310/${MYSQL_DATABASE}
+    url: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}
     username: ${MYSQL_USER}
     password: ${MYSQL_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -33,14 +33,14 @@ spring:
       name: none
       password: none
 
-  openai:
-    api:
-      key: ${OPENAI_API_KEY}
-      model: ${OPENAI_API_MODEL}
+openai:
+  api:
+    key: ${OPENAI_API_KEY}
+    model: ${OPENAI_API_MODEL}
 
-  suno:
-    api:
-      key: ${SUNO_API_KEY}
+suno:
+  api:
+    key: ${SUNO_API_KEY}
 
 springdoc:
   api-docs:
@@ -66,4 +66,4 @@ cloud:
 
 jwt:
   secret: ${JWT_SECRET}
-  expiration-ms: ${JWT_EXPIRES_MS:3600000} # 기본값 1시간
+  expiration-ms: ${JWT_EXPIRES_MS:3600000}
