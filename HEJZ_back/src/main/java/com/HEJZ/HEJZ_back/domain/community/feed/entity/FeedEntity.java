@@ -1,6 +1,7 @@
 package com.HEJZ.HEJZ_back.domain.community.feed.entity;
 
 import com.HEJZ.HEJZ_back.domain.community.user.entity.UserEntity;
+import com.HEJZ.HEJZ_back.domain.music.entity.SavedSong;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
@@ -51,4 +52,8 @@ public class FeedEntity {
     @OneToMany(mappedBy = "feed")
     @JsonManagedReference
     private List<CommentEntity> comments;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonBackReference
+    private SavedSong song;
 }
