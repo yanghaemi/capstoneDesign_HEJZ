@@ -71,9 +71,13 @@ public class LikeController {
      * 메소드: get
      */
     @GetMapping("/get_my_list_of_like")
-    public ResponseEntity<ApiResponse<Object>> getMyListOfLike(@RequestBody MyLikeRequest likeRequest) {
+    public ResponseEntity<ApiResponse<Object>> getMyListOfLike() {
 
-        ApiResponse<Object> result = likeService.getMyListOfLike(likeRequest);
+        Authentication authentication = SecurityContextHolder.getContext()
+                .getAuthentication();
+        String username = authentication.getName();
+
+        ApiResponse<Object> result = likeService.getMyListOfLike(username);
 
         return ResponseEntity.ok(result);
     }

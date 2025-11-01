@@ -116,7 +116,7 @@ public class LikeService {
         }
     }
 
-    public ApiResponse<Object> getMyListOfLike(MyLikeRequest likeRequest) {
+    public ApiResponse<Object> getMyListOfLike(String username) {
 
         try {
 

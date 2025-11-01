@@ -45,17 +45,6 @@ public class SongService {
 
     }
 
-    // private void saveSong(SongSaveLyricsDTO dto){
-    // SavedSong song = SavedSong.builder()
-    // .taskId(dto.getTaskId())
-    // .title(dto.getTaskId())
-    // .songUrl(dto.getSongUrl())
-    // .songPath(dto.getSongPath())
-    // .prompt(dto.getPrompt())
-    // .build();
-    //
-    // SavedSongRepository.save(song);
-    // }
     public String saveLyrics(SongSaveLyricsDTO request) {
         // 설명 : suno에서 가져온 가사 (timestamp 있는 버전)를 프론트에 불러오기 쉽게 한 줄 씩 포맷하고 db에 저장하는 api
 

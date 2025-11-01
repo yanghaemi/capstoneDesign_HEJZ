@@ -1,14 +1,10 @@
 package com.HEJZ.HEJZ_back.domain.music.controller;
 
-import com.HEJZ.HEJZ_back.domain.music.dto.SavedSongDTO;
-import com.HEJZ.HEJZ_back.domain.music.dto.SunoRequest;
-import com.HEJZ.HEJZ_back.domain.music.dto.SunoResponse;
+import com.HEJZ.HEJZ_back.domain.music.dto.*;
 import com.HEJZ.HEJZ_back.domain.music.entity.SavedSong;
 import com.HEJZ.HEJZ_back.domain.music.repository.SavedSongRepository;
 import com.HEJZ.HEJZ_back.domain.music.service.SunoService;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -46,10 +42,15 @@ public class SunoController {
     // method: post
     @PostMapping("/callback")
     public ResponseEntity<List<SavedSongDTO>> callbackSong(@RequestBody SunoResponse callback) {
-        System.out.println("taskId: " + callback.getData().getTaskId());
-        System.out.println("✅ 콜백 성공! data size: " + callback.getData().getData().size());
+        System.out.println("콜백 받은 거: " + callback);
+        if (callback == null || callback.getData() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        System.out.println("taskId: " + callback.getData().getTask_id());
+        var list = callback.getData().getData();
+        System.out.println("✅ 콜백 성공! data size: " + (list == null ? 0 : list.size()));
         List<SavedSongDTO> result = sunoService.callbackFromSuno(callback);
-        // System.out.println("콜백: "+result);
+        System.out.println("ㅠㅠ콜백: " + result);
         return ResponseEntity.ok(result);
     }
 
@@ -60,31 +61,54 @@ public class SunoController {
      */
     @PostMapping("/get_timestamplyrics")
     public ResponseEntity<?> getTimestampLyrics(
-            @RequestBody com.HEJZ.HEJZ_back.domain.music.dto.SunoLyricsDTO request) {
-        String result = sunoService.getTimestampLyrics(request);
+            @RequestBody SunoLyricsDTO request) {
+
         try {
-            // JSON 파싱: result는 JSON string
-            ObjectMapper mapper = new ObjectMapper();
-            Map<String, Object> parsed = mapper.readValue(result, new TypeReference<>() {
-            });
 
-            // data 안에 alignedWords가 있을 경우 한 번 더 추출
-            // data 꺼내기
-            Map<String, Object> data = (Map<String, Object>) parsed.get("data"); // alignedWords 꺼내기
-            List<Map<String, Object>> alignedWords = (List<Map<String, Object>>) data.get("alignedWords");
+            var taskId = request.getTaskId();
+            var audioId = request.getAudioId();
 
-            return ResponseEntity.ok(alignedWords); // 👉 최종적으로 alignedWords만 리턴
+            var alreadySaved = savedSongRepository.existsTimestampPayload(taskId, audioId);
+
+            if (alreadySaved) {
+                return ResponseEntity.ok(Map.of(
+                        "status", "skip",
+                        "reason", "timestamped lyrics already stored"));
+            }
+            String resp = sunoService.getTimestampLyrics(request);
+            sunoService.saveTimestampResponse(taskId, audioId, resp);
+
+            // 2. 저장 후 DB에서 다시 확인
+            var songOpt = savedSongRepository.findByTaskIdAndAudioId(request.getTaskId(), request.getAudioId());
+
+            System.out.println(songOpt);
+
+            if (songOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("해당 taskId의 저장된 곡을 찾을 수 없습니다.");
+            }
+
+            SavedSong song = songOpt.get();
+
+            // 3. 리턴 dto
+            Map<String, Object> response = Map.of(
+                    "taskId", song.getTaskId(),
+                    "plainLyrics", song.getPlainLyrics(),
+                    "hootCer", song.getHootCer(),
+                    "isStreamed", song.getIsStreamed());
+
+            return ResponseEntity.ok(response);
 
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("가사 파싱 실패");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("가사 저장 실패");
         }
     }
 
-    @GetMapping("/latest")
-    public ResponseEntity<List<SavedSongDTO>> getLatestSongs() {
+    @GetMapping("/getSongs")
+    public ResponseEntity<List<SavedSongDTO>> getSongs() {
         // 엔티티-> DTO 변환
-        List<SavedSong> songs = savedSongRepository.findTop5ByOrderByCreatedAtDesc();
+        List<SavedSong> songs = savedSongRepository.findTop20ByOrderByCreatedAtDesc();
         List<SavedSongDTO> dtos = songs.stream()
                 .map(song -> new SavedSongDTO(
                         song.getTitle(),

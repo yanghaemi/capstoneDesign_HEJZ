@@ -16,7 +16,7 @@ public class SunoResponse {
     @Setter
     public static class CallbackData {
         private String callbackType;
-        private String taskId;
+        private String task_id;
         private List<AudioData> data;
     }
 
@@ -24,14 +24,14 @@ public class SunoResponse {
     @Setter
     public static class AudioData {
         private String id;
-        private String audioUrl;
-        private String sourceAudioUrl;
-        private String streamAudioUrl;
-        private String sourceStreamAudioUrl;
-        private String imageUrl;
-        private String sourceImageUrl;
+        private String audio_url;
+        private String source_audio_url;
+        private String stream_audio_url;
+        private String source_stream_audio_url;
+        private String image_url;
+        private String source_image_url;
         private String prompt;
-        private String modelName;
+        private String model_name;
         private String title;
         private String tags;
         private String createTime;
