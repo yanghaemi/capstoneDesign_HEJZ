@@ -8,6 +8,6 @@ import lombok.Setter;
 @Setter
 public class SunoLyricsDTO {
     String taskId;
-    String AudioId;
+    String audioId;
     int musicIndex; // possible valudes: 0, 1
 }

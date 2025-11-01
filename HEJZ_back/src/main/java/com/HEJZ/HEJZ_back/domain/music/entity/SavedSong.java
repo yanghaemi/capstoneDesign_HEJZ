@@ -6,8 +6,10 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -49,5 +51,15 @@ public class SavedSong {
     private String plainLyrics;
 
     @CreatedDate
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "waveform_json", columnDefinition = "LONGTEXT")
+    private String waveformJson;
+
+    @Column(name = "hoot_cer")
+    private Double hootCer;
+
+    @Column(name = "is_streamed")
+    private Boolean isStreamed;
 }
