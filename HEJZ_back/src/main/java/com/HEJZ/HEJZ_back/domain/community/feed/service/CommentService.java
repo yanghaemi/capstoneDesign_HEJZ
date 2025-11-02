@@ -64,10 +64,9 @@ public class CommentService {
     }
 
     @Transactional
-    public ApiResponse<Object> getMyComments(String username) {
+    public ApiResponse<Object> getFeedComments(Long feedId) {
         try {
-
-            var comments = commentRepository.findByUsernameWithUser(username);
+            var comments = commentRepository.findByFeedId(feedId);
             List<CommentDto> dto = comments.stream()
                     .map(c -> new CommentDto(
                             c.getId(),
@@ -81,6 +80,25 @@ public class CommentService {
             return new ApiResponse<>(200, dto, "댓글 조회 성공");
         } catch (Exception e) {
             return new ApiResponse<>(500, null, "댓글 조회 실패");
+        }
+    }
+
+    public ApiResponse<Object> getMyComments(String username) {
+        try {
+            var comments = commentRepository.findByUsernameWithUser(username);
+            List<CommentDto> dto = comments.stream()
+                    .map(c -> new CommentDto(
+                            c.getId(),
+                            c.getComment(),
+                            c.getCreatedAt(),
+                            c.getUser().getId(),
+                            c.getUser().getUsername(),
+                            commentLikeRepository.countByComment_Id(c.getId())))
+                    .toList();
+
+            return new ApiResponse<>(200, dto, "내 댓글 조회 성공");
+        } catch (Exception e) {
+            return new ApiResponse<>(500, null, "내 댓글 조회 실패");
         }
     }
 

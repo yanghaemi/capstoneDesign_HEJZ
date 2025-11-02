@@ -23,6 +23,8 @@ public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
             """)
     List<CommentEntity> findByUsernameWithUser(String username);
 
+    List<CommentEntity> findByFeedId(Long feedId);
+
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Transactional
     @Query("delete from CommentEntity c where c.id = :id")
