@@ -6,6 +6,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import com.HEJZ.HEJZ_back.domain.community.feed.dto.CommentDeleteRequest;
+import com.HEJZ.HEJZ_back.domain.community.feed.entity.CommentRequest;
 import com.HEJZ.HEJZ_back.domain.community.feed.dto.CommentCreateRequest;
 import com.HEJZ.HEJZ_back.domain.community.feed.service.CommentService;
 import com.HEJZ.HEJZ_back.global.response.ApiResponse;
@@ -38,12 +39,25 @@ public class CommentController {
     }
 
     /*
+     * 호출 url: http://localhost:8080/api/comments/getcomments
+     * 설명: 피드 댓글 조회
+     * method: post
+     */
+    @PostMapping("/getcomments")
+    public ResponseEntity<ApiResponse<Object>> getMyComments(@RequestBody CommentRequest req) {
+
+        ApiResponse<Object> result = commentService.getFeedComments(req.getFeedId());
+
+        return ResponseEntity.ok(result);
+    }
+
+    /*
      * 호출 url: http://localhost:8080/api/comments/getmycomments
      * 설명: 내 댓글 조회
      * method: get
      */
     @GetMapping("/getmycomments")
-    public ResponseEntity<ApiResponse<Object>> getMyComments() {
+    public ResponseEntity<ApiResponse<Object>> getComments() {
 
         Authentication authentication = SecurityContextHolder.getContext()
                 .getAuthentication();
@@ -66,4 +80,5 @@ public class CommentController {
 
         return ResponseEntity.ok(result);
     }
+
 }
