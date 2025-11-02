@@ -1,7 +1,8 @@
-// src/api/comment.ts
+// src/api/comments.ts
 import { BASE_URL } from './baseUrl';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// ====== DTO ======
 export interface CommentDto {
   id: number;
   comment: string;
@@ -16,9 +17,15 @@ export interface CommentCreateRequest {
   comment: string;
 }
 
-// -----------------------------
-// 내부 유틸: 토큰/응답 언래퍼
-// -----------------------------
+export interface CommentRequest {
+  feedId: number;
+}
+
+export interface CommentDeleteRequest {
+  commentId: number;
+}
+
+// ====== 내부 유틸 ======
 async function getAuthToken(): Promise<string | null> {
   const keys = ['auth.token', 'token', 'accessToken', 'jwt'];
   const pairs = await AsyncStorage.multiGet(keys);
@@ -26,91 +33,80 @@ async function getAuthToken(): Promise<string | null> {
   return null;
 }
 
-function unwrapApi<T = any>(json: any): T {
-  const code = json?.code ?? json?.status ?? json?.statusCode;
+type ApiEnvelope<T> = { code?: number; status?: number; statusCode?: number; message?: string; data?: T } | T;
+
+function unwrapApi<T>(json: ApiEnvelope<T>): T {
+  const code = (json as any)?.code ?? (json as any)?.status ?? (json as any)?.statusCode;
   if (typeof code === 'number' && code !== 200) {
-    const msg = json?.message ?? json?.msg ?? '요청 실패';
+    const msg = (json as any)?.message ?? '요청 실패';
     throw new Error(msg);
   }
-  // code 필드가 없더라도 data가 있으면 우선 반환
-  return (json?.data ?? json) as T;
+  return ((json as any)?.data ?? json) as T;
 }
 
-// -----------------------------
-// 댓글 생성
+async function http<T>(path: string, init: RequestInit & { auth?: boolean } = {}): Promise<T> {
+  const token = init.auth ? await getAuthToken() : null;
+
+  const res = await fetch(`${BASE_URL}${path}`, {
+    ...init,
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': init.body ? 'application/json' : 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(init.headers || {}),
+    },
+  });
+
+  // 204 No Content 등 처리
+  if (res.status === 204) return undefined as unknown as T;
+
+  let json: any = {};
+  try {
+    json = await res.json();
+  } catch {
+    // body가 비어있을 수 있음
+  }
+
+  if (!res.ok) {
+    const msg = json?.message || `HTTP ${res.status}`;
+    throw new Error(msg);
+  }
+  return unwrapApi<T>(json);
+}
+
+// ====== API ======
+
 // POST /api/comments/create
-// -----------------------------
 export async function createComment(feedId: number, comment: string): Promise<CommentDto> {
-  const token = await getAuthToken();
-
-  const res = await fetch(`${BASE_URL}/api/comments/create`, {
+  return http<CommentDto>('/api/comments/create', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: JSON.stringify({ feedId, comment } satisfies CommentCreateRequest),
+    auth: true,
+    body: JSON.stringify({ feedId, comment } as CommentCreateRequest),
   });
-
-  const json = await res.json().catch(() => ({}));
-  return unwrapApi<CommentDto>(json);
 }
 
-// -----------------------------
-// 내 댓글 목록
-// GET /api/comments/getmycomments
-// -----------------------------
+// POST /api/comments/getcomments  (피드별 댓글 조회)
+export async function getCommentsByFeed(feedId: number): Promise<CommentDto[]> {
+  return http<CommentDto[]>('/api/comments/getcomments', {
+    method: 'POST',
+    auth: true,
+    body: JSON.stringify({ feedId } as CommentRequest),
+  });
+}
+
+// GET /api/comments/getmycomments  (내 댓글 목록)
 export async function getMyComments(): Promise<CommentDto[]> {
-  const token = await getAuthToken();
-
-  const res = await fetch(`${BASE_URL}/api/comments/getmycomments`, {
+  return http<CommentDto[]>('/api/comments/getmycomments', {
     method: 'GET',
-    headers: {
-      Accept: 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
+    auth: true,
   });
-
-  const json = await res.json().catch(() => ({}));
-  return unwrapApi<CommentDto[]>(json) || [];
 }
 
-// -----------------------------
-// 댓글 삭제
 // DELETE /api/comments/delete  (body: { commentId })
-// -----------------------------
 export async function deleteComment(commentId: number): Promise<void> {
-  const token = await getAuthToken();
-
-  const res = await fetch(`${BASE_URL}/api/comments/delete`, {
+  await http<void>('/api/comments/delete', {
     method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: JSON.stringify({ commentId }),
+    auth: true,
+    body: JSON.stringify({ commentId } as CommentDeleteRequest),
   });
-
-  const json = await res.json().catch(() => ({}));
-  unwrapApi(json); // 에러면 throw, 성공이면 아무것도 반환하지 않음
 }
-
-// -----------------------------
-// (주의) 피드별 댓글 목록
-// 제공된 컨트롤러에는 해당 엔드포인트가 없음.
-// 실제 백엔드 경로 알려주면 여기에 맞춰 구현할게.
-// -----------------------------
-// export async function getCommentsByFeed(feedId: number): Promise<CommentDto[]> {
-//   const token = await getAuthToken();
-//   const res = await fetch(`${BASE_URL}/api/feeds/${feedId}/comments`, {
-//     method: 'GET',
-//     headers: {
-//       Accept: 'application/json',
-//       ...(token ? { Authorization: `Bearer ${token}` } : {}),
-//     },
-//   });
-//   const json = await res.json().catch(() => ({}));
-//   return unwrapApi<CommentDto[]>(json) || [];
-// }

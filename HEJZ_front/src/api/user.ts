@@ -13,7 +13,16 @@ export type UserProfile = {
   followers?: number;
   following?: number;
 };
-
+export type PublicUser = {
+  id: number;
+  username: string;
+  nickname?: string;
+  bio?: string | null;
+  avatarUrl?: string | null;
+  profileImageUrl?: string | null;
+  followers?: number;
+  following?: number;
+};
 export const SK = {
   username: 'user.username',
   nickname: 'user.nickname',
@@ -129,47 +138,79 @@ export async function fetchMyProfile(): Promise<UserProfile> {
   return profile;
 }
 
-/** 공개 프로필: username으로 조회 (POST /api/user/info) */
-export async function fetchUserPublicByUsername(username: string): Promise<UserProfile> {
-  if (!username) throw new Error('username이 필요합니다.');
+export async function fetchUserInfoById(userId: number): Promise<PublicUser> {
+  console.log(`[fetchUserInfoById] 요청: userId=${userId}`);
 
-  const token = await getToken();
-  const url = `${BASE_URL}${PUBLIC_INFO_PATH}`;
-  console.log('[userByUsername] URL =', url);
+  const keys = ['auth.token', 'token', 'accessToken', 'jwt'];
+  const pairs = await AsyncStorage.multiGet(keys);
+  const token = pairs.find(([, v]) => !!v)?.[1] ?? null;
 
-  const res = await fetch(url, {
+  const res = await fetch(`${BASE_URL}/api/user/info`, {
     method: 'POST',
     headers: {
+      'Content-Type': 'application/json',
       Accept: 'application/json',
-      'Content-Type': 'application/json', // 🔁 POST니까 필요
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
-    body: JSON.stringify({ username }),
+    body: JSON.stringify({ userId }),
   });
 
-  const raw = await res.text().catch(() => '');
-  if (!res.ok) {
-    try {
-      const j = raw ? JSON.parse(raw) : null;
-      console.log('[userByUsername] error body =', j);
-      throw new Error(j?.msg || j?.message || `HTTP ${res.status}`);
-    } catch {
-      console.log('[userByUsername] error raw =', raw);
-      throw new Error(raw || `HTTP ${res.status}`);
-    }
+  let json: any = {};
+  try {
+    json = await res.json();
+    console.log(`[fetchUserInfoById] 응답 (userId=${userId}):`, JSON.stringify(json, null, 2));
+  } catch (e) {
+    console.log(`[fetchUserInfoById] JSON 파싱 실패 (userId=${userId}):`, e);
   }
 
-  const payload = extractPayloadAndMaybeThrow(raw, res.status);
-  const profile = mapToUserProfile(payload);
+  const code = json?.code ?? json?.status ?? json?.statusCode ?? res.status;
+  if (code !== 200) {
+    const msg = json?.message ?? json?.msg ?? `HTTP ${res.status}`;
+    console.log(`[fetchUserInfoById] 에러 (userId=${userId}):`, msg);
+    throw new Error(msg);
+  }
 
-  // 최소 보장
-  if (!profile.username) profile.username = username;
-  if (!profile.nickname) profile.nickname = username;
-
-  return profile;
+  const userData = (json?.data ?? json) as PublicUser;
+  console.log(`[fetchUserInfoById] 성공 (userId=${userId}):`, userData.username);
+  return userData;
 }
 
-/** 편의 함수: username 없으면 내 정보, 있으면 상대 정보 */
-export async function fetchUserInfo(username?: string) {
-  return username ? fetchUserPublicByUsername(username) : fetchMyProfile();
+// fetchUserPublicByUsername도 추가 (누락된 함수)
+export async function fetchUserPublicByUsername(username: string, userId?: number): Promise<PublicUser> {
+  console.log(`[fetchUserPublicByUsername] 요청: username=${username}, userId=${userId}`);
+
+  const keys = ['auth.token', 'token', 'accessToken', 'jwt'];
+  const pairs = await AsyncStorage.multiGet(keys);
+  const token = pairs.find(([, v]) => !!v)?.[1] ?? null;
+
+  const res = await fetch(`${BASE_URL}/api/user/info`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({
+      userId: userId, // ✅ userId 우선 사용
+      ...(userId ? {} : { username }) // userId 없으면 username 시도
+    }),
+  });
+
+  let json: any = {};
+  try {
+    json = await res.json();
+    console.log(`[fetchUserPublicByUsername] 응답:`, JSON.stringify(json, null, 2));
+  } catch (e) {
+    console.log(`[fetchUserPublicByUsername] JSON 파싱 실패:`, e);
+  }
+
+  const code = json?.code ?? json?.status ?? json?.statusCode ?? res.status;
+  if (code !== 200) {
+    const msg = json?.message ?? json?.msg ?? `HTTP ${res.status}`;
+    throw new Error(msg);
+  }
+
+  return (json?.data ?? json) as PublicUser;
 }
+
+
