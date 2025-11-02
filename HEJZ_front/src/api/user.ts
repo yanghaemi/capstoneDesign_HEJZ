@@ -21,11 +21,11 @@ export const SK = {
   avatarUrl: 'user.avatarUrl',
   followers: 'user.followers',
   following: 'user.following',
-  token: 'auth.token', // 로그인 시 saveToken()이 저장한 키와 일치해야 함
+  token: 'auth.token',
 } as const;
 
 const ME_PATH = '/api/user/myinfo';
-const PUBLIC_BY_USERNAME_PATH = '/api/user/getMyInfo'; // ?username=...
+const PUBLIC_INFO_PATH = '/api/user/info'; // 🔁 변경: POST { username }
 
 /** JWT에서 sub 클레임 추출 (실패해도 조용히 무시) */
 function decodeJwtSub(token: string | null | undefined): string | null {
@@ -39,7 +39,7 @@ function decodeJwtSub(token: string | null | undefined): string | null {
   }
 }
 
-/** 백엔드 응답(payload)을 공통 UserProfile로 매핑 */
+/** 백엔드 payload → 공통 UserProfile 매핑 */
 function mapToUserProfile(payload: any): UserProfile {
   return {
     id: payload?.id ?? payload?.userId ?? undefined,
@@ -54,66 +54,41 @@ function mapToUserProfile(payload: any): UserProfile {
   };
 }
 
-/** 내 프로필 가져오기 (/api/user/myinfo) */
-export async function fetchMyProfile(): Promise<UserProfile> {
-  const token = await getToken();
-  console.log('[myinfo] token exists?', !!token);
-  console.log('[myinfo] URL =', `${BASE_URL}${ME_PATH}`);
+/** ApiResponse 형태도 함께 처리해서 payload 꺼내기 */
+function extractPayloadAndMaybeThrow(raw: string, status: number) {
+  // 기본 에러 메시지
+  const defaultMsg = `HTTP ${status}`;
+  if (!raw) return {};
 
-  const res = await fetch(`${BASE_URL}${ME_PATH}`, {
-    method: 'GET',
-    headers: {
-      Accept: 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-  });
-
-  const raw = await res.text().catch(() => '');
-  if (!res.ok) {
-    let msg = `HTTP ${res.status}`;
-    try {
-      const j = raw ? JSON.parse(raw) : null;
-      msg = j?.message || raw || msg;
-      console.log('[myinfo] error body =', j);
-    } catch {
-      console.log('[myinfo] error raw =', raw);
-    }
-    throw new Error(msg);
-  }
-
-  let payload: any = {};
   try {
-    const j = raw ? JSON.parse(raw) : {};
-    payload = (j && typeof j === 'object' && 'data' in j) ? j.data : j;
-    console.log('[myinfo] payload =', payload);
+    const parsed = JSON.parse(raw);
+    // ApiResponse 형태인 경우: { code, msg, data }
+    if (parsed && typeof parsed === 'object' && ('code' in parsed || 'data' in parsed)) {
+      const code = typeof parsed.code === 'number' ? parsed.code : status;
+      if (code !== 200) {
+        const msg = parsed.msg || parsed.message || defaultMsg;
+        throw new Error(msg);
+      }
+      return parsed.data ?? {};
+    }
+    // 그냥 data가 바로 오는 경우
+    return parsed;
   } catch (e) {
-    console.log('[myinfo] parse error:', e);
+    // JSON 파싱 실패 시, 상태코드가 에러면 raw 더미로 던짐
+    if (status < 200 || status >= 300) {
+      throw new Error(raw || defaultMsg);
+    }
+    // 2xx인데 JSON이 아니면 빈 객체
+    return {};
   }
-
-  const profile: UserProfile = mapToUserProfile(payload);
-
-  // username 보조 채움 (JWT sub)
-  if (!profile.username && token) {
-    try {
-      const sub = decodeJwtSub(token);
-      if (sub) profile.username = sub;
-    } catch {}
-  }
-
-  if (!profile.username && !profile.nickname) {
-    throw new Error('myinfo 응답에 username/nickname이 없습니다.');
-  }
-
-  return profile;
 }
 
-/** 공개 프로필: username으로 조회 (/api/user/getMyInfo?username=...) */
-export async function fetchUserPublicByUsername(username: string): Promise<UserProfile> {
-  if (!username) throw new Error('username이 필요합니다.');
-
-  const token = await getToken(); // 필요 시 인증 포함
-  const url = `${BASE_URL}${PUBLIC_BY_USERNAME_PATH}?username=${encodeURIComponent(username)}`;
-  console.log('[userByUsername] URL =', url);
+/** 내 프로필 가져오기 (GET /api/user/myinfo) */
+export async function fetchMyProfile(): Promise<UserProfile> {
+  const token = await getToken();
+  const url = `${BASE_URL}${ME_PATH}`;
+  console.log('[myinfo] token exists?', !!token);
+  console.log('[myinfo] URL =', url);
 
   const res = await fetch(url, {
     method: 'GET',
@@ -125,23 +100,66 @@ export async function fetchUserPublicByUsername(username: string): Promise<UserP
 
   const raw = await res.text().catch(() => '');
   if (!res.ok) {
-    let msg = `HTTP ${res.status}`;
+    // HTTP 에러
     try {
       const j = raw ? JSON.parse(raw) : null;
-      msg = j?.message || raw || msg;
-      console.log('[userByUsername] error body =', j);
+      console.log('[myinfo] error body =', j);
+      throw new Error(j?.msg || j?.message || `HTTP ${res.status}`);
     } catch {
-      console.log('[userByUsername] error raw =', raw);
+      console.log('[myinfo] error raw =', raw);
+      throw new Error(raw || `HTTP ${res.status}`);
     }
-    throw new Error(msg);
   }
 
-  let payload: any = {};
-  try {
-    const j = raw ? JSON.parse(raw) : {};
-    payload = (j && typeof j === 'object' && 'data' in j) ? j.data : j;
-  } catch {}
+  const payload = extractPayloadAndMaybeThrow(raw, res.status);
+  console.log('[myinfo] payload =', payload);
 
+  const profile: UserProfile = mapToUserProfile(payload);
+
+  // username 보조 채움 (JWT sub)
+  if (!profile.username && token) {
+    const sub = decodeJwtSub(token);
+    if (sub) profile.username = sub;
+  }
+
+  if (!profile.username && !profile.nickname) {
+    throw new Error('myinfo 응답에 username/nickname이 없습니다.');
+  }
+
+  return profile;
+}
+
+/** 공개 프로필: username으로 조회 (POST /api/user/info) */
+export async function fetchUserPublicByUsername(username: string): Promise<UserProfile> {
+  if (!username) throw new Error('username이 필요합니다.');
+
+  const token = await getToken();
+  const url = `${BASE_URL}${PUBLIC_INFO_PATH}`;
+  console.log('[userByUsername] URL =', url);
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json', // 🔁 POST니까 필요
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ username }),
+  });
+
+  const raw = await res.text().catch(() => '');
+  if (!res.ok) {
+    try {
+      const j = raw ? JSON.parse(raw) : null;
+      console.log('[userByUsername] error body =', j);
+      throw new Error(j?.msg || j?.message || `HTTP ${res.status}`);
+    } catch {
+      console.log('[userByUsername] error raw =', raw);
+      throw new Error(raw || `HTTP ${res.status}`);
+    }
+  }
+
+  const payload = extractPayloadAndMaybeThrow(raw, res.status);
   const profile = mapToUserProfile(payload);
 
   // 최소 보장
@@ -149,4 +167,9 @@ export async function fetchUserPublicByUsername(username: string): Promise<UserP
   if (!profile.nickname) profile.nickname = username;
 
   return profile;
+}
+
+/** 편의 함수: username 없으면 내 정보, 있으면 상대 정보 */
+export async function fetchUserInfo(username?: string) {
+  return username ? fetchUserPublicByUsername(username) : fetchMyProfile();
 }

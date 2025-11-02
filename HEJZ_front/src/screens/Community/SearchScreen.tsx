@@ -11,7 +11,6 @@ import {
   Image,
   Keyboard,
   Dimensions,
-  Alert,
 } from 'react-native';
 import { BASE_URL } from '../../api/baseUrl';
 import { searchAll } from '../../api/search';
@@ -28,17 +27,20 @@ function absUrl(u?: string | null) {
   if (!u) return null;
   return /^https?:\/\//i.test(u) ? u : `${BASE_URL}${u}`;
 }
-function safeJson(v: any) {
-  try { return JSON.stringify(v); } catch { return String(v); }
-}
 
 // userId -> username 해석
 function resolveUsernameFromItem(it: any, idMap: Map<number, string>): string | undefined {
+  // 1순위: 아이템에 직접 포함된 username
   if (typeof it?.username === 'string' && it.username) return it.username;
   if (typeof it?.authorUsername === 'string' && it.authorUsername) return it.authorUsername;
   if (typeof it?.user?.username === 'string' && it.user.username) return it.user.username;
 
-  const uid = typeof it?.userId === 'number' ? it.userId : undefined;
+  // 2순위: idMap에서 조회
+  const uid =
+    typeof it?.userId === 'number' ? it.userId :
+    typeof it?.authorId === 'number' ? it.authorId :
+    typeof it?.user?.id === 'number' ? it.user.id :
+    undefined;
   if (uid && idMap.has(uid)) return idMap.get(uid)!;
 
   return undefined;
@@ -127,22 +129,52 @@ export default function SearchScreen({ navigation }: any) {
     return () => clearTimeout(t);
   }, [q, limit]);
 
-  // 3) (중요) 현재 검색결과에서 발견되는 (userId, username) 쌍을 맵에 합친다
+  // 3) 현재 검색결과에서 발견되는 (userId, username) 쌍을 맵에 합친다
   useEffect(() => {
-    if (!Array.isArray(data)) return;
-    if (data.length === 0) return;
+    if (!Array.isArray(data) || data.length === 0) return;
 
     setIdUsernameMap(prev => {
       const next = new Map(prev);
+
+      // 개별 아이템에서 바로 찾기
       for (const it of data) {
-        const uid = typeof it?.userId === 'number' ? it.userId : undefined;
+        const uname = resolveUsernameFromItem(it, next);
+        const uid =
+          typeof it?.userId === 'number' ? it.userId :
+          typeof it?.authorId === 'number' ? it.authorId :
+          typeof it?.user?.id === 'number' ? it.user.id :
+          undefined;
+
+        if (uid && uname && !next.has(uid)) next.set(uid, uname);
+      }
+
+      // 동일 userId 그룹 내에서 누가 username 들고 있으면 전파
+      const byUid = new Map<number, { uname?: string }>();
+      for (const it of data) {
+        const uid =
+          typeof it?.userId === 'number' ? it.userId :
+          typeof it?.authorId === 'number' ? it.authorId :
+          typeof it?.user?.id === 'number' ? it.user.id :
+          undefined;
+        if (!uid) continue;
+
+        const known = byUid.get(uid) ?? {};
         const uname =
           (typeof it?.username === 'string' && it.username) ||
           (typeof it?.authorUsername === 'string' && it.authorUsername) ||
           (typeof it?.user?.username === 'string' && it.user.username) ||
+          (typeof it?.author?.username === 'string' && it.author.username) ||
+          (typeof it?.owner?.username === 'string' && it.owner.username) ||
+          (typeof it?.createdBy?.username === 'string' && it.createdBy.username) ||
           undefined;
+
+        if (uname) known.uname = uname;
+        byUid.set(uid, known);
+      }
+      for (const [uid, { uname }] of byUid) {
         if (uid && uname && !next.has(uid)) next.set(uid, uname);
       }
+
       return next;
     });
   }, [data]);
@@ -154,8 +186,11 @@ export default function SearchScreen({ navigation }: any) {
 
     // FOLLOWING: 게시글의 작성자(userId or username)가 내 팔로잉에 포함된 것만
     return arr.filter((item) => {
-      const uid = item?.userId; // number
-      const uname = resolveUsernameFromItem(item, idUsernameMap); // username (해석)
+      const uid =
+        typeof item?.userId === 'number' ? item.userId :
+        typeof item?.authorId === 'number' ? item.authorId :
+        undefined;
+      const uname = resolveUsernameFromItem(item, idUsernameMap);
       const hit =
         (typeof uid === 'number' && followingIds.has(uid)) ||
         (typeof uname === 'string' && followingIds.has(uname));
@@ -186,16 +221,16 @@ export default function SearchScreen({ navigation }: any) {
 
     // userId → username 치환
     const resolvedUsername = resolveUsernameFromItem(item, idUsernameMap);
-    const showLine =
-      resolvedUsername
-        ? `@${resolvedUsername}`
-        : (typeof item?.userId === 'number' ? `userId: ${item.userId}` : '');
 
-    // 작성자 칩 onPress 핸들러 안
+    // 표시 라인: username이 있으면 username 사용, 없으면 "작성자 정보 없음"
+    const showLine = resolvedUsername
+      ? `@${resolvedUsername}`
+      : '작성자 정보 없음';
+
+    // 작성자 칩 onPress
     const goToAuthor = async () => {
       try {
         if (resolvedUsername) {
-          // username을 얻었으면: 공개 프로필 일부 받아서 UserRoom으로
           const u = await fetchUserPublicByUsername(resolvedUsername).catch(() => null);
           navigation.navigate('UserRoom', {
             username: u?.username ?? resolvedUsername,
@@ -208,17 +243,7 @@ export default function SearchScreen({ navigation }: any) {
           return;
         }
 
-        // username이 없고 userId만 있을 때: 같은 작성자의 포스트 묶어 seedPosts로 넘김
-        if (typeof item?.userId === 'number') {
-          const sameUserPosts = posts.filter(p => p?.userId === item.userId);
-          navigation.navigate('UserRoom', {
-            userId: item.userId,
-            seedPosts: sameUserPosts, // UserRoom에서 이걸로 닉네임/아바타/그리드 합성
-          });
-          return;
-        }
-
-        // 최후: 피드 상세로
+        // username이 없으면 FeedDetail로 이동
         navigation.navigate('FeedDetail', {
           feedId: item?.id,
           content: item?.content,
@@ -226,7 +251,6 @@ export default function SearchScreen({ navigation }: any) {
         });
       } catch {}
     };
-
 
     return (
       <TouchableOpacity
@@ -250,13 +274,15 @@ export default function SearchScreen({ navigation }: any) {
             {item?.content ?? '(내용 없음)'}
           </Text>
 
-          {/* 표시도 username 우선, 없으면 userId */}
+          {/* username 우선 표시 */}
           <Text style={s.subTxt}>{showLine}</Text>
 
           {/* 작성자 칩 (탭 시 UserRoom으로) */}
-          <TouchableOpacity onPress={goToAuthor} style={s.authorChip} activeOpacity={0.8}>
-            <Text style={s.authorTxt}>{showLine || '작성자'}</Text>
-          </TouchableOpacity>
+          {resolvedUsername && (
+            <TouchableOpacity onPress={goToAuthor} style={s.authorChip} activeOpacity={0.8}>
+              <Text style={s.authorTxt}>{showLine}</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </TouchableOpacity>
     );
