@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.HEJZ.HEJZ_back.domain.community.user.dto.InfoRequest;
 import com.HEJZ.HEJZ_back.domain.community.user.dto.LoginRequest;
 import com.HEJZ.HEJZ_back.domain.community.user.dto.SignUpRequest;
+import com.HEJZ.HEJZ_back.domain.community.user.repository.UserRepository;
 import com.HEJZ.HEJZ_back.domain.community.user.service.UserService;
 import com.HEJZ.HEJZ_back.global.response.ApiResponse;
 
@@ -23,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 public class UserController {
 
     private final UserService userService;
+    private final UserRepository userRepository;
 
     /*
      * 호출 url : http://localhost:8080/api/user/signup
@@ -68,7 +70,8 @@ public class UserController {
         Authentication authentication = SecurityContextHolder.getContext()
                 .getAuthentication();
         String username = authentication.getName();
-        ApiResponse<Object> result = userService.getInfo(username);
+        Long userId = userRepository.findIdByUsername(username);
+        ApiResponse<Object> result = userService.getInfo(userId);
 
         return ResponseEntity.ok(result);
     }
@@ -81,8 +84,8 @@ public class UserController {
     @PostMapping("/info")
     public ResponseEntity<ApiResponse<Object>> getInfo(@RequestBody InfoRequest req) {
 
-        System.out.println(req.getUsername() + "님의 정보를 조회합니다.");
-        ApiResponse<Object> result = userService.getInfo(req.getUsername());
+        System.out.println(req.getUserId() + "님의 정보를 조회합니다.");
+        ApiResponse<Object> result = userService.getInfo(req.getUserId());
 
         return ResponseEntity.ok(result);
     }
