@@ -7,5 +7,5 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class InfoRequest {
-    private String username;
+    private Long userId;
 }

@@ -94,13 +94,11 @@ public class UserService {
 
     // 로그아웃은 프론트에서 토큰 삭제로 처리
 
-    public ApiResponse<Object> getInfo(String username) {
+    public ApiResponse<Object> getInfo(Long userId) {
 
         try {
-            UserEntity user = userRepository.findByUsername(username);
-            if (user == null) {
-                return new ApiResponse<Object>(404, null, "유저를 찾을 수 없습니다.");
-            }
+            UserEntity user = userRepository.findById(userId)
+                    .orElseThrow(() -> new IllegalArgumentException("유저가 없습니다: " + userId));
 
             UserDto info = new UserDto();
             info.setUsername(user.getUsername());
