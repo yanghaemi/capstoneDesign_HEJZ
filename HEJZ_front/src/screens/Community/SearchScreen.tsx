@@ -1,5 +1,5 @@
 // src/screens/SearchScreen.tsx
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -15,7 +15,7 @@ import {
 import { BASE_URL } from '../../api/baseUrl';
 import { searchAll } from '../../api/search';
 import { getFollowings, getFollowers } from '../../api/follow';
-import { fetchUserPublicByUsername } from '../../api/user';
+import { fetchUserPublicByUsername, fetchUserInfoById } from '../../api/user';
 
 const { width } = Dimensions.get('window');
 
@@ -57,6 +57,9 @@ export default function SearchScreen({ navigation }: any) {
   // 팔로잉/팔로워에서 수집한 id->username 맵, 그리고 내가 팔로우 중인 집합
   const [idUsernameMap, setIdUsernameMap] = useState<Map<number, string>>(new Map());
   const [followingIds, setFollowingIds] = useState<Set<number | string>>(new Set());
+
+  // 진행 중인 userId -> info 요청 중복 방지용
+  const inFlightRef = useRef<Set<number>>(new Set());
 
   // 1) 내 팔로잉/팔로워 불러와서 id→username 맵 + following 집합 구성
   useEffect(() => {
@@ -117,6 +120,14 @@ export default function SearchScreen({ navigation }: any) {
     const t = setTimeout(async () => {
       try {
         const d = await searchAll({ keyword: q.trim(), limit });
+
+        // 🔍 디버깅: 실제 응답 구조 확인
+        console.log('=== 검색 결과 ===');
+        console.log('전체:', JSON.stringify(d, null, 2));
+        if (Array.isArray(d) && d.length > 0) {
+          console.log('첫 번째 아이템:', JSON.stringify(d[0], null, 2));
+        }
+
         setData(d);
       } catch (e: any) {
         setErr(e?.message ?? '검색 실패');
@@ -129,7 +140,7 @@ export default function SearchScreen({ navigation }: any) {
     return () => clearTimeout(t);
   }, [q, limit]);
 
-  // 3) 현재 검색결과에서 발견되는 (userId, username) 쌍을 맵에 합친다
+  // 3-a) 현재 검색결과에서 발견되는 (userId, username) 쌍을 맵에 합친다 (직접 포함된 username 우선)
   useEffect(() => {
     if (!Array.isArray(data) || data.length === 0) return;
 
@@ -178,6 +189,99 @@ export default function SearchScreen({ navigation }: any) {
       return next;
     });
   }, [data]);
+
+  // 3-b) 남은 userId들에 대해 /api/user/info 로 username 채우기 (최대 20개 동시)
+  // SearchScreen.tsx의 3-b) useEffect 수정
+  useEffect(() => {
+    console.log('[username 수집] useEffect 시작, data 개수:', data?.length ?? 0);
+
+    if (!Array.isArray(data) || data.length === 0) {
+      console.log('[username 수집] data가 비어있어서 종료');
+      return;
+    }
+
+    const need: number[] = [];
+    for (const it of data) {
+      const uid =
+        typeof it?.userId === 'number' ? it.userId :
+        typeof it?.authorId === 'number' ? it.authorId :
+        typeof it?.user?.id === 'number' ? it.user.id :
+        undefined;
+
+      if (!uid) continue;
+
+      // ⚠️ 여기서는 현재 상태를 직접 읽지 말고, inFlightRef만 체크
+      if (inFlightRef.current.has(uid)) {
+        console.log(`[username 수집] 요청 중: userId=${uid}`);
+        continue;
+      }
+
+      need.push(uid);
+      inFlightRef.current.add(uid);
+      if (need.length >= 20) break;
+    }
+
+    console.log(`[username 수집] API 호출할 userId들:`, need);
+
+    if (need.length === 0) {
+      console.log('[username 수집] 호출할 userId가 없어서 종료');
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      console.log('[username 수집] 비동기 함수 시작');
+      try {
+        const results = await Promise.all(
+          need.map(async (id) => {
+            try {
+              const user = await fetchUserInfoById(id);
+              console.log(`[username 수집] API 성공: ${id} -> ${user?.username}`);
+              return { userId: id, user };
+            } catch (err: any) {
+              console.log(`[username 수집] API 실패: userId=${id}, error=${err?.message}`);
+              return { userId: id, user: null };
+            }
+          })
+        );
+
+        console.log('[username 수집] Promise.all 완료, cancelled?', cancelled);
+        if (cancelled) {
+          console.log('[username 수집] ❌ cancelled=true이므로 맵 업데이트 안함');
+          return;
+        }
+
+        console.log(`[username 수집] 성공한 결과 개수:`, results.filter(r => r.user).length);
+
+        setIdUsernameMap(prev => {
+          console.log('[username 수집] setIdUsernameMap 시작, 기존 맵 크기:', prev.size);
+          const next = new Map(prev);
+
+          let addedCount = 0;
+          for (const { userId, user } of results) {
+            if (user?.username && !next.has(userId)) {
+              console.log(`[username 수집] ✅ 맵에 추가: ${userId} -> ${user.username}`);
+              next.set(userId, user.username);
+              addedCount++;
+            }
+          }
+
+          console.log(`[username 수집] 최종: ${addedCount}개 추가됨, 새 맵 크기: ${next.size}`);
+          return next;
+        });
+      } catch (error: any) {
+        console.log('[username 수집] 예외 발생:', error?.message);
+      } finally {
+        console.log('[username 수집] finally, inFlight에서 제거:', need);
+        need.forEach(id => inFlightRef.current.delete(id));
+      }
+    })();
+
+    return () => {
+      console.log('[username 수집] cleanup, cancelled=true');
+      cancelled = true;
+    };
+  }, [data]); // ✅ idUsernameMap 제거! data만 의존
 
   // 결과(배열만 온다고 가정) → 스코프에 따라 필터링
   const posts: any[] = useMemo(() => {
@@ -228,28 +332,29 @@ export default function SearchScreen({ navigation }: any) {
       : '작성자 정보 없음';
 
     // 작성자 칩 onPress
-    const goToAuthor = async () => {
-      try {
-        if (resolvedUsername) {
-          const u = await fetchUserPublicByUsername(resolvedUsername).catch(() => null);
-          navigation.navigate('UserRoom', {
-            username: u?.username ?? resolvedUsername,
-            nickname: u?.nickname ?? resolvedUsername,
-            bio: u?.bio ?? '',
-            avatarUrl: u?.avatarUrl ?? u?.profileImageUrl ?? null,
-            followers: u?.followers ?? 0,
-            following: u?.following ?? 0,
-          });
-          return;
-        }
+    // SearchScreen.tsx의 goToAuthor 수정
+    const goToAuthor = () => {
+      // userId 추출
+      const uid =
+        typeof item?.userId === 'number' ? item.userId :
+        typeof item?.authorId === 'number' ? item.authorId :
+        typeof item?.user?.id === 'number' ? item.user.id :
+        undefined;
 
-        // username이 없으면 FeedDetail로 이동
+      if (resolvedUsername && uid) {
+        // ✅ username과 userId만 전달, UserRoom에서 API 호출
+        navigation.navigate('UserRoom', {
+          username: resolvedUsername,
+          userId: uid,
+        });
+      } else if (resolvedUsername) {
+        // userId가 없으면 FeedDetail로
         navigation.navigate('FeedDetail', {
           feedId: item?.id,
           content: item?.content,
           images,
         });
-      } catch {}
+      }
     };
 
     return (
