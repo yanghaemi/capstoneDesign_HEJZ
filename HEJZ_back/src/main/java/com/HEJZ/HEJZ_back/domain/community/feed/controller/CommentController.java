@@ -44,7 +44,7 @@ public class CommentController {
      * method: post
      */
     @PostMapping("/getcomments")
-    public ResponseEntity<ApiResponse<Object>> getMyComments(@RequestBody CommentRequest req) {
+    public ResponseEntity<ApiResponse<Object>> getComments(@RequestBody CommentRequest req) {
 
         ApiResponse<Object> result = commentService.getFeedComments(req.getFeedId());
 
@@ -57,7 +57,7 @@ public class CommentController {
      * method: get
      */
     @GetMapping("/getmycomments")
-    public ResponseEntity<ApiResponse<Object>> getComments() {
+    public ResponseEntity<ApiResponse<Object>> getMyComments() {
 
         Authentication authentication = SecurityContextHolder.getContext()
                 .getAuthentication();
