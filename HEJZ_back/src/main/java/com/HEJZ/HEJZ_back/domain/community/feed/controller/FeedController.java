@@ -107,6 +107,20 @@ public class FeedController {
         return ResponseEntity.ok(new ApiResponse<>(200, resp, "조회 성공"));
     }
 
+    // 전역 피드: 누구의 글이든(삭제 제외) 최신순
+    @GetMapping("/global")
+    public ResponseEntity<ApiResponse<Object>> global(
+            @RequestParam(defaultValue = "20") int limit,
+            @RequestParam(required = false) String cursor) {
+        Long userId = getCurrentUserId(); // 비로그인 허용하려면 Optional 처리로 바꿀 수 있음
+        if (!rateLimitService.allowRequest(userId)) {
+            return ResponseEntity.status(429)
+                    .body(new ApiResponse<>(429, null, "요청 횟수 초과. 1분 후 다시 시도해주세요."));
+        }
+        var resp = feedService.getGlobalFeeds(limit, cursor);
+        return ResponseEntity.ok(new ApiResponse<>(200, resp, "조회 성공"));
+    }
+
     @DeleteMapping("/{feedId}")
     public ResponseEntity<ApiResponse<Object>> delete(@PathVariable Long feedId) {
         Long userId = getCurrentUserId();

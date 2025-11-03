@@ -107,6 +107,19 @@ public class FeedService {
     }
 
     // =========================
+    // Read: Global (everyone, latest)
+    // =========================
+    @Transactional(readOnly = true)
+    public FeedListResponse getGlobalFeeds(int limit, String cursor) {
+        Cursor c = parseCursor(cursor);
+        List<FeedEntity> feeds = feedRepository.findGlobalFeeds(
+                c.createdAt(),
+                c.id(),
+                PageRequest.of(0, clamp(limit, 1, 100)));
+        return buildListResponse(feeds);
+    }
+
+    // =========================
     // Delete (soft delete)
     // =========================
     @Transactional
@@ -156,16 +169,14 @@ public class FeedService {
         return new FeedListResponse(items, nextCursor);
     }
 
-    private record Cursor(LocalDateTime createdAt, Long id) {
-    }
+    private record Cursor(LocalDateTime createdAt, Long id) {}
 
     private Cursor parseCursor(String cursor) {
         if (cursor != null && cursor.contains("_") && !"null".equalsIgnoreCase(cursor)) {
             String[] parts = cursor.split("_", 2);
             if (parts.length == 2) {
                 String ts = parts[0];
-                if (ts.length() > 19)
-                    ts = ts.substring(0, 19); // trim nanos if any
+                if (ts.length() > 19) ts = ts.substring(0, 19); // trim nanos if any
                 try {
                     return new Cursor(LocalDateTime.parse(ts, CURSOR_FMT), Long.parseLong(parts[1]));
                 } catch (Exception e) {
