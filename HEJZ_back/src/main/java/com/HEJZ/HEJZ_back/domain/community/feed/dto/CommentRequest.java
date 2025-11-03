@@ -1,4 +1,4 @@
-package com.HEJZ.HEJZ_back.domain.community.feed.entity;
+package com.HEJZ.HEJZ_back.domain.community.feed.dto;
 
 import lombok.Getter;
 import lombok.Setter;
