@@ -10,7 +10,6 @@ import com.HEJZ.HEJZ_back.domain.community.feed.entity.FeedMediaEntity;
 import com.HEJZ.HEJZ_back.domain.community.feed.repository.FeedRepository;
 import com.HEJZ.HEJZ_back.domain.community.user.entity.UserEntity;
 import com.HEJZ.HEJZ_back.domain.community.user.repository.UserRepository;
-import com.HEJZ.HEJZ_back.domain.music.controller.SongController;
 import com.HEJZ.HEJZ_back.domain.music.entity.SavedSong;
 import com.HEJZ.HEJZ_back.domain.music.repository.SavedSongRepository;
 

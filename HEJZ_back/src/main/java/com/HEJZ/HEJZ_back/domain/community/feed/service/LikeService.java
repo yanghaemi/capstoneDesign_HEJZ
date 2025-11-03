@@ -1,15 +1,18 @@
 package com.HEJZ.HEJZ_back.domain.community.feed.service;
 
 import com.HEJZ.HEJZ_back.domain.community.feed.dto.CommentLikeRequest;
+import com.HEJZ.HEJZ_back.domain.community.feed.dto.FeedItemDto;
 import com.HEJZ.HEJZ_back.domain.community.feed.dto.FeedLikeRequest;
 import com.HEJZ.HEJZ_back.domain.community.feed.dto.LikeDto;
 import com.HEJZ.HEJZ_back.domain.community.feed.dto.LikeListRequest;
+import com.HEJZ.HEJZ_back.domain.community.feed.dto.MediaDto;
 import com.HEJZ.HEJZ_back.domain.community.feed.dto.MyLikeRequest;
 import com.HEJZ.HEJZ_back.domain.community.feed.dto.TargetType;
 import com.HEJZ.HEJZ_back.domain.community.feed.entity.CommentEntity;
 import com.HEJZ.HEJZ_back.domain.community.feed.entity.CommentLikeEntity;
 import com.HEJZ.HEJZ_back.domain.community.feed.entity.FeedEntity;
 import com.HEJZ.HEJZ_back.domain.community.feed.entity.FeedLikeEntity;
+import com.HEJZ.HEJZ_back.domain.community.feed.entity.FeedMediaEntity;
 import com.HEJZ.HEJZ_back.domain.community.feed.repository.CommentLikeRepository;
 import com.HEJZ.HEJZ_back.domain.community.feed.repository.FeedLikeRepository;
 import com.HEJZ.HEJZ_back.domain.community.user.entity.UserEntity;
@@ -19,6 +22,10 @@ import com.HEJZ.HEJZ_back.global.response.ApiResponse;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+
+import java.util.Comparator;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 @Service
@@ -104,11 +111,43 @@ public class LikeService {
         }
     }
 
+    private List<FeedItemDto> getFeedDtos(List<FeedLikeEntity> likes) {
+
+        List<FeedItemDto> dtos = likes.stream()
+                .map(FeedLikeEntity::getFeed)
+                .map(f -> {
+                    List<MediaDto> media = f.getImages().stream()
+                            .sorted(Comparator.comparingInt(FeedMediaEntity::getOrd))
+                            .map(m -> new MediaDto(
+                                    m.getUrl(),
+                                    m.getOrd(),
+                                    m.getType(),
+                                    m.getThumbnailUrl(),
+                                    m.getDurationMs(),
+                                    m.getMimeType()))
+                            .toList();
+                    return new FeedItemDto(
+                            f.getId(),
+                            f.getUser().getId(),
+                            f.getContent(),
+                            media,
+                            f.getSong(),
+                            f.getEmotion(),
+                            f.getGenre(), // FeedItemDto가 Long songId 받는다고 가정
+                            f.getCreatedAt());
+                })
+                .toList();
+
+        return dtos;
+    }
+
     public ApiResponse<Object> getListOfLike(LikeListRequest likeRequest) {
 
         try {
 
-            return new ApiResponse<>(200, null, "해당 피드/댓글의 좋아요 리스트 조회 성공");
+            List<FeedLikeEntity> likes = feedLikeRepository.findByFeedId(likeRequest.getFeedId());
+
+            return new ApiResponse<>(200, getFeedDtos(likes), "해당 피드/댓글의 좋아요 리스트 조회 성공");
 
         } catch (Exception e) {
             return new ApiResponse<>(500, null, "해당 피드/댓글의 좋아요 리스트 조회 실패");
@@ -118,15 +157,17 @@ public class LikeService {
 
     public ApiResponse<Object> getMyListOfLike(String username) {
 
-        
-
         try {
+            Long id = userRepository.findIdByUsername(username);
 
-            return new ApiResponse<>(200, null, "내 좋아요 리스트 조회 성공");
+            List<FeedLikeEntity> likes = feedLikeRepository.findByUserId(id);
+
+            return new ApiResponse<>(200, getFeedDtos(likes), "내 좋아요 리스트 조회 성공");
 
         } catch (Exception e) {
             return new ApiResponse<>(500, null, "내 좋아요 리스트 조회 실패");
 
         }
     }
+
 }

@@ -1,5 +1,7 @@
 package com.HEJZ.HEJZ_back.domain.community.feed.repository;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 
@@ -13,4 +15,8 @@ public interface FeedLikeRepository extends JpaRepository<FeedLikeEntity, Long> 
     @Modifying
     @Transactional
     void deleteByFeedIdAndUserId(Long feedId, Long userId);
+
+    List<FeedLikeEntity> findByFeedId(Long feedId);
+
+    List<FeedLikeEntity> findByUserId(Long userId);
 }
