@@ -10,6 +10,10 @@ import com.HEJZ.HEJZ_back.domain.community.feed.entity.FeedMediaEntity;
 import com.HEJZ.HEJZ_back.domain.community.feed.repository.FeedRepository;
 import com.HEJZ.HEJZ_back.domain.community.user.entity.UserEntity;
 import com.HEJZ.HEJZ_back.domain.community.user.repository.UserRepository;
+import com.HEJZ.HEJZ_back.domain.music.controller.SongController;
+import com.HEJZ.HEJZ_back.domain.music.entity.SavedSong;
+import com.HEJZ.HEJZ_back.domain.music.repository.SavedSongRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -27,6 +31,7 @@ public class FeedService {
 
     private final FeedRepository feedRepository;
     private final UserRepository userRepository;
+    private final SavedSongRepository songRepository;
 
     private static final DateTimeFormatter CURSOR_FMT = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
@@ -38,9 +43,15 @@ public class FeedService {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        SavedSong song = songRepository.findById(request.songId())
+                .orElseThrow(() -> new RuntimeException("노래를 찾지 못했습니다."));
+
         FeedEntity feed = FeedEntity.builder()
                 .user(user)
                 .content(request.content())
+                .song(song)
+                .genre(request.genre())
+                .emotion(request.emotion())
                 .createdAt(LocalDateTime.now())
                 .build();
 
@@ -139,6 +150,9 @@ public class FeedService {
                 feed.getUser().getId(),
                 feed.getContent(),
                 mediaDtos,
+                feed.getSong(),
+                feed.getEmotion(),
+                feed.getGenre(),
                 feed.getCreatedAt());
     }
 

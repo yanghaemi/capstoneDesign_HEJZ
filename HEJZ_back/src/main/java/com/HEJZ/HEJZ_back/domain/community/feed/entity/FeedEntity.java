@@ -56,4 +56,10 @@ public class FeedEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonBackReference
     private SavedSong song;
+
+    @Column(name = "emotion")
+    private String emotion;
+
+    @Column(name = "genre")
+    private String genre;
 }
