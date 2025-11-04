@@ -2,6 +2,7 @@ package com.HEJZ.HEJZ_back.domain.community.feed.controller;
 
 import com.HEJZ.HEJZ_back.domain.community.follow.repository.FollowRepository;
 import com.HEJZ.HEJZ_back.domain.community.feed.dto.FeedCreateRequest;
+import com.HEJZ.HEJZ_back.domain.community.feed.dto.FeedScoreDebugDto;
 import com.HEJZ.HEJZ_back.domain.community.feed.service.FeedService;
 import com.HEJZ.HEJZ_back.domain.community.feed.service.RateLimitService;
 import com.HEJZ.HEJZ_back.domain.community.user.entity.UserEntity;
@@ -9,6 +10,9 @@ import com.HEJZ.HEJZ_back.domain.community.user.repository.UserRepository;
 import com.HEJZ.HEJZ_back.global.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -93,7 +97,7 @@ public class FeedController {
         return ResponseEntity.ok(new ApiResponse<>(200, resp, "조회 성공"));
     }
 
-    // 타임라인: 내가 팔로우하는 사람들의 피드
+    // 타임라인: 전역 추천 피드
     @GetMapping("/timeline")
     public ResponseEntity<ApiResponse<Object>> timeline(
             @RequestParam(defaultValue = "20") int limit,
@@ -107,17 +111,25 @@ public class FeedController {
         return ResponseEntity.ok(new ApiResponse<>(200, resp, "조회 성공"));
     }
 
+    @GetMapping("/timeline/debug")
+    public ResponseEntity<List<FeedScoreDebugDto>> timelineDebug(
+            @RequestParam(defaultValue = "20") Integer limit,
+            @RequestParam(required = false) String cursor) {
+        Long userId = getCurrentUserId();
+        return ResponseEntity.ok(feedService.getTimelineFeedsWithScores(userId, limit));
+    }
+
     // 전역 피드: 누구의 글이든(삭제 제외) 최신순
     @GetMapping("/global")
     public ResponseEntity<ApiResponse<Object>> global(
             @RequestParam(defaultValue = "20") int limit,
             @RequestParam(required = false) String cursor) {
-        Long userId = getCurrentUserId(); // 비로그인 허용하려면 Optional 처리로 바꿀 수 있음
+        Long userId = getCurrentUserId();
         if (!rateLimitService.allowRequest(userId)) {
             return ResponseEntity.status(429)
                     .body(new ApiResponse<>(429, null, "요청 횟수 초과. 1분 후 다시 시도해주세요."));
         }
-        var resp = feedService.getGlobalFeeds(limit, cursor);
+        var resp = feedService.getGlobalFeeds(userId, limit, cursor);
         return ResponseEntity.ok(new ApiResponse<>(200, resp, "조회 성공"));
     }
 

@@ -2,8 +2,6 @@ package com.HEJZ.HEJZ_back.domain.community.feed.controller;
 
 import com.HEJZ.HEJZ_back.domain.community.feed.dto.CommentLikeRequest;
 import com.HEJZ.HEJZ_back.domain.community.feed.dto.FeedLikeRequest;
-import com.HEJZ.HEJZ_back.domain.community.feed.dto.LikeListRequest;
-import com.HEJZ.HEJZ_back.domain.community.feed.dto.MyLikeRequest;
 import com.HEJZ.HEJZ_back.domain.community.feed.service.LikeService;
 import com.HEJZ.HEJZ_back.global.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -58,7 +56,7 @@ public class LikeController {
      * 메소드: post
      */
     @PostMapping("/get_list_of_like")
-    public ResponseEntity<ApiResponse<Object>> getListOfLike(@RequestBody LikeListRequest likeRequest) {
+    public ResponseEntity<ApiResponse<Object>> getListOfLike(@RequestBody FeedLikeRequest likeRequest) {
 
         ApiResponse<Object> result = likeService.getListOfLike(likeRequest);
 

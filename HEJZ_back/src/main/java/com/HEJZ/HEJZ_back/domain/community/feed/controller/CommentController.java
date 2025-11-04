@@ -6,7 +6,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import com.HEJZ.HEJZ_back.domain.community.feed.dto.CommentDeleteRequest;
-import com.HEJZ.HEJZ_back.domain.community.feed.entity.CommentRequest;
+import com.HEJZ.HEJZ_back.domain.community.feed.dto.CommentRequest;
 import com.HEJZ.HEJZ_back.domain.community.feed.dto.CommentCreateRequest;
 import com.HEJZ.HEJZ_back.domain.community.feed.service.CommentService;
 import com.HEJZ.HEJZ_back.global.response.ApiResponse;

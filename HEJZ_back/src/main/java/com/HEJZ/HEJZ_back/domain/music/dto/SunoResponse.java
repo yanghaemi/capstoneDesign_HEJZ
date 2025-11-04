@@ -36,5 +36,33 @@ public class SunoResponse {
         private String tags;
         private String createTime;
         private double duration;
+
+        public String getAudio_url() {
+            return audio_url;
+        }
+
+        public String getSource_audio_url() {
+            return source_audio_url;
+        }
+
+        public String getStream_audio_url() {
+            return stream_audio_url;
+        }
+
+        public String getSource_stream_audio_url() {
+            return source_stream_audio_url;
+        }
+
+        public String getImage_url() {
+            return image_url;
+        }
+
+        public String getSource_image_url() {
+            return source_image_url;
+        }
+
+        public String getModel_name() {
+            return model_name;
+        }
     }
 }

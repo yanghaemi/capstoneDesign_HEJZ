@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -65,6 +67,10 @@ public class SunoController {
 
         try {
 
+            Authentication authentication = SecurityContextHolder.getContext()
+                    .getAuthentication();
+            String username = authentication.getName();
+
             var taskId = request.getTaskId();
             var audioId = request.getAudioId();
 
@@ -76,7 +82,7 @@ public class SunoController {
                         "reason", "timestamped lyrics already stored"));
             }
             String resp = sunoService.getTimestampLyrics(request);
-            sunoService.saveTimestampResponse(taskId, audioId, resp);
+            sunoService.saveTimestampResponse(taskId, audioId, resp, username);
 
             // 2. 저장 후 DB에서 다시 확인
             var songOpt = savedSongRepository.findByTaskIdAndAudioId(request.getTaskId(), request.getAudioId());
@@ -95,7 +101,8 @@ public class SunoController {
                     "taskId", song.getTaskId(),
                     "plainLyrics", song.getPlainLyrics(),
                     "hootCer", song.getHootCer(),
-                    "isStreamed", song.getIsStreamed());
+                    "isStreamed", song.getIsStreamed(),
+                    "user", song.getUser());
 
             return ResponseEntity.ok(response);
 

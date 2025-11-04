@@ -8,6 +8,10 @@ import java.time.LocalDateTime;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import com.HEJZ.HEJZ_back.domain.community.user.entity.UserEntity;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 @Entity
 @EntityListeners(AuditingEntityListener.class)
 @Getter
@@ -62,4 +66,13 @@ public class SavedSong {
 
     @Column(name = "is_streamed")
     private Boolean isStreamed;
+
+    @Version
+    private long version; // 낙관적 락 버전
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user")
+    @JsonBackReference
+    private UserEntity user;
+
 }

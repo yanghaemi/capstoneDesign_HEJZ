@@ -1,5 +1,7 @@
 package com.HEJZ.HEJZ_back.domain.music.service;
 
+import com.HEJZ.HEJZ_back.domain.community.user.entity.UserEntity;
+import com.HEJZ.HEJZ_back.domain.community.user.repository.UserRepository;
 import com.HEJZ.HEJZ_back.domain.music.dto.SavedSongDTO;
 import com.HEJZ.HEJZ_back.domain.music.dto.SunoLyricsDTO;
 import com.HEJZ.HEJZ_back.domain.music.dto.SunoRequest;
@@ -10,6 +12,9 @@ import com.HEJZ.HEJZ_back.global.util.HttpUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -28,13 +33,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class SunoService {
 
     @Value("${suno.api.key}")
     private String token;
 
-    @Autowired
-    private SavedSongRepository savedSongRepository;
+    private final SavedSongRepository savedSongRepository;
+    private final UserRepository userRepository;
 
     public String generateSong(SunoRequest request) {
         // Suno API로 HTTP 요청 보내는 코드
@@ -166,7 +172,7 @@ public class SunoService {
         }
     }
 
-    public void saveTimestampResponse(String taskId, String audioId, String responseJson) {
+    public void saveTimestampResponse(String taskId, String audioId, String responseJson, String username) {
         try {
 
             if (responseJson == null || responseJson.isBlank()) {
@@ -206,7 +212,10 @@ public class SunoService {
             Double hootCer = data.has("hootCer") ? data.get("hootCer").asDouble() : null;
             Boolean isStreamed = data.has("isStreamed") ? data.get("isStreamed").asBoolean() : null;
 
-            // 4) 저장
+            // 4) 유저 저장
+            UserEntity user = userRepository.findByUsername(username);
+
+            // 5) 최종 저장
             savedSongRepository.findByTaskIdAndAudioId(taskId, audioId).ifPresent(song -> {
                 try {
                     // JSON 문자열로 보관
@@ -218,6 +227,7 @@ public class SunoService {
                     }
                     song.setHootCer(hootCer);
                     song.setIsStreamed(isStreamed);
+                    song.setUser(user);
 
                     savedSongRepository.save(song);
                 } catch (JsonProcessingException e) {
@@ -232,13 +242,6 @@ public class SunoService {
             }
             throw new RuntimeException("타임스탬프 응답 저장 실패", e);
         }
-    }
-
-    public void fetchAndStoreLyrics(SunoLyricsDTO request) {
-
-        String resp = getTimestampLyrics(request);
-
-        saveTimestampResponse(request.getTaskId(), request.getAudioId(), resp);
     }
 
     // Get Timestamped Lyrics api 호출 함수
