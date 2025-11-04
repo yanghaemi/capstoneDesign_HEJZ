@@ -2,7 +2,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BASE_URL } from './baseUrl';
 
-// 타입 정의
+/* =========================
+ * 타입 정의
+ * ========================= */
 export type LyricsRequest = {
   lyrics: string;
   selectedEmotion: string;
@@ -10,8 +12,8 @@ export type LyricsRequest = {
 };
 
 export type LyricsGroupRecommendation = {
-  lyricsGroup: string;
-  analyzedEmotion: string;
+  lyricsGroup: string;            // 2줄 가사 묶음
+  analyzedEmotion: string;        // 분석된 감정
   selectedEmotionMotion: string | null;
   selectedGenreMotion: string | null;
   analyzedMotion1: string | null;
@@ -33,213 +35,185 @@ export type SelectionGroupResponseDto = {
   videoUrls: string[];
 };
 
-// 인증 헤더 가져오기
+/* =========================
+ * 공통: 인증 헤더
+ * ========================= */
 async function getAuthHeaders() {
   const token = await AsyncStorage.getItem('token');
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
-/**
- * 가사 분석 및 통합 안무 추천
- * @param lyrics - 가사 텍스트
- * @param selectedEmotion - 선택한 감정
- * @param selectedGenre - 선택한 장르
- * @returns Promise<IntegratedRecommendationResponse>
- */
+/* =========================
+ * 유틸: 가사 정규화
+ * - [Verse], [Chorus] 같은 섹션 태그 제거
+ * - 공백 라인 제거
+ * ========================= */
+export function normalizePlainLyrics(raw: string) {
+  return (raw || '')
+    .replace(/\r\n/g, '\n')
+    .replace(/\[(.*?)\]\n?/g, '') // 섹션 태그 제거
+    .split('\n')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .join('\n');
+}
+
+/* =========================
+ * 1) 전체 가사 분석 API
+ * - 서버 DTO 변화 대비: selectedEmotion/selectedGenre + emotion/genre 모두 전송
+ * ========================= */
 export async function analyzeLyrics(
   lyrics: string,
   selectedEmotion: string,
   selectedGenre: string
 ): Promise<IntegratedRecommendationResponse> {
-  try {
-    const headers = await getAuthHeaders();
+  const headers = await getAuthHeaders();
 
-    console.log('[analyzeLyrics] API 호출 시작');
-    console.log('[analyzeLyrics] Params:', {
-      lyricsLength: lyrics.length,
-      selectedEmotion,
-      selectedGenre
-    });
+  const body = {
+    lyrics,
+    selectedEmotion,
+    selectedGenre,
 
-    const response = await fetch(`${BASE_URL}/api/emotion/analyze`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...headers,
-      },
-      body: JSON.stringify({
-        lyrics,
-        selectedEmotion,
-        selectedGenre,
-      }),
-    });
+  };
 
-    console.log('[analyzeLyrics] Response status:', response.status);
+  console.log('[analyzeLyrics] REQUEST =', JSON.stringify(body));
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('[analyzeLyrics] Error response:', errorText);
-      throw new Error(`HTTP ${response.status}: ${errorText}`);
-    }
+  const res = await fetch(`${BASE_URL}/api/emotion/analyze`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json; charset=UTF-8', ...headers },
+    body: JSON.stringify(body),
+  });
 
-    const result = await response.json();
-    console.log('[analyzeLyrics] Response data:', JSON.stringify(result, null, 2));
+  const text = await res.text();
+  console.log('[analyzeLyrics] STATUS =', res.status);
+  console.log('[analyzeLyrics] RESPONSE =', text);
 
-    return result;
-  } catch (error) {
-    console.error('[analyzeLyrics] 에러:', error);
-    throw error;
-  }
+  if (!res.ok) throw new Error(`HTTP ${res.status}: ${text}`);
+
+  const json = text ? JSON.parse(text) : {};
+  return json as IntegratedRecommendationResponse;
 }
 
-/**
- * 가사 그룹별 선택 안무 저장 (Bulk)
- * @param selections - 선택한 안무 목록
- * @returns Promise<string>
- */
+/* =========================
+ * 2) 2줄 단위 분석 헬퍼
+ * - 항상 배열만 반환해서 화면에서 바로 setRecs([...]) 가능
+ * ========================= */
+export async function analyzeLyricsByTwoLines(
+  lyrics: string,
+  emotion: string,
+  genre: string
+): Promise<LyricsGroupRecommendation[]> {
+  const headers = await getAuthHeaders();
+
+  const payload = {
+    lyrics,
+    selectedEmotion: emotion,
+    selectedGenre: genre,
+
+  };
+
+  console.log('[analyzeLyricsByTwoLines] REQUEST =', JSON.stringify(payload));
+
+  const res = await fetch(`${BASE_URL}/api/emotion/analyze`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json; charset=UTF-8', ...headers },
+    body: JSON.stringify(payload),
+  });
+
+  const text = await res.text();
+  console.log('[analyzeLyricsByTwoLines] STATUS =', res.status);
+  console.log('[analyzeLyricsByTwoLines] RESPONSE =', text);
+
+  if (!res.ok) throw new Error(`HTTP ${res.status} ${text}`);
+
+  const json = text ? JSON.parse(text) : {};
+  const arr = Array.isArray(json?.lyricsRecommendations) ? json.lyricsRecommendations : [];
+  return arr as LyricsGroupRecommendation[];
+}
+
+/* =========================
+ * 3) 선택(블록별) Bulk 저장
+ * ========================= */
 export async function saveEmotionSelections(
   selections: SelectionGroupDto[]
 ): Promise<string> {
-  try {
-    const headers = await getAuthHeaders();
+  const headers = await getAuthHeaders();
 
-    console.log('[saveEmotionSelections] API 호출 시작');
-    console.log('[saveEmotionSelections] Selections count:', selections.length);
+  console.log('[saveEmotionSelections] API 호출 시작');
+  console.log('[saveEmotionSelections] Selections count:', selections.length);
 
-    const response = await fetch(`${BASE_URL}/api/emotion/selection/bulk`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...headers,
-      },
-      body: JSON.stringify(selections),
-    });
+  const res = await fetch(`${BASE_URL}/api/emotion/selection/bulk`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headers },
+    body: JSON.stringify(selections),
+  });
 
-    console.log('[saveEmotionSelections] Response status:', response.status);
+  const text = await res.text();
+  console.log('[saveEmotionSelections] STATUS =', res.status);
+  console.log('[saveEmotionSelections] RESPONSE =', text);
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('[saveEmotionSelections] Error response:', errorText);
-      throw new Error(`HTTP ${response.status}: ${errorText}`);
-    }
-
-    const result = await response.text();
-    console.log('[saveEmotionSelections] Response:', result);
-
-    return result;
-  } catch (error) {
-    console.error('[saveEmotionSelections] 에러:', error);
-    throw error;
-  }
+  if (!res.ok) throw new Error(`HTTP ${res.status}: ${text}`);
+  return text;
 }
 
-/**
- * 저장된 안무 선택 조회
- * @returns Promise<SelectionGroupResponseDto[]>
- */
+/* =========================
+ * 4) 저장된 선택 조회
+ * ========================= */
 export async function getAllEmotionSelections(): Promise<SelectionGroupResponseDto[]> {
-  try {
-    const headers = await getAuthHeaders();
+  const headers = await getAuthHeaders();
 
-    console.log('[getAllEmotionSelections] API 호출 시작');
+  console.log('[getAllEmotionSelections] API 호출 시작');
 
-    const response = await fetch(`${BASE_URL}/api/emotion/selection`, {
-      method: 'GET',
-      headers: {
-        ...headers,
-      },
-    });
+  const res = await fetch(`${BASE_URL}/api/emotion/selection`, {
+    method: 'GET',
+    headers: { ...headers },
+  });
 
-    console.log('[getAllEmotionSelections] Response status:', response.status);
+  const text = await res.text();
+  console.log('[getAllEmotionSelections] STATUS =', res.status);
+  console.log('[getAllEmotionSelections] RESPONSE =', text);
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('[getAllEmotionSelections] Error response:', errorText);
-      throw new Error(`HTTP ${response.status}: ${errorText}`);
-    }
+  if (!res.ok) throw new Error(`HTTP ${res.status}: ${text}`);
 
-    const result = await response.json();
-    console.log('[getAllEmotionSelections] Response data:', JSON.stringify(result, null, 2));
-
-    return result;
-  } catch (error) {
-    console.error('[getAllEmotionSelections] 에러:', error);
-    throw error;
-  }
+  const json = text ? JSON.parse(text) : [];
+  return json as SelectionGroupResponseDto[];
 }
 
-/**
- * 2줄씩 가사를 분석하는 헬퍼 함수
- * @param lyrics - 전체 가사
- * @param selectedEmotion - 선택한 감정
- * @param selectedGenre - 선택한 장르
- * @returns Promise<LyricsGroupRecommendation[]>
- */
-export async function analyzeLyricsByTwoLines(
-  lyrics: string,
-  selectedEmotion: string,
-  selectedGenre: string
-): Promise<LyricsGroupRecommendation[]> {
-  const response = await analyzeLyrics(lyrics, selectedEmotion, selectedGenre);
-  return response.lyricsRecommendations;
-}
-
-/**
- * 모션 ID로 presigned URL 가져오기
- * @param motionId - 모션 ID
- * @returns Promise<string>
- */
+/* =========================
+ * 5) 모션 URL (presigned)
+ * ========================= */
 export async function getMotionUrl(motionId: string): Promise<string> {
-  try {
-    const headers = await getAuthHeaders();
+  const headers = await getAuthHeaders();
 
-    console.log('[getMotionUrl] API 호출:', motionId);
+  console.log('[getMotionUrl] motionId =', motionId);
 
-    const response = await fetch(`${BASE_URL}/api/motion/${encodeURIComponent(motionId)}`, {
-      method: 'GET',
-      headers: {
-        ...headers,
-      },
-    });
+  const res = await fetch(`${BASE_URL}/api/motion/${encodeURIComponent(motionId)}`, {
+    method: 'GET',
+    headers: { ...headers },
+  });
 
-    console.log('[getMotionUrl] Response status:', response.status);
+  const text = await res.text();
+  console.log('[getMotionUrl] STATUS =', res.status);
+  console.log('[getMotionUrl] RESPONSE =', text);
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('[getMotionUrl] Error response:', errorText);
-      throw new Error(`HTTP ${response.status}: ${errorText}`);
-    }
-
-    const url = await response.text();
-    console.log('[getMotionUrl] URL:', url);
-
-    return url;
-  } catch (error) {
-    console.error('[getMotionUrl] 에러:', error);
-    throw error;
-  }
+  if (!res.ok) throw new Error(`HTTP ${res.status}: ${text}`);
+  return text; // URL 문자열
 }
 
-/**
- * 여러 모션 ID의 URL을 한번에 가져오기
- * @param motionIds - 모션 ID 배열
- * @returns Promise<Map<string, string>> - motionId -> url 매핑
- */
+/* =========================
+ * 6) 여러 모션 URL 병렬 조회
+ * ========================= */
 export async function getMotionUrls(motionIds: string[]): Promise<Map<string, string>> {
-  const urlMap = new Map<string, string>();
-
-  // 병렬로 URL 가져오기
+  const map = new Map<string, string>();
   await Promise.all(
-    motionIds.map(async (motionId) => {
+    motionIds.map(async (mid) => {
       try {
-        const url = await getMotionUrl(motionId);
-        urlMap.set(motionId, url);
-      } catch (error) {
-        console.error(`Failed to get URL for motion ${motionId}:`, error);
-        // 실패해도 계속 진행
+        const url = await getMotionUrl(mid);
+        map.set(mid, url);
+      } catch (e) {
+        console.error(`[getMotionUrls] fail: ${mid}`, e);
       }
     })
   );
-
-  return urlMap;
+  return map;
 }
