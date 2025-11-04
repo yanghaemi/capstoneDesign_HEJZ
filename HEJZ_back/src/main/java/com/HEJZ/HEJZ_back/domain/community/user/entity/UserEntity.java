@@ -8,6 +8,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.HEJZ.HEJZ_back.domain.community.feed.entity.CommentEntity;
 import com.HEJZ.HEJZ_back.domain.community.feed.entity.FeedEntity;
+import com.HEJZ.HEJZ_back.domain.music.entity.SavedSong;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import jakarta.persistence.Column;
@@ -66,4 +67,8 @@ public class UserEntity {
     @OneToMany(mappedBy = "user") // commentEntity의 user 필드에 매핑
     @JsonBackReference
     private List<CommentEntity> myComments;
+
+    @OneToMany(mappedBy = "user")
+    @JsonBackReference
+    private List<SavedSong> mySongs;
 }

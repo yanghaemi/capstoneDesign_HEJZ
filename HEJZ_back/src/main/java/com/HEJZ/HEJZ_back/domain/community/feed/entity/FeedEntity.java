@@ -29,6 +29,7 @@ public class FeedEntity {
 
     @ManyToOne(fetch = FetchType.LAZY) // 작성자
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonBackReference
     private UserEntity user;
 
     @Column(nullable = false, length = 255)
