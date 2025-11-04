@@ -48,30 +48,6 @@ function pickFirstMediaUrlLocal(item: any): string | null {
   return normalizeAbsUrl(first?.url ?? null);
 }
 
-// 🔹 userId → username 조회 (POST /api/user/info { userId })
-async function fetchUsernameById(userId: number): Promise<string | null> {
-  try {
-    const token = await getAuthToken();
-    const res = await fetch(`${BASE_URL}/api/user/info`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify({ userId }),
-    });
-    const text = await res.text();
-    const json = text ? JSON.parse(text) : {};
-    const code = json?.code ?? res.status;
-    if (code !== 200) return null;
-    // 백엔드 data에 username 포함된다고 가정
-    return json?.data?.username ?? null;
-  } catch {
-    return null;
-  }
-}
-
 // =============================================================
 export default function CommunityScreen({ navigation }: any) {
   const [tab, setTab] = useState<'FOLLOWING' | 'EXPLORE'>('FOLLOWING');
@@ -83,7 +59,7 @@ export default function CommunityScreen({ navigation }: any) {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  // userId -> username 캐시
+  // userId -> username 캐시 (숫자 key로 통일)
   const [idNameMap, setIdNameMap] = useState<Map<number, string>>(new Map());
 
   // 재생 제어
@@ -128,6 +104,12 @@ export default function CommunityScreen({ navigation }: any) {
       setLoading(true);
       try {
         const resp = await fetchTimeline({ limit: 10, cursor: reset ? null : cursor });
+
+        // 🔍 디버깅: 첫 번째 아이템 구조 확인
+        if (resp.items.length > 0) {
+          console.log('[CommunityScreen] First item structure:', JSON.stringify(resp.items[0], null, 2));
+        }
+
         const filtered = resp.items.filter((it) => !blockedRef.current.has(it.userId));
         setItems((prev) => (reset ? filtered : [...prev, ...filtered]));
         setCursor(resp.nextCursor);
@@ -160,40 +142,63 @@ export default function CommunityScreen({ navigation }: any) {
     load(false);
   }, [hasMore, loading, load]);
 
-  // ---------- NEW: items 변할 때 모르는 userId만 골라 username 캐싱 ----------
+  // ---------- items 변할 때 모르는 userId만 골라 username 캐싱 ----------
   useEffect(() => {
     if (!items.length) return;
 
-    // userId를 number로 정규화해서 수집
-    const ids = Array.from(
+    // 🔹 다양한 필드명에서 userId 추출 시도
+    const unknownIds = Array.from(
       new Set(
         items
-          .map(i => Number((i as any)?.userId))
-          .filter(n => Number.isFinite(n))
-      )
-    ).filter(id => !idNameMap.has(id));
+          .map(i => {
+            // userId, user_id, authorId, author_id 등 다양한 필드명 시도
+            const rawUserId = (i as any)?.userId ??
+                             (i as any)?.user_id ??
+                             (i as any)?.authorId ??
+                             (i as any)?.author_id ??
+                             (i as any)?.creator_id ??
+                             (i as any)?.creatorId;
 
-    if (ids.length === 0) return;
+            const numUserId = Number(rawUserId);
+            console.log(`[CommunityScreen] Item ${(i as any).id}: rawUserId=${rawUserId}, parsed=${numUserId}`);
+            return numUserId;
+          })
+          .filter(n => Number.isFinite(n) && n > 0 && !idNameMap.has(n))
+      )
+    );
+
+    if (unknownIds.length === 0) return;
+
+    console.log('[CommunityScreen] Fetching usernames for IDs:', unknownIds);
 
     (async () => {
       const entries: [number, string][] = [];
-      for (const uid of ids) {
+      for (const uid of unknownIds) {
         try {
-          const u = await fetchUserInfoById(uid); // <- user.ts에 있는 함수 사용
-          if (u?.username) entries.push([uid, u.username]);
+          const u = await fetchUserInfoById(uid);
+          // 🔹 다양한 필드명 시도 (userName, username, name 등)
+          const username = u?.username || u?.userName || (u as any)?.name || `user${uid}`;
+          console.log(`[CommunityScreen] userId ${uid} -> username: ${username}, raw:`, JSON.stringify(u));
+          entries.push([uid, username]);
         } catch (e) {
-          // 무시 (네트워크/429 등)
+          console.error(`[CommunityScreen] Failed to fetch username for ${uid}:`, e);
+          // 실패해도 기본값 저장
+          entries.push([uid, `user${uid}`]);
         }
       }
+
       if (entries.length) {
         setIdNameMap(prev => {
           const next = new Map(prev);
-          for (const [k, v] of entries) next.set(k, v);
+          for (const [k, v] of entries) {
+            next.set(k, v);
+            console.log(`[CommunityScreen] Cached: ${k} -> ${v}`);
+          }
           return next;
         });
       }
     })();
-  }, [items]); // ✅ items가 바뀔 때만
+  }, [items]); // ✅ idNameMap 의존성 제거 (무한 루프 방지)
 
   // 액션 (API 연동은 이후)
   const toggleLike = (id: number) => {
@@ -250,8 +255,25 @@ export default function CommunityScreen({ navigation }: any) {
     const mediaUrl = pickFirstMediaUrlLocal(item);
     const isVideo = isVideoUrl(mediaUrl);
 
-    // 🔹 표시용 username (없으면 일단 userId)
-    const uname = typeof item.userId === 'number' ? (idNameMap.get(item.userId) ?? String(item.userId)) : 'user';
+    // 🔹 다양한 필드명에서 userId 추출
+    const rawUserId = (item as any)?.userId ??
+                      (item as any)?.user_id ??
+                      (item as any)?.authorId ??
+                      (item as any)?.author_id ??
+                      (item as any)?.creator_id ??
+                      (item as any)?.creatorId;
+
+    const userId = Number(rawUserId);
+
+    // 🔹 표시용 username (아이템에 이미 있으면 우선 사용, 없으면 캐시에서)
+    const uname = (item as any).username ||
+                  (item as any).userName ||
+                  (item as any).author ||
+                  (item as any).creator ||
+                  (Number.isFinite(userId) && userId > 0 ? idNameMap.get(userId) : null) ||
+                  (Number.isFinite(userId) && userId > 0 ? `user${userId}` : 'unknown');
+
+    console.log(`[Render] Item ${item.id}: rawUserId=${rawUserId}, userId=${userId}, username=${uname}`);
 
     return (
       <View style={styles.page}>
@@ -321,7 +343,11 @@ export default function CommunityScreen({ navigation }: any) {
         <View style={styles.bottomText}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <Text style={styles.title}>@{uname}</Text>
-            <TouchableOpacity onPress={() => toggleFollow(item.userId)} style={styles.followBtn} activeOpacity={0.85}>
+            <TouchableOpacity
+              onPress={() => Number.isFinite(userId) && userId > 0 && toggleFollow(userId)}
+              style={styles.followBtn}
+              activeOpacity={0.85}
+            >
               <Text style={styles.followTxt}>팔로우</Text>
             </TouchableOpacity>
           </View>
@@ -336,7 +362,9 @@ export default function CommunityScreen({ navigation }: any) {
             <View style={styles.popup}>
               <TouchableOpacity
                 onPress={() => {
-                  handleBlockUser(item.userId);
+                  if (Number.isFinite(userId) && userId > 0) {
+                    handleBlockUser(userId);
+                  }
                   setModalVisible(false);
                 }}
                 style={styles.popupRow}
@@ -402,7 +430,7 @@ export default function CommunityScreen({ navigation }: any) {
           <Text style={styles.commentHeader}>댓글</Text>
           <FlatList
             data={comments}
-            keyExtractor={(_, i) => String(i)}
+            keyExtractor={(it: any, idx) => it._key ?? String(it.id ?? idx)}
             renderItem={({ item }) => <Text style={styles.commentItem}>💬 {item}</Text>}
             style={{ maxHeight: SCREEN_H * 0.4 }}
           />
