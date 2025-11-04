@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class RateLimitService {
 
     private final Map<Long, Queue<LocalDateTime>> requestHistory = new ConcurrentHashMap<>();
-    private static final int MAX_REQUESTS = 5;
+    private static final int MAX_REQUESTS = 20;
     private static final int TIME_WINDOW_MINUTES = 1;
 
     public boolean allowRequest(Long userId) {
@@ -41,9 +41,7 @@ public class RateLimitService {
     public void cleanup() {
         LocalDateTime oneMinuteAgo = LocalDateTime.now().minusMinutes(TIME_WINDOW_MINUTES);
 
-        requestHistory.values().forEach(queue ->
-                queue.removeIf(time -> time.isBefore(oneMinuteAgo))
-        );
+        requestHistory.values().forEach(queue -> queue.removeIf(time -> time.isBefore(oneMinuteAgo)));
 
         requestHistory.entrySet().removeIf(entry -> entry.getValue().isEmpty());
     }
