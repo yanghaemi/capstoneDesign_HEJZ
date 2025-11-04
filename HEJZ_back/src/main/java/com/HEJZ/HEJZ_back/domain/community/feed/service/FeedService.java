@@ -8,12 +8,15 @@ import com.HEJZ.HEJZ_back.domain.community.feed.dto.MediaType;
 import com.HEJZ.HEJZ_back.domain.community.feed.entity.FeedEntity;
 import com.HEJZ.HEJZ_back.domain.community.feed.entity.FeedMediaEntity;
 import com.HEJZ.HEJZ_back.domain.community.feed.repository.FeedRepository;
+import com.HEJZ.HEJZ_back.domain.community.recommendation.repository.UserPrefScoreRepository;
 import com.HEJZ.HEJZ_back.domain.community.user.entity.UserEntity;
 import com.HEJZ.HEJZ_back.domain.community.user.repository.UserRepository;
+import com.HEJZ.HEJZ_back.domain.music.dto.SavedSongDTO;
 import com.HEJZ.HEJZ_back.domain.music.entity.SavedSong;
 import com.HEJZ.HEJZ_back.domain.music.repository.SavedSongRepository;
 
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +25,11 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -31,8 +38,73 @@ public class FeedService {
     private final FeedRepository feedRepository;
     private final UserRepository userRepository;
     private final SavedSongRepository songRepository;
+    private final UserPrefScoreRepository userPrefScoreRepository;
 
     private static final DateTimeFormatter CURSOR_FMT = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+
+    // 가중치 크기================
+    private static final int RERANK_WINDOW_MULTIPLIER = 3; // limit의 3배만 임시로 가져와 재랭크
+    private static final double W_AUTHOR = 1.0;
+    private static final double W_GENRE = 0.7;
+    private static final double W_EMOTION = 0.4;
+    private static final double W_PREF = 0.7; // 취향 비중
+    private static final double W_RECENCY = 1.0 - W_PREF; // 최신 비중
+    private static final double RECENCY_TAU_SECONDS = 60 * 60 * 24; // 1일 감쇠
+    // ==========================
+
+    // =========================
+    // 가중치 적용
+    // =========================
+    private double recencyScore(LocalDateTime createdAt) {
+        double ageSec = java.time.Duration.between(createdAt, LocalDateTime.now()).getSeconds();
+        return Math.exp(-ageSec / RECENCY_TAU_SECONDS);
+    }
+
+    private double computePrefScore(FeedEntity f, Map<String, Double> prefMap) {
+        double author = prefMap.getOrDefault("author: " + f.getUser().getId(), 0.0);
+        double genre = (f.getGenre() != null) ? prefMap.getOrDefault("genre: " + f.getGenre(), 0.0) : 0.0;
+        double emo = (f.getEmotion() != null) ? prefMap.getOrDefault("emotion:" + f.getEmotion(), 0.0) : 0.0;
+        return W_AUTHOR * author + W_GENRE * genre + W_EMOTION * emo;
+    }
+
+    private Map<String, Double> loadPrefMap(Long userId, List<FeedEntity> feeds) {
+        Set<String> keys = new HashSet<>();
+        for (var f : feeds) {
+            keys.add("author: " + f.getUser().getId());
+            if (f.getGenre() != null)
+                keys.add("genre:" + f.getGenre());
+            if (f.getEmotion() != null)
+                keys.add("emotion: " + f.getEmotion());
+        }
+
+        var rows = userPrefScoreRepository.findAllByUserIdAndKeyIn(userId, keys);
+        Map<String, Double> map = new HashMap<>();
+        for (var r : rows)
+            map.put(r.getKey(), r.getScore());
+        return map;
+
+    }
+
+    private FeedListResponse reRankAndBuild(List<FeedEntity> feeds, Long userId, int limit) {
+        if (feeds.isEmpty())
+            return buildListResponse(feeds);
+
+        var prefMap = loadPrefMap(userId, feeds);
+
+        // 점수 계산 후 재정렬 (동점 안정화 위해 createdAt desc, id desc tie-breaker)
+        feeds.sort((a, b) -> {
+            double aScore = W_PREF * computePrefScore(a, prefMap) + W_RECENCY * recencyScore(a.getCreatedAt());
+            double bScore = W_PREF * computePrefScore(b, prefMap) + W_RECENCY * recencyScore(b.getCreatedAt());
+            if (aScore != bScore)
+                return Double.compare(bScore, aScore); // desc
+            int t = b.getCreatedAt().compareTo(a.getCreatedAt()); // 최신 우선
+            return (t != 0) ? t : Long.compare(b.getId(), a.getId());
+        });
+
+        // 최종 limit만 반영
+        List<FeedEntity> page = feeds.size() > limit ? feeds.subList(0, limit) : feeds;
+        return buildListResponse(page);
+    }
 
     // =========================
     // Create
@@ -108,12 +180,18 @@ public class FeedService {
     @Transactional(readOnly = true)
     public FeedListResponse getTimelineFeeds(Long userId, int limit, String cursor) {
         Cursor c = parseCursor(cursor);
+
+        // 1차: 기존 키셋으로 최근순 가져오되, 재랭크 윈도우만큼 더 가져오기
+        int window = clamp(limit, 1, 100) * RERANK_WINDOW_MULTIPLIER;
+
         List<FeedEntity> feeds = feedRepository.findTimelineFeeds(
                 userId,
                 c.createdAt(),
                 c.id(),
-                PageRequest.of(0, clamp(limit, 1, 100)));
-        return buildListResponse(feeds);
+                PageRequest.of(0, window));
+
+        // 2차: 취향 점수와 최신성 블렌딩으로 재정렬 후 limit만큼 잘라서 응답
+        return reRankAndBuild(feeds, userId, clamp(limit, 1, 100));
     }
 
     // =========================
@@ -144,12 +222,28 @@ public class FeedService {
                         m.getMimeType()))
                 .toList();
 
+        SavedSongDTO songDto = null;
+        if (feed.getSong() != null) {
+            SavedSong song = feed.getSong();
+            songDto = new SavedSongDTO(
+                    song.getTitle(),
+                    song.getTaskId(),
+                    song.getAudioId(),
+                    song.getAudioUrl(),
+                    song.getSourceAudioUrl(),
+                    song.getStreamAudioUrl(),
+                    song.getSourceStreamAudioUrl(),
+                    song.getPrompt(),
+                    song.getLyricsJson(),
+                    song.getPlainLyrics());
+        }
+
         return new FeedItemDto(
                 feed.getId(),
                 feed.getUser().getId(),
                 feed.getContent(),
                 mediaDtos,
-                feed.getSong(),
+                songDto,
                 feed.getEmotion(),
                 feed.getGenre(),
                 feed.getCreatedAt());
