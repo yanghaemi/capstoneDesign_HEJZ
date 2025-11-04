@@ -2,6 +2,7 @@ package com.HEJZ.HEJZ_back.domain.community.feed.controller;
 
 import com.HEJZ.HEJZ_back.domain.community.follow.repository.FollowRepository;
 import com.HEJZ.HEJZ_back.domain.community.feed.dto.FeedCreateRequest;
+import com.HEJZ.HEJZ_back.domain.community.feed.dto.FeedScoreDebugDto;
 import com.HEJZ.HEJZ_back.domain.community.feed.service.FeedService;
 import com.HEJZ.HEJZ_back.domain.community.feed.service.RateLimitService;
 import com.HEJZ.HEJZ_back.domain.community.user.entity.UserEntity;
@@ -9,6 +10,9 @@ import com.HEJZ.HEJZ_back.domain.community.user.repository.UserRepository;
 import com.HEJZ.HEJZ_back.global.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -93,7 +97,7 @@ public class FeedController {
         return ResponseEntity.ok(new ApiResponse<>(200, resp, "조회 성공"));
     }
 
-    // 타임라인: 내가 팔로우하는 사람들의 피드
+    // 타임라인: 전역 추천 피드
     @GetMapping("/timeline")
     public ResponseEntity<ApiResponse<Object>> timeline(
             @RequestParam(defaultValue = "20") int limit,
@@ -105,6 +109,14 @@ public class FeedController {
         }
         var resp = feedService.getTimelineFeeds(userId, limit, cursor);
         return ResponseEntity.ok(new ApiResponse<>(200, resp, "조회 성공"));
+    }
+
+    @GetMapping("/timeline/debug")
+    public ResponseEntity<List<FeedScoreDebugDto>> timelineDebug(
+            @RequestParam(defaultValue = "20") Integer limit,
+            @RequestParam(required = false) String cursor) {
+        Long userId = getCurrentUserId();
+        return ResponseEntity.ok(feedService.getTimelineFeedsWithScores(userId, limit));
     }
 
     @DeleteMapping("/{feedId}")
