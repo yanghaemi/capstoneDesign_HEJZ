@@ -3,6 +3,7 @@ package com.HEJZ.HEJZ_back.domain.community.feed.entity;
 import com.HEJZ.HEJZ_back.domain.community.user.entity.UserEntity;
 import com.HEJZ.HEJZ_back.domain.music.entity.SavedSong;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.*;
@@ -54,7 +55,7 @@ public class FeedEntity {
     private List<CommentEntity> comments;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JsonBackReference
+    @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
     private SavedSong song;
 
     @Column(name = "emotion")
