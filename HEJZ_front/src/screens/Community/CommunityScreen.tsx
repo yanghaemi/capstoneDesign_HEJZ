@@ -19,7 +19,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { fetchUserInfoById } from '../../api/user';
-import { fetchTimeline } from '../../api/feed';
+import { fetchTimeline,fetchGlobal } from '../../api/feed';
 import type { FeedItemDto } from '../../api/types/feed';
 import { BASE_URL } from '../../api/baseUrl';
 // ✅ 댓글 API 연결 (복수형 파일명)
@@ -110,13 +110,20 @@ export default function CommunityScreen({ navigation }: any) {
       if (loading) return;
       setLoading(true);
       try {
-        const resp = await fetchTimeline({ limit: 10, cursor: reset ? null : cursor });
+        // ✅ 탭에 따라 타임라인/전역 선택
+        const fetcher = tab === 'EXPLORE' ? fetchGlobal : fetchTimeline;
+
+        const resp = await fetcher({ limit: 10, cursor: reset ? null : cursor });
 
         if (resp.items.length > 0) {
-          console.log('[CommunityScreen] First item:', JSON.stringify(resp.items[0], null, 2));
+          console.log(
+            `[CommunityScreen/${tab}] First item:`,
+            JSON.stringify(resp.items[0], null, 2)
+          );
         }
 
         const filtered = resp.items.filter((it) => !blockedRef.current.has((it as any).userId));
+
         setItems((prev) => (reset ? filtered : [...prev, ...filtered]));
         setCursor(resp.nextCursor);
         setHasMore(Boolean(resp.nextCursor));
@@ -130,8 +137,18 @@ export default function CommunityScreen({ navigation }: any) {
         setLoading(false);
       }
     },
-    [cursor, loading]
+    [cursor, loading, tab] // ✅ tab 의존성 추가
   );
+
+  useEffect(() => {
+    // 탭 바꾸면 리스트/커서/hasMore 초기화하고 새로 로드
+    setItems([]);
+    setCursor(null);
+    setHasMore(true);
+    // 탭 변경 직후 첫 페이지 로드
+    load(true);
+  }, [tab]);
+
 
   const onRefresh = useCallback(async () => {
     if (loading) return;
