@@ -327,7 +327,7 @@ public class FeedService {
     }
 
     // =========================
-    // Read: My feeds 팔로워
+    // Read: My feeds (pagination)
     // =========================
     @Transactional(readOnly = true)
     public FeedListResponse getMyFeeds(Long userId, int limit, String cursor) {
@@ -346,7 +346,7 @@ public class FeedService {
     }
 
     // =========================
-    // Read: Timeline 전역
+    // Read: Timeline 팔로워
     // =========================
     @Transactional(readOnly = true)
     public FeedListResponse getTimelineFeeds(Long userId, int limit, String cursor) {
@@ -362,6 +362,24 @@ public class FeedService {
                 PageRequest.of(0, window));
 
         // 2차: 취향 점수와 최신성 블렌딩으로 재정렬 후 limit만큼 잘라서 응답
+        return reRankAndBuild(feeds, userId, clamp(limit, 1, 100));
+    }
+
+    // =========================
+    // Read: Global (everyone, latest)
+    // =========================
+    @Transactional(readOnly = true)
+    public FeedListResponse getGlobalFeeds(Long userId, int limit, String cursor) {
+        Cursor c = parseCursor(cursor);
+
+        int window = clamp(limit, 1, 100) * RERANK_WINDOW_MULTIPLIER;
+
+        List<FeedEntity> feeds = feedRepository.findGlobalFeeds(
+                userId,
+                c.createdAt(),
+                c.id(),
+                PageRequest.of(0, window));
+
         return reRankAndBuild(feeds, userId, clamp(limit, 1, 100));
     }
 
