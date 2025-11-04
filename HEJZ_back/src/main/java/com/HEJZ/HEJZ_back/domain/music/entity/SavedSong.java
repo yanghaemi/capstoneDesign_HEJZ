@@ -62,4 +62,8 @@ public class SavedSong {
 
     @Column(name = "is_streamed")
     private Boolean isStreamed;
+
+    @Version
+    private long version; // 낙관적 락 버전
+
 }
