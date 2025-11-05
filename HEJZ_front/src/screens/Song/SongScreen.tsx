@@ -42,9 +42,9 @@ const SongScreen = () => {
   const [title, setTitle] = useState('');
   const [customMode, setCustomMode] = useState(false);
   const [instrumental, setInstrumental] = useState(false);
-  const [model, setModel] = useState<'V3_5' | 'V4' | 'V4_5'>('V3_5');
+  const [model, setModel] = useState<'V3_5' | 'V4' | 'V4_5' | 'V5'>('V5');
   const [callBackUrl, setCallBackUrl] = useState(
-    'https://nonpurposive-herpetologic-lynwood.ngrok-free.dev/api/suno/callback',
+    'https://3c6ffa0274a2.ngrok-free.app/api/suno/callback',
   );
 
   // ====== 감정(무드) 태그 선택 ======
@@ -81,7 +81,7 @@ const SongScreen = () => {
 
     try {
       await axios.post(
-        'https://nonpurposive-herpetologic-lynwood.ngrok-free.dev/api/suno/generate',
+        'https://3c6ffa0274a2.ngrok-free.app/api/suno/generate',
         {
           prompt: finalPrompt,
           style,
