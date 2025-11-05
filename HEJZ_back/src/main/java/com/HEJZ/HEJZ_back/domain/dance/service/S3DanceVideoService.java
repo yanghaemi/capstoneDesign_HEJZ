@@ -12,9 +12,7 @@ import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignReques
 
 import java.net.URL;
 import java.time.Duration;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -25,14 +23,14 @@ public class S3DanceVideoService {
     @Value("${cloud.aws.s3.bucket}")
     private String bucketName;
 
+    // 단일 presigned URL 생성
     public String getPresignedUrl(String motionId) {
+        final String key = "final_videos/dance_video/" + motionId + "_body.mp4";
         try {
-            String key = "final_videos/" + motionId + "_body.mp4";
-
             GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                     .bucket(bucketName)
                     .key(key)
-                    .responseContentType("video/mp4")
+                    .responseContentType("video/mp4") // 플레이어 인식용
                     .build();
 
             GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
@@ -40,19 +38,19 @@ public class S3DanceVideoService {
                     .signatureDuration(Duration.ofMinutes(10))
                     .build();
 
-            URL presignedUrl = s3Presigner.presignGetObject(presignRequest).url();
-            return presignedUrl.toString();
+            URL url = s3Presigner.presignGetObject(presignRequest).url();
+            return url.toString();
 
         } catch (S3Exception e) {
+            // 키오류/권한 등 S3단 에러
             throw new CustomException(ErrorCode.VIDEO_NOT_FOUND);
         } catch (Exception e) {
             throw new CustomException(ErrorCode.UNKNOWN_SERVER_ERROR);
         }
     }
-    public List<String> getPresignedUrls(List<String> motionIds) {
-        return motionIds.stream()
-                .map(this::getPresignedUrl)
-                .toList();
-    }
 
+    // 여러 개 presigned URL 생성
+    public List<String> getPresignedUrls(List<String> motionIds) {
+        return motionIds.stream().map(this::getPresignedUrl).toList();
+    }
 }
