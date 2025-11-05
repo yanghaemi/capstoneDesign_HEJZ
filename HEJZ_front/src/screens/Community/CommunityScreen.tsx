@@ -19,7 +19,8 @@ import LinearGradient from 'react-native-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { fetchUserInfoById } from '../../api/user';
-import { fetchTimeline,fetchGlobal } from '../../api/feed';
+import { fetchTimeline, fetchGlobal } from '../../api/feed';
+import { followUser, unfollowUser, checkInterFollow, getFollowings, getFollowers } from '../../api/follow';
 import type { FeedItemDto } from '../../api/types/feed';
 import { BASE_URL } from '../../api/baseUrl';
 // ✅ 댓글 API 연결 (복수형 파일명)
@@ -83,6 +84,8 @@ export default function CommunityScreen({ navigation }: any) {
   const [commentList, setCommentList] = useState<CommentDto[]>([]);
   const [loadingComments, setLoadingComments] = useState(false);
   const [sending, setSending] = useState(false);
+
+  const [username, setUsername] = useState("");
 
   // 차단 목록
   const blockedRef = useRef<Set<number | string>>(new Set());
@@ -307,10 +310,58 @@ export default function CommunityScreen({ navigation }: any) {
     );
   };
 
-  const toggleFollow = (userId?: number) => {
-    if (!userId) return;
-    Alert.alert('팔로우', '나중에 API 연결!');
+  // Empty State 렌더링 함수
+  const renderEmptyState = () => {
+    if (loading) {
+      return (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyTitle}>로딩 중...</Text>
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.emptyContainer}>
+        {tab === 'FOLLOWING' ? (
+          <>
+            <Text style={styles.emptyIcon}>👥</Text>
+            <Text style={styles.emptyTitle}>팔로우한 사람이 없어요</Text>
+            <Text style={styles.emptySubtitle}>
+              다른 사용자들을 팔로우하고{'\n'}재미있는 콘텐츠를 만나보세요!
+            </Text>
+            <TouchableOpacity
+              style={styles.emptyButton}
+              onPress={() => setTab('EXPLORE')}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.emptyButtonText}>추천 콘텐츠 보기</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <>
+            <Text style={styles.emptyIcon}>📭</Text>
+            <Text style={styles.emptyTitle}>아직 콘텐츠가 없어요</Text>
+            <Text style={styles.emptySubtitle}>
+              첫 번째 게시물을 작성해보세요!
+            </Text>
+          </>
+        )}
+      </View>
+    );
   };
+
+
+  const toggleFollow = async (username: string) => {
+    if (!username) Alert.alert('팔로우', 'username을 전송할 수 없습니다.');
+    try {
+      const resp = await followUser(username);
+    
+      Alert.alert('성공', '팔로우 했습니다!');
+    }catch (e: any) {
+      Alert.alert('알림', e?.message ?? '불러오기 실패');
+    }
+  };
+  
 
   const handleBlockUser = async (userId?: number) => {
     if (!userId) return;
@@ -345,16 +396,17 @@ export default function CommunityScreen({ navigation }: any) {
       (item as any)?.author_id ??
       (item as any)?.creator_id ??
       (item as any)?.creatorId;
+    
 
     const userId = Number(rawUserId);
 
-    const uname =
+    setUsername(
       (item as any).username ||
       (item as any).userName ||
       (item as any).author ||
       (item as any).creator ||
       (Number.isFinite(userId) && userId > 0 ? idNameMap.get(userId) : null) ||
-      (Number.isFinite(userId) && userId > 0 ? `user${userId}` : 'unknown');
+      (Number.isFinite(userId) && userId > 0 ? `user${userId}` : 'unknown'));
 
     return (
       <View style={styles.page}>
@@ -417,9 +469,9 @@ export default function CommunityScreen({ navigation }: any) {
         {/* 좌하단 유저/콘텐츠 */}
         <View style={styles.bottomText}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={styles.title}>@{uname}</Text>
+            <Text style={styles.title}>@{username}</Text>
             <TouchableOpacity
-              onPress={() => Number.isFinite(userId) && userId > 0 && toggleFollow(userId)}
+              onPress={() => Number.isFinite(userId) && userId > 0 && toggleFollow(username)}
               style={styles.followBtn}
               activeOpacity={0.85}
             >
@@ -471,25 +523,31 @@ export default function CommunityScreen({ navigation }: any) {
             style={[styles.tab, tab === k && styles.tabOn]}
             activeOpacity={0.9}
           >
-            <Text style={[styles.tabTxt, tab === k && styles.tabTxtOn]}>{k === 'FOLLOWING' ? '팔로잉' : '익스플로어'}</Text>
+            <Text style={[styles.tabTxt, tab === k && styles.tabTxtOn]}>{k === 'FOLLOWING' ? '팔로잉' : '전체 추천'}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
       {/* 틱톡형 세로 스와이프 */}
-      <FlatList
-        data={items}
-        keyExtractor={(it: any) => String((it as any).id)}
-        renderItem={renderItem}
-        pagingEnabled
-        showsVerticalScrollIndicator={false}
-        onEndReachedThreshold={0.85}
-        onEndReached={onEndReached}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" />}
-        getItemLayout={(_, index) => ({ length: SCREEN_H, offset: SCREEN_H * index, index })}
-        onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={viewabilityConfig}
-      />
+      {items.length > 0 ? (
+        <FlatList
+          data={items}
+          keyExtractor={(it: any) => String((it as any).id)}
+          renderItem={renderItem}
+          pagingEnabled
+          showsVerticalScrollIndicator={false}
+          onEndReachedThreshold={0.85}
+          onEndReached={onEndReached}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" />}
+          getItemLayout={(_, index) => ({ length: SCREEN_H, offset: SCREEN_H * index, index })}
+          onViewableItemsChanged={onViewableItemsChanged}
+          viewabilityConfig={viewabilityConfig}
+        />
+      ) : (
+        renderEmptyState()
+      )}
+
+
 
       {/* 댓글 모달 */}
       <Modal
@@ -559,6 +617,43 @@ export default function CommunityScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
+
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#000',
+    paddingHorizontal: 32,
+  },
+  emptyIcon: {
+    fontSize: 64,
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#fff',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    fontSize: 15,
+    color: '#9CA3AF',
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 24,
+  },
+  emptyButton: {
+    backgroundColor: '#587dc4',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  emptyButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
   tabs: {
     position: 'absolute',
     top: Platform.OS === 'ios' ? 60 : 20,

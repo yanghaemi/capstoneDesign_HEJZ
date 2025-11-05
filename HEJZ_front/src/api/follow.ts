@@ -34,6 +34,7 @@ export async function followUser(username: string): Promise<void> {
   }
 
   console.log('[followUser] 성공!');
+  return json?.data ?? json;
 }
 
 /** 언팔로우하기 */

@@ -194,7 +194,7 @@ export async function fetchTimeline(p: { limit?: number; cursor?: string | null 
 
   return { items, nextCursor };
 }
-// src/api/feed.ts (맨 아래 쪽 적당한 위치)
+
 export async function fetchFeedDetail(feedId: number) {
   const token = await getToken();
   const res = await fetch(`${BASE_URL}/api/feeds/${encodeURIComponent(feedId)}`, {
@@ -208,6 +208,7 @@ export async function fetchFeedDetail(feedId: number) {
   const data = parseApiResponse(json, res.status); // 기존 함수 재사용
   return data; // 기대: { id, content, images: [{url, ord, ...}], ... }
 }
+
 
 // 전역 최신 피드(백엔드 /api/feeds/global)
 export async function fetchGlobal(p: { limit?: number; cursor?: string | null } = {}) {
