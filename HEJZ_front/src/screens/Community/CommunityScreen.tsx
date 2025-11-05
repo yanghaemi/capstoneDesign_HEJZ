@@ -121,7 +121,7 @@ export default function CommunityScreen({ navigation }: any) {
             JSON.stringify(resp.items[0], null, 2)
           );
         }
-
+        console.log('[COMM]', tab, 'FIRST RAW ITEM =', JSON.stringify(resp.items[0], null, 2));
         const filtered = resp.items.filter((it) => !blockedRef.current.has((it as any).userId));
 
         setItems((prev) => (reset ? filtered : [...prev, ...filtered]));

@@ -84,8 +84,56 @@ export const fetchMyFeeds = (p: { limit?: number; cursor?: string | null }) =>
     params: { limit: p.limit ?? 20, cursor: p.cursor ?? undefined },
   });
 
-export const createFeed = (body: FeedCreateRequest) =>
-  request<FeedItemDto>('/api/feeds', { method: 'POST', body });
+export async function createFeed(body: FeedCreateRequest, timeoutMs = 60000) { // 🔧 15초 → 60초로 증가
+  const token = await getToken();
+
+  console.log('[createFeed] 요청 시작:', { body, timeoutMs }); // 🔍
+
+  const ctrl = new AbortController();
+  const to = setTimeout(() => ctrl.abort(), timeoutMs);
+
+  try {
+    const res = await fetch(`${BASE_URL}/api/feeds`, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(body),
+      signal: ctrl.signal,
+    });
+
+    console.log('[createFeed] 응답 상태:', res.status); // 🔍
+
+    const responseText = await res.text();
+    console.log('[createFeed] 응답 원본:', responseText); // 🔍
+
+    let json;
+    try {
+      json = JSON.parse(responseText);
+    } catch (parseErr) {
+      console.error('[createFeed] JSON 파싱 실패:', parseErr); // 🔍
+      throw new Error('서버 응답을 파싱할 수 없어요');
+    }
+
+    if (!res.ok) {
+      console.error('[createFeed] 서버 에러:', json); // 🔍
+      throw new Error(json?.message || json?.msg || `HTTP ${res.status}`);
+    }
+
+    console.log('[createFeed] 성공:', json); // 🔍
+    return json?.data ?? json;
+  } catch (err: any) {
+    console.error('[createFeed] 에러 발생:', err); // 🔍
+    if (err?.name === 'AbortError') {
+      throw new Error('요청이 시간 초과됐어요.');
+    }
+    throw err;
+  } finally {
+    clearTimeout(to);
+  }
+}
 
 export const deleteFeed = (feedId: number) =>
   request<null>(`/api/feeds/${feedId}`, { method: 'DELETE' });
@@ -117,7 +165,7 @@ export async function fetchUserFeeds(username: string, limit: number = 20, curso
   return { feeds: items as any, nextCursor } as any;
 }
 
-// ========== ⬇️ 수정/추가 포인트: 타임라인 & 글로벌 ==========
+// ========== 타임라인 & 글로벌 ==========
 
 export async function fetchTimeline(p: { limit?: number; cursor?: string | null } = {}) {
   const limit = p.limit ?? 20;
@@ -145,6 +193,20 @@ export async function fetchTimeline(p: { limit?: number; cursor?: string | null 
   const nextCursor = data?.nextCursor ?? null;
 
   return { items, nextCursor };
+}
+// src/api/feed.ts (맨 아래 쪽 적당한 위치)
+export async function fetchFeedDetail(feedId: number) {
+  const token = await getToken();
+  const res = await fetch(`${BASE_URL}/api/feeds/${encodeURIComponent(feedId)}`, {
+    headers: {
+      Accept: 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  const json = await res.json().catch(() => ({}));
+  const data = parseApiResponse(json, res.status); // 기존 함수 재사용
+  return data; // 기대: { id, content, images: [{url, ord, ...}], ... }
 }
 
 // 전역 최신 피드(백엔드 /api/feeds/global)
