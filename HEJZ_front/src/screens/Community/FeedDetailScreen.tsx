@@ -1,5 +1,5 @@
 // screens/FeedDetailScreen.tsx
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useCallback, useRef, useMemo, useState, useEffect } from 'react';
 import {
   View, Text, Image, StyleSheet, Dimensions, TouchableOpacity, Alert, FlatList,
   SafeAreaView, ScrollView, TextInput, KeyboardAvoidingView, Platform, Modal
@@ -7,23 +7,20 @@ import {
 import Video from 'react-native-video';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
-import { deleteFeed } from '../../api/feed';
+import { deleteFeed, getFeed } from '../../api/feed'; // ✅ getFeed import 추가
+import { likeFeed, isLiked, getListOfLike } from '../../api/like';
 import { BASE_URL } from '../../api/baseUrl';
 import { createComment, getCommentsByFeed, deleteComment, CommentDto } from '../../api/comment';
+import Heart from '../../assets/icon/heart.png';
+import HeartOutline from '../../assets/icon/heart-outline.png';
+import CommentIcon from '../../assets/icon/comments.png';
+const { height: SCREEN_H, width: SCREEN_W } = Dimensions.get('window');
+import type { FeedItemDto } from '../../api/types/feed';
 
 // ---------- 타입 ----------
 type ImageDto = { url: string; ord?: number };
 type P = {
   feedId: number | string;
-  content?: string;
-  images?: ImageDto[];
-  media?: ImageDto[];       // images 대신 media로 오는 경우 대비
-  ownerUsername?: string;
-  username?: string;        // 실제로 더 자주 쓰는 키
-  likeCount?: number;
-  isLiked?: boolean;
-  commentCount?: number;
-  mode?: 'MY' | 'USER';
 };
 
 // ---------- 유틸 ----------
@@ -33,7 +30,6 @@ function absUrl(u?: string | null) {
   if (!u) return null;
   const t = String(u).trim();
   if (!t || t === '/' || t === 'null' || t === 'undefined') return null;
-  // 절대경로면 그대로, 상대경로면 BASE_URL 붙임
   return /^https?:\/\//i.test(t) ? t : `${BASE_URL}${t.startsWith('/') ? '' : '/'}${t}`;
 }
 
@@ -42,39 +38,38 @@ function isVideoUrl(u?: string | null) {
   return /\.(mp4|mov|m4v|webm|3gp)$/i.test(u);
 }
 
+function normalizeAbsUrl(u?: string | null) {
+  if (!u) return null;
+  const t = String(u).trim();
+  if (!t || t === '/' || t === '#' || t === 'null' || t === 'undefined') return null;
+  return /^https?:\/\//i.test(t) ? t : `${BASE_URL}${t.startsWith('/') ? '' : '/'}${t}`;
+}
+
+function pickFirstMediaUrlLocal(item: any): string | null {
+  const arr = Array.isArray(item?.images)
+    ? item.images
+    : Array.isArray(item?.media)
+    ? item.media
+    : [];
+  if (arr.length === 0) return null;
+  const first = arr.slice().sort((a: any, b: any) => (a?.ord ?? 0) - (b?.ord ?? 0))[0];
+  return normalizeAbsUrl(first?.url ?? null);
+}
+
 // ========== 컴포넌트 ==========
 export default function FeedDetailScreen() {
   const navigation = useNavigation();
   const route = useRoute<RouteProp<Record<string, any>, string>>();
 
-  // ✅ 어떤 형태로 오든 흡수 (payload로 감싸서 오거나, 낱개로 오거나)
-  const params = (route.params?.payload ?? route.params ?? {}) as P;
+  const params = route.params as any;
+  const feedId = Number(params?.feedId);
 
-  // ✅ 키 정규화
-  const feedId = Number(params.feedId);
-  const uname = params.username ?? params.ownerUsername ?? 'unknown';
-  const rawImages: ImageDto[] = Array.isArray(params.images)
-    ? params.images
-    : Array.isArray(params.media)
-    ? params.media
-    : [];
-
-  const {
-    content,
-    likeCount: initLikeCount = 0,
-    isLiked: initIsLiked = false,
-    commentCount: initCommentCount = 0,
-  } = params;
-
-  // 🔍 받은 파라미터 확인
-  useEffect(() => {
-    console.log('[FeedDetail] route.params(raw)=', route.params);
-    console.log('[FeedDetail] parsed:', {
-      feedId, content, uname, rawImages,
-    });
-  }, [route.params]);
+  console.log('[FeedDetail] 받은 params:', params);
+  console.log('[FeedDetail] feedId:', feedId);
 
   // 상태
+  const [feedData, setFeedData] = useState<FeedItemDto | null>(null);
+  const [loading, setLoading] = useState(true);
   const [index, setIndex] = useState(0);
   const [showContent, setShowContent] = useState(true);
   const [showComments, setShowComments] = useState(false);
@@ -82,35 +77,67 @@ export default function FeedDetailScreen() {
   const [commentText, setCommentText] = useState('');
   const [loadingComments, setLoadingComments] = useState(false);
 
-  const [isLiked, setIsLiked] = useState(initIsLiked);
-  const [likeCount, setLikeCount] = useState(initLikeCount);
+  // ✅ 좋아요 상태 관리
+  const [isLikedState, setIsLikedState] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
 
-  // media 리스트 (상대경로 → 절대경로로 정규화)
+  // ✅ 피드 데이터 및 좋아요 상태 초기 로드
+  useEffect(() => {
+    const loadFeedData = async () => {
+    if (!feedId || isNaN(feedId)) {
+      console.error('[FeedDetail] 유효하지 않은 feedId:', feedId);
+      Alert.alert('오류', '잘못된 피드 ID입니다.');
+      (navigation as any).goBack();
+      return;
+    }
+
+    try {
+      setLoading(true);
+      console.log('[FeedDetail] feedId로 데이터 로드 시작:', feedId);
+      
+      // 1. 피드 데이터 가져오기
+      const feed = await getFeed(feedId);
+      console.log('[FeedDetail] 피드 데이터:', feed);
+      
+      setFeedData(feed);
+      // ... 나머지 코드
+    } catch (e: any) {
+      console.error('[FeedDetail] 데이터 로드 실패:', e?.message);
+      Alert.alert('오류', e?.message ?? '피드를 불러올 수 없습니다.');
+      (navigation as any).goBack();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  loadFeedData();
+}, [feedId, navigation]);
+
+  // media 리스트
   const media = useMemo(() => {
-    const arr = Array.isArray(rawImages) ? rawImages : [];
-    const result = arr
+    if (!feedData) return [];
+    
+    const rawImages = Array.isArray((feedData as any).images)
+      ? (feedData as any).images
+      : Array.isArray((feedData as any).media)
+      ? (feedData as any).media
+      : [];
+    
+    const result = rawImages
       .slice()
-      .sort((a, b) => (a.ord ?? 0) - (b.ord ?? 0))
-      .map(m => {
+      .sort((a: any, b: any) => (a.ord ?? 0) - (b.ord ?? 0))
+      .map((m: any) => {
         const raw = m.url;
-        const url = absUrl(raw);          // ★ 여기서 BASE_URL을 붙임
+        const url = absUrl(raw);
         return { url, isVideo: isVideoUrl(raw) };
       })
-      .filter(m => !!m.url);
+      .filter((m: any) => !!m.url);
 
-    console.log('[FeedDetail] 처리된 미디어 목록:', result, 'BASE_URL:', BASE_URL);
+    console.log('[FeedDetail] 처리된 미디어 목록:', result);
     return result;
-  }, [rawImages]);
+  }, [feedData]);
 
   const current = media[index];
-
-  useEffect(() => {
-    if (current) {
-      console.log('[FeedDetail] 현재 미디어:', { index, url: current.url, isVideo: current.isVideo });
-    } else {
-      console.log('[FeedDetail] 현재 미디어 없음');
-    }
-  }, [index, current]);
 
   // 댓글 불러오기
   const loadComments = async () => {
@@ -165,10 +192,30 @@ export default function FeedDetailScreen() {
     ]);
   };
 
-  // 좋아요 토글 (로컬 optimistic)
-  const handleToggleLike = () => {
-    setIsLiked(v => !v);
-    setLikeCount(prev => (isLiked ? Math.max(prev - 1, 0) : prev + 1));
+  // ✅ 좋아요 토글
+  const toggleLike = async () => {
+    try {
+      // 1. 좋아요 토글 API 호출
+      await likeFeed(feedId);
+      console.log('[toggleLike] 좋아요 API 호출 성공');
+
+      // 2. 좋아요 상태 확인 (true/false)
+      const checkIsLiked = await isLiked(feedId);
+
+      // 3. 좋아요 목록 가져오기 (개수 확인)
+      const likeList = await getListOfLike(feedId);
+      const newLikeCount = Array.isArray(likeList) ? likeList.length : 0;
+
+      // 4. UI 업데이트
+      setIsLikedState(checkIsLiked);
+      setLikeCount(newLikeCount);
+
+      console.log(`[toggleLike] feedId=${feedId}, isLiked=${checkIsLiked}, likeCount=${newLikeCount}`);
+
+    } catch (e: any) {
+      console.error('[toggleLike] 좋아요 실패:', e?.message);
+      Alert.alert('알림', e?.message ?? '좋아요에 실패했어요.');
+    }
   };
 
   // 게시글 삭제
@@ -182,7 +229,6 @@ export default function FeedDetailScreen() {
           try {
             await deleteFeed(feedId);
             Alert.alert('완료', '삭제되었습니다.');
-            // @ts-ignore
             (navigation as any).goBack();
           } catch (e: any) {
             Alert.alert('실패', e?.message ?? '삭제 중 오류가 발생했습니다.');
@@ -191,6 +237,27 @@ export default function FeedDetailScreen() {
       }
     ]);
   };
+
+  // 로딩 중
+  if (loading) {
+    return (
+      <View style={[s.screen, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text style={{ color: '#fff', fontSize: 16 }}>로딩 중...</Text>
+      </View>
+    );
+  }
+
+  // 데이터 없음
+  if (!feedData) {
+    return (
+      <View style={[s.screen, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text style={{ color: '#fff', fontSize: 16 }}>피드를 찾을 수 없습니다.</Text>
+      </View>
+    );
+  }
+
+  const uname = (feedData as any).username || (feedData as any).ownerUsername || 'unknown';
+  const content = (feedData as any).content || '';
 
   return (
     <View style={s.screen}>
@@ -226,9 +293,6 @@ export default function FeedDetailScreen() {
         ) : (
           <View style={s.placeholder}>
             <Text style={{ color: '#9CA3AF' }}>미디어 없음</Text>
-            <Text style={{ color: '#6B7280', fontSize: 12, marginTop: 8 }}>
-              images/media: {JSON.stringify(rawImages)}
-            </Text>
           </View>
         )}
       </View>
@@ -251,36 +315,28 @@ export default function FeedDetailScreen() {
 
       {/* 오른쪽 아이콘 */}
       <View style={s.rightIcons}>
-        {/* 댓글 버튼 */}
-        <TouchableOpacity style={s.iconBtn} onPress={() => setShowComments(true)} activeOpacity={0.85}>
-          <Image source={require('../../assets/icon/comments.png')} style={s.icon} resizeMode="contain" />
-          <Text style={s.iconCount}>{showComments ? comments.length : (comments.length || initCommentCount)}</Text>
-        </TouchableOpacity>
-
         {/* 좋아요 버튼 */}
-        <TouchableOpacity style={s.iconBtn} onPress={handleToggleLike} activeOpacity={0.85}>
+        <TouchableOpacity onPress={toggleLike} style={s.iconBtn} activeOpacity={0.85}>
           <Image
-            source={
-              isLiked
-                ? require('../../assets/icon/heart-outline.png')
-                : require('../../assets/icon/heart.png')
-            }
+            source={isLikedState ? HeartOutline : Heart}
             style={s.icon}
             resizeMode="contain"
           />
           <Text style={s.iconCount}>{likeCount}</Text>
         </TouchableOpacity>
+
+        {/* 댓글 버튼 */}
+        <TouchableOpacity style={s.iconBtn} onPress={() => setShowComments(true)} activeOpacity={0.85}>
+          <Image source={CommentIcon} style={s.icon} resizeMode="contain" />
+          <Text style={s.iconCount}>{comments.length || (feedData as any).commentCount || 0}</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* 하단 콘텐츠 (유저/본문 + 썸네일 스트립) */}
+      {/* 하단 콘텐츠 */}
       <View style={s.bottomContainer}>
-        {/* 유저/본문 */}
         <View style={s.bottomText}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <Text style={s.username}>@{uname}</Text>
-            <TouchableOpacity style={s.followBtn} activeOpacity={0.85} onPress={() => Alert.alert('팔로우', '나중에 API 연결!')}>
-              <Text style={s.followTxt}>팔로우</Text>
-            </TouchableOpacity>
           </View>
 
           {!!content && (
@@ -407,8 +463,6 @@ const s = StyleSheet.create({
   bottomContainer: { position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10 },
   bottomText: { paddingHorizontal: 12, paddingBottom: 8 },
   username: { fontSize: 18, fontWeight: '800', color: '#fff', marginRight: 8 },
-  followBtn: { borderWidth: 1, borderColor: '#fff', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 3, marginLeft: 8 },
-  followTxt: { fontSize: 12, color: '#fff' },
 
   contentWrapper: { maxHeight: height * 0.35 },
   contentToggle: { alignItems: 'center', paddingVertical: 8, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.15)', marginTop: 6 },

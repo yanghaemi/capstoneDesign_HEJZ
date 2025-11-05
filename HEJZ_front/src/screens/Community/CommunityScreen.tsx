@@ -108,7 +108,7 @@ export default function CommunityScreen({ navigation }: any) {
     }, [])
   );
 
-  // ✅ 각 피드의 좋아요 상태 및 개수를 API로 가져오는 함수
+  // 각 피드의 좋아요 상태 및 개수를 API로 가져오는 함수
   const loadLikeStatus = useCallback(async (feedId: number) => {
     try {
       const [likedStatus, likeList] = await Promise.all([
