@@ -2,7 +2,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BASE_URL } from './baseUrl';
 
-async function getAuthToken(): Promise<string | null> {
+export async function getAuthToken(): Promise<string | null> {
   const keys = ['auth.token', 'token', 'accessToken', 'jwt'];
   const pairs = await AsyncStorage.multiGet(keys);
   for (const [, val] of pairs) if (val) return val;

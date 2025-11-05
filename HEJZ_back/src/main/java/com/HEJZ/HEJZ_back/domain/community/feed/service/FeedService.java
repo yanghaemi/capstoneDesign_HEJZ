@@ -59,20 +59,20 @@ public class FeedService {
     // =========================
     // 가중치 적용
     // =========================
-    private double recencyScore(LocalDateTime createdAt) {
-        double ageSec = java.time.Duration.between(createdAt,
-                LocalDateTime.now()).getSeconds();
-        return Math.exp(-ageSec / RECENCY_TAU_SECONDS);
-    }
+    // private double recencyScore(LocalDateTime createdAt) {
+    // double ageSec = java.time.Duration.between(createdAt,
+    // LocalDateTime.now()).getSeconds();
+    // return Math.exp(-ageSec / RECENCY_TAU_SECONDS);
+    // }
 
-    private double computePrefScore(FeedEntity f, Map<String, Double> prefMap) {
-        double author = prefMap.getOrDefault("author: " + f.getUser().getId(), 0.0);
-        double genre = (f.getGenre() != null) ? prefMap.getOrDefault("genre: " +
-                f.getGenre(), 0.0) : 0.0;
-        double emo = (f.getEmotion() != null) ? prefMap.getOrDefault("emotion:" +
-                f.getEmotion(), 0.0) : 0.0;
-        return W_AUTHOR * author + W_GENRE * genre + W_EMOTION * emo;
-    }
+    // private double computePrefScore(FeedEntity f, Map<String, Double> prefMap) {
+    // double author = prefMap.getOrDefault("author: " + f.getUser().getId(), 0.0);
+    // double genre = (f.getGenre() != null) ? prefMap.getOrDefault("genre: " +
+    // f.getGenre(), 0.0) : 0.0;
+    // double emo = (f.getEmotion() != null) ? prefMap.getOrDefault("emotion:" +
+    // f.getEmotion(), 0.0) : 0.0;
+    // return W_AUTHOR * author + W_GENRE * genre + W_EMOTION * emo;
+    // }
 
     private Map<String, Double> loadPrefMap(Long userId, List<FeedEntity> feeds) {
         Set<String> keys = new HashSet<>();
@@ -280,18 +280,9 @@ public class FeedService {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // SavedSong song = songRepository.findById(request.songId())
-                // .orElseThrow(() -> new RuntimeException("노래를 찾지 못했습니다."));
-        // 🔧 songId가 있을 때만 조회, 없으면 null
-        SavedSong song = null;
-        if (request.songId() != null) {
-            song = songRepository.findById(request.songId())
-                .orElse(null);  // 못 찾으면 null (에러 안 냄)
-        }
         FeedEntity feed = FeedEntity.builder()
                 .user(user)
                 .content(request.content())
-                .song(song)
                 .genre(request.genre())
                 .emotion(request.emotion())
                 .createdAt(LocalDateTime.now())
@@ -416,28 +407,11 @@ public class FeedService {
                         m.getMimeType()))
                 .toList();
 
-        SavedSongDTO songDto = null;
-        if (feed.getSong() != null) {
-            SavedSong song = feed.getSong();
-            songDto = new SavedSongDTO(
-                    song.getTitle(),
-                    song.getTaskId(),
-                    song.getAudioId(),
-                    song.getAudioUrl(),
-                    song.getSourceAudioUrl(),
-                    song.getStreamAudioUrl(),
-                    song.getSourceStreamAudioUrl(),
-                    song.getPrompt(),
-                    song.getLyricsJson(),
-                    song.getPlainLyrics());
-        }
-
         return new FeedItemDto(
                 feed.getId(),
                 feed.getUser().getId(),
                 feed.getContent(),
                 mediaDtos,
-                songDto,
                 feed.getEmotion(),
                 feed.getGenre(),
                 feed.getCreatedAt());
