@@ -1,5 +1,5 @@
 // src/screens/Dance/DanceRecommendScreen.tsx
-// DB lyrics_json 기반: 마지막 글자가 \n 인 토큰을 2번 만나면 2줄 블록으로 루프
+// DB lyrics_json 기반: \n을 2번 만나면 한 블록으로 처리
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
@@ -13,9 +13,7 @@ import {
 import Video from 'react-native-video';
 import Slider from '@react-native-community/slider';
 import RNSoundPlayer from 'react-native-sound-player';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { BASE_URL } from '../../api/baseUrl';
 import {
   analyzeLyricsByTwoLines,
   getMotionUrl,
@@ -44,9 +42,6 @@ type Props = {
 };
 
 // ====== 유틸 ======
-const endsWithNewline = (s: string) => /\n$/.test(s);
-
-// lyrics_json → 2줄 블록(마지막 글자가 \n 인 토큰을 2번 만나면 한 블록)
 function buildTimingBlocksFromLyricsJson(words: LWord[]): TimingBlock[] {
   const blocks: TimingBlock[] = [];
   if (!Array.isArray(words) || words.length === 0) return blocks;
@@ -54,29 +49,30 @@ function buildTimingBlocksFromLyricsJson(words: LWord[]): TimingBlock[] {
   let blockStart: number | null = null;
   let newlineCount = 0;
 
-  for (const w of words) {
+  for (let i = 0; i < words.length; i++) {
+    const w = words[i];
     if (blockStart == null) blockStart = w.startS;
 
-    if (endsWithNewline(w.word || '')) {
-      newlineCount += 1;
-      if (newlineCount === 2) {
-        blocks.push({ start: blockStart, end: w.endS });
-        blockStart = null;
-        newlineCount = 0;
-      }
+    const numNewlines = (w.word.match(/\n/g) || []).length;
+    newlineCount += numNewlines;
+
+    if (newlineCount >= 2) {
+      blocks.push({ start: blockStart, end: w.endS });
+      blockStart = null;
+      newlineCount = 0;
     }
   }
 
-  // 남은 꼬리(줄 1개만 끝났거나 \n이 안 나온 경우)
-  if (blockStart != null) {
+  if (blockStart != null && words.length > 0) {
     const lastEnd = words[words.length - 1]?.endS ?? blockStart;
     blocks.push({ start: blockStart, end: lastEnd });
   }
 
+  console.log(`📊 타이밍 블록 ${blocks.length}개 생성:`, blocks);
   return blocks;
 }
 
-// lyricsRecommendations 항목에서 후보 모션 4개 추출(중복 제거)
+// 후보 4개 추출(중복 제거)
 function extractCandidates(r: LyricsGroupRecommendation): string[] {
   const list = [
     r.selectedEmotionMotion,
@@ -84,26 +80,31 @@ function extractCandidates(r: LyricsGroupRecommendation): string[] {
     r.analyzedMotion1,
     r.analyzedMotion2,
   ].filter(Boolean) as string[];
-  // 중복 제거, 최대 4개
   return Array.from(new Set(list)).slice(0, 4);
 }
 
 // 가사/타이밍 소스 확보
 function fromPassedParams(plain?: string, jsonRaw?: string) {
-  const plainLyrics = plain ?? '';
+  // \\n → 실제 줄바꿈
+  let plainLyrics = (plain ?? '').replace(/\\n/g, '\n');
+  // [Verse], [Chorus] 제거
+  plainLyrics = plainLyrics.replace(/\[.*?\]\n?/g, '');
+  console.log('📝 처리된 가사:\n', plainLyrics);
+
   let arr: any[] = [];
   try { arr = jsonRaw ? JSON.parse(jsonRaw) : []; } catch { arr = []; }
-  const lyricsWords = (arr || []).map(x => ({
-    word: String(x?.word ?? ''),
+
+  const lyricsWords = (arr || []).map((x: any) => ({
+    word: String(x?.word ?? '').replace(/\\n/g, '\n'),
     startS: Number(x?.startS ?? 0),
     endS: Number(x?.endS ?? 0),
   }));
+
   return { plainLyrics, lyricsWords };
 }
 
-
 export default function DanceRecommendScreen({ route, navigation }: Props) {
-  const { p_id, p_title, p_filepath, p_emotion, p_genre } = route.params;
+  const { p_title, p_filepath } = route.params;
 
   // 전체 상태
   const [loading, setLoading] = useState(true);
@@ -116,8 +117,14 @@ export default function DanceRecommendScreen({ route, navigation }: Props) {
 
   // 후보 포인터(블록마다 현재 후보 idx)
   const [ptrByBlock, setPtrByBlock] = useState<number[]>([]);
-  const [currentMotionUrl, setCurrentMotionUrl] = useState<string | null>(null);
-  const [loadingMotion, setLoadingMotion] = useState(false);
+
+  // 표시용 URL 캐시(선택된 후보에 대한 디버깅/표시)
+  const [motionUrlsMap, setMotionUrlsMap] = useState<Map<string, string>>(new Map());
+  const [loadingMotions, setLoadingMotions] = useState(false);
+
+  // ▶️ 실제 Video가 사용하는 전용 상태 (여기에 응답 URL을 "그대로" 저장)
+  const [playerMotionId, setPlayerMotionId] = useState<string | null>(null);
+  const [playerUrl, setPlayerUrl] = useState<string | null>(null);
 
   // 오디오 루프 상태
   const [duration, setDuration] = useState(0);
@@ -131,14 +138,13 @@ export default function DanceRecommendScreen({ route, navigation }: Props) {
 
   const isFinished = useMemo(() => currentIndex >= recs.length, [currentIndex, recs.length]);
 
-  // ========== 1) 초기: 곡 상세 → 분석 → 타이밍 ==========
+  // ========== 1) 초기: 분석 + 타이밍 ==========
   useEffect(() => {
     (async () => {
       try {
         setLoading(true);
         const { p_emotion, p_genre, p_plainLyrics, p_lyricsJsonRaw } = route.params;
 
-        // 상세 API 호출 없이, 네비로 받은 값만 사용
         const { plainLyrics, lyricsWords } = fromPassedParams(p_plainLyrics, p_lyricsJsonRaw);
         if (!plainLyrics?.trim()) throw new Error('plain_lyrics가 없습니다.');
         if (!lyricsWords.length)   throw new Error('lyrics_json(타이밍)이 없습니다.');
@@ -151,6 +157,8 @@ export default function DanceRecommendScreen({ route, navigation }: Props) {
         setTiming(timingBlocks.slice(0, n));
         setPtrByBlock(new Array(n).fill(0));
 
+        console.log(`✅ 분석 완료: ${n}개 블록`);
+
         if (n > 0) {
           setCurrentIndex(0);
           setLoopStart(timingBlocks[0].start);
@@ -158,33 +166,48 @@ export default function DanceRecommendScreen({ route, navigation }: Props) {
           try { RNSoundPlayer.seek(timingBlocks[0].start + 0.01); } catch {}
           setCurrentTime(timingBlocks[0].start);
         }
-      } catch (e:any) {
-        Alert.alert('오류', e?.message ?? '초기 로드 실패');
+      } catch (e: any) {
+        console.error('초기 로드 실패:', e);
+        setAnalyzeErr(e?.message ?? '초기 로드 실패');
       } finally {
         setLoading(false);
       }
     })();
   }, [route.params]);
 
-  // ========== 2) 현재 블록/포인터가 바뀌면 후보 모션 URL 로드 ==========
+  // ========== 2) 후보 바뀔 때 응답 URL 로드 → playerUrl에 그대로 세팅 ==========
   useEffect(() => {
-    if (loading || isFinished) { setCurrentMotionUrl(null); return; }
+    if (loading || isFinished) return;
+
     const rec = recs[currentIndex];
-    if (!rec) { setCurrentMotionUrl(null); return; }
-    const candidates = extractCandidates(rec);
+    if (!rec) return;
+
+    const cands = extractCandidates(rec);
     const ptr = ptrByBlock[currentIndex] ?? 0;
-    const motionId = candidates[ptr];
-    if (!motionId) { setCurrentMotionUrl(null); return; }
+    const motionId = cands[ptr];
+    if (!motionId) return;
 
     (async () => {
       try {
-        setLoadingMotion(true);
-        const url = await getMotionUrl(motionId);
-        setCurrentMotionUrl(url || null);
-      } catch {
-        setCurrentMotionUrl(null);
+        setLoadingMotions(true);
+        console.log(`[블록 ${currentIndex}, 후보 ${ptr + 1}/${cands.length}] URL 로드:`, motionId);
+
+        const raw = await getMotionUrl(motionId);
+        // 응답 문자열의 앞뒤 따옴표/개행 제거만, 그 외 인코딩/가공 절대 금지
+        const url = raw.trim().replace(/^"|"$/g, '');
+
+        console.log('🔗 URL 로드 완료 (playerUrl에 그대로 저장):', url.substring(0, 140) + '...');
+        setMotionUrlsMap(new Map([[motionId, url]]));
+
+        setPlayerMotionId(motionId);
+        setPlayerUrl(url); // ★ Video는 이 값만 사용
+      } catch (e) {
+        console.error('❌ URL 로드 실패:', e);
+        setMotionUrlsMap(new Map());
+        setPlayerMotionId(null);
+        setPlayerUrl(null);
       } finally {
-        setLoadingMotion(false);
+        setLoadingMotions(false);
       }
     })();
   }, [currentIndex, ptrByBlock, recs, loading, isFinished]);
@@ -194,6 +217,7 @@ export default function DanceRecommendScreen({ route, navigation }: Props) {
     if (isFinished) { setLoopStart(null); setLoopEnd(null); return; }
     const blk = timing[currentIndex];
     if (blk) {
+      console.log(`⏰ 블록 ${currentIndex} 타이밍:`, blk.start, '~', blk.end);
       setLoopStart(blk.start);
       setLoopEnd(blk.end);
       try { RNSoundPlayer.seek(blk.start + 0.01); } catch {}
@@ -279,9 +303,7 @@ export default function DanceRecommendScreen({ route, navigation }: Props) {
       return;
     }
 
-    // 블록의 2줄 텍스트는 분석 응답의 lyricsGroup 사용
     const lyricsGroup = rec.lyricsGroup || '';
-
     setSelections(prev => {
       const list = [...prev];
       const idx = list.findIndex(x => x.lyricsGroup === lyricsGroup);
@@ -290,6 +312,7 @@ export default function DanceRecommendScreen({ route, navigation }: Props) {
       return list;
     });
 
+    console.log(`✔ 블록 ${currentIndex} 선택:`, motionId);
     setCurrentIndex(i => i + 1);
   };
 
@@ -298,9 +321,11 @@ export default function DanceRecommendScreen({ route, navigation }: Props) {
     (async () => {
       if (!isFinished || selections.length === 0) return;
       try {
+        console.log('💾 저장 시작:', selections);
         const msg = await saveEmotionSelections(selections);
         Alert.alert('완료', msg || '선택한 안무가 저장되었습니다.');
       } catch (e: any) {
+        console.error('저장 실패:', e);
         Alert.alert('오류', e?.message ?? '저장 중 오류가 발생했어요.');
       }
     })();
@@ -310,7 +335,7 @@ export default function DanceRecommendScreen({ route, navigation }: Props) {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#4B9DFE" />
+        <ActivityIndicator size="large" />
         <Text style={{ color: '#fff', marginTop: 12 }}>블록별 추천 분석 중…</Text>
       </View>
     );
@@ -329,6 +354,19 @@ export default function DanceRecommendScreen({ route, navigation }: Props) {
   const cands = rec ? extractCandidates(rec) : [];
   const ptr = ptrByBlock[currentIndex] ?? 0;
 
+  // 표시용(디버깅)
+  const currentMotionId = cands[ptr];
+  const currentMotionUrl = currentMotionId ? motionUrlsMap.get(currentMotionId) : null;
+
+  console.log('=== 렌더 디버깅 ===');
+  console.log('currentIndex:', currentIndex);
+  console.log('후보 목록:', cands);
+  console.log('현재 포인터:', ptr);
+  console.log('표시용 motionId:', currentMotionId);
+  console.log('표시용 URL(map):', currentMotionUrl);
+  console.log('▶ playerMotionId:', playerMotionId);
+  console.log('▶ playerUrl:', playerUrl);
+
   return (
     <ImageBackground
       source={require('../../assets/background/DanceRecommendBackground.png')}
@@ -342,7 +380,6 @@ export default function DanceRecommendScreen({ route, navigation }: Props) {
 
         {!isFinished ? (
           <>
-            {/* 분석 응답에서 온 2줄 가사 표시 */}
             <View style={styles.lyricsBox}>
               <Text style={styles.lyricLine}>{lyricsLines[0] || ''}</Text>
               <Text style={styles.lyricLine}>{lyricsLines[1] || ''}</Text>
@@ -352,35 +389,75 @@ export default function DanceRecommendScreen({ route, navigation }: Props) {
               {cands.length ? `후보 ${ptr + 1}/${cands.length}` : '후보 없음'}
             </Text>
 
-            {loadingMotion ? (
+            {loadingMotions ? (
               <View style={[styles.video, { alignItems: 'center', justifyContent: 'center' }]}>
-                <ActivityIndicator />
+                <ActivityIndicator size="large" />
+                <Text style={{ marginTop: 8, color: '#666' }}>후보 영상 로딩 중...</Text>
               </View>
-            ) : currentMotionUrl ? (
-              <Video
-                source={{ uri: currentMotionUrl }}
-                style={styles.video}
-                controls
-                resizeMode="contain"
-                paused={false}
-                repeat
-              />
+            ) : playerUrl ? (
+              <View style={{ alignItems: 'center' }}>
+                {console.log('🎬 Video 렌더링(playerUrl):', playerUrl.substring(0, 120))}
+                <Video
+                  key={playerUrl}                       // 소스 변경 시 재마운트
+                  source={{ uri: playerUrl, type: 'mp4' }} // ★ 응답 URL 그대로 사용
+                  style={styles.video}
+                  resizeMode="cover"
+                  repeat
+                  paused={false}
+                  muted={false}
+                  onError={(e) => {
+                    console.error('❌ Video Error with URL =', playerUrl, e);
+                  }}
+                  onLoad={(data) => {
+                    console.log('✅ Video Loaded from =', playerUrl, data?.naturalSize);
+                  }}
+                />
+                <View style={{ padding: 8, backgroundColor: '#1c1c1e', borderRadius: 8, marginTop: 4, width: '90%' }}>
+                  <Text style={{ fontSize: 10, color: '#fff' }}>
+                    🎬 motionId: {playerMotionId || '(없음)'}
+                  </Text>
+                  <Text style={{ fontSize: 9, color: '#87cefa', marginTop: 2 }} numberOfLines={1}>
+                    🔗 {playerUrl}
+                  </Text>
+                </View>
+              </View>
             ) : (
               <View style={[styles.video, { alignItems: 'center', justifyContent: 'center' }]}>
-                <Text>영상 없음</Text>
+                <Text style={{ color: '#999', fontSize: 16, fontWeight: 'bold' }}>영상 없음</Text>
+                <Text style={{ color: '#666', fontSize: 12, marginTop: 4 }}>
+                  {cands.length > 0 ? 'URL을 가져올 수 없습니다' : '추천된 후보가 없습니다'}
+                </Text>
               </View>
             )}
 
             <View style={styles.controls}>
-              {/* reset = 다음 후보 보기 */}
-              <TouchableOpacity onPress={cycleCandidate} style={[styles.controlButton, styles.resetButton]}>
+              <TouchableOpacity
+                onPress={cycleCandidate}
+                style={[styles.controlButton, styles.resetButton]}
+                disabled={cands.length <= 1 || loadingMotions}
+              >
                 <Text style={styles.controlText}>⏭ 후보 변경</Text>
               </TouchableOpacity>
 
-              {/* check = 현재 후보로 선택 후 다음 블록 */}
-              <TouchableOpacity onPress={selectCurrent} style={[styles.controlButton, styles.playButton]}>
+              <TouchableOpacity
+                onPress={selectCurrent}
+                style={[styles.controlButton, styles.playButton]}
+                disabled={loadingMotions || !playerUrl}
+              >
                 <Text style={styles.controlText}>✔ 선택</Text>
               </TouchableOpacity>
+
+              {playerUrl && (
+                <TouchableOpacity
+                  onPress={() => {
+                    console.log('🔗 URL (player):', playerUrl);
+                    Alert.alert('URL', playerUrl, [{ text: '확인' }]);
+                  }}
+                  style={[styles.controlButton, { backgroundColor: '#FF9800', paddingHorizontal: 8 }]}
+                >
+                  <Text style={styles.controlText}>🔗</Text>
+                </TouchableOpacity>
+              )}
             </View>
 
             {cands.length === 0 && (
@@ -458,7 +535,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  video: { width: '100%', height: 220, backgroundColor: '#000', borderRadius: 12 },
+  video: {
+    width: '100%',
+    height: 220,
+    backgroundColor: '#222',
+    borderRadius: 12,
+  },
 
   playerCard: {
     backgroundColor: 'white',
