@@ -23,7 +23,7 @@ RUN chmod +x gradlew
 RUN ./gradlew build -x test --no-daemon
 
 # 실행 환경 (경량 JDK) 설정
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jre-jammy
 
 WORKDIR /app
 
