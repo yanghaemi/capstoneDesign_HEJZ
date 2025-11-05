@@ -15,6 +15,7 @@ import com.HEJZ.HEJZ_back.domain.community.user.repository.UserRepository;
 import com.HEJZ.HEJZ_back.domain.music.dto.SavedSongDTO;
 import com.HEJZ.HEJZ_back.domain.music.entity.SavedSong;
 import com.HEJZ.HEJZ_back.domain.music.repository.SavedSongRepository;
+import com.HEJZ.HEJZ_back.global.response.ApiResponse;
 
 import lombok.RequiredArgsConstructor;
 
@@ -59,20 +60,20 @@ public class FeedService {
     // =========================
     // 가중치 적용
     // =========================
-    private double recencyScore(LocalDateTime createdAt) {
-        double ageSec = java.time.Duration.between(createdAt,
-                LocalDateTime.now()).getSeconds();
-        return Math.exp(-ageSec / RECENCY_TAU_SECONDS);
-    }
+    // private double recencyScore(LocalDateTime createdAt) {
+    // double ageSec = java.time.Duration.between(createdAt,
+    // LocalDateTime.now()).getSeconds();
+    // return Math.exp(-ageSec / RECENCY_TAU_SECONDS);
+    // }
 
-    private double computePrefScore(FeedEntity f, Map<String, Double> prefMap) {
-        double author = prefMap.getOrDefault("author: " + f.getUser().getId(), 0.0);
-        double genre = (f.getGenre() != null) ? prefMap.getOrDefault("genre: " +
-                f.getGenre(), 0.0) : 0.0;
-        double emo = (f.getEmotion() != null) ? prefMap.getOrDefault("emotion:" +
-                f.getEmotion(), 0.0) : 0.0;
-        return W_AUTHOR * author + W_GENRE * genre + W_EMOTION * emo;
-    }
+    // private double computePrefScore(FeedEntity f, Map<String, Double> prefMap) {
+    // double author = prefMap.getOrDefault("author: " + f.getUser().getId(), 0.0);
+    // double genre = (f.getGenre() != null) ? prefMap.getOrDefault("genre: " +
+    // f.getGenre(), 0.0) : 0.0;
+    // double emo = (f.getEmotion() != null) ? prefMap.getOrDefault("emotion:" +
+    // f.getEmotion(), 0.0) : 0.0;
+    // return W_AUTHOR * author + W_GENRE * genre + W_EMOTION * emo;
+    // }
 
     private Map<String, Double> loadPrefMap(Long userId, List<FeedEntity> feeds) {
         Set<String> keys = new HashSet<>();
@@ -280,18 +281,9 @@ public class FeedService {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // SavedSong song = songRepository.findById(request.songId())
-                // .orElseThrow(() -> new RuntimeException("노래를 찾지 못했습니다."));
-        // 🔧 songId가 있을 때만 조회, 없으면 null
-        SavedSong song = null;
-        if (request.songId() != null) {
-            song = songRepository.findById(request.songId())
-                .orElse(null);  // 못 찾으면 null (에러 안 냄)
-        }
         FeedEntity feed = FeedEntity.builder()
                 .user(user)
                 .content(request.content())
-                .song(song)
                 .genre(request.genre())
                 .emotion(request.emotion())
                 .createdAt(LocalDateTime.now())
@@ -388,6 +380,36 @@ public class FeedService {
         return reRankAndBuild(feeds, userId, clamp(limit, 1, 100));
     }
 
+    public ApiResponse<Object> getFeed(Long feedId) {
+        try {
+            FeedEntity feed = feedRepository.findById(feedId).orElseThrow(() -> new RuntimeException("피드를 찾지 못함."));
+
+            List<MediaDto> mediaDtos = feed.getImages().stream()
+                    .sorted(Comparator.comparingInt(FeedMediaEntity::getOrd))
+                    .map(m -> new MediaDto(
+                            m.getUrl(),
+                            m.getOrd(),
+                            m.getType(),
+                            m.getThumbnailUrl(),
+                            m.getDurationMs(),
+                            m.getMimeType()))
+                    .toList();
+
+            FeedItemDto dto = new FeedItemDto(
+                    feed.getId(),
+                    feed.getUser().getId(),
+                    feed.getContent(),
+                    mediaDtos,
+                    feed.getEmotion(),
+                    feed.getGenre(),
+                    feed.getCreatedAt());
+
+            return new ApiResponse<Object>(200, dto, "게시글 조회 성공");
+        } catch (Exception e) {
+            return new ApiResponse<Object>(500, null, "게시글 조회 실패");
+        }
+    }
+
     // =========================
     // Delete (soft delete)
     // =========================
@@ -416,28 +438,11 @@ public class FeedService {
                         m.getMimeType()))
                 .toList();
 
-        SavedSongDTO songDto = null;
-        if (feed.getSong() != null) {
-            SavedSong song = feed.getSong();
-            songDto = new SavedSongDTO(
-                    song.getTitle(),
-                    song.getTaskId(),
-                    song.getAudioId(),
-                    song.getAudioUrl(),
-                    song.getSourceAudioUrl(),
-                    song.getStreamAudioUrl(),
-                    song.getSourceStreamAudioUrl(),
-                    song.getPrompt(),
-                    song.getLyricsJson(),
-                    song.getPlainLyrics());
-        }
-
         return new FeedItemDto(
                 feed.getId(),
                 feed.getUser().getId(),
                 feed.getContent(),
                 mediaDtos,
-                songDto,
                 feed.getEmotion(),
                 feed.getGenre(),
                 feed.getCreatedAt());

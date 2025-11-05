@@ -21,6 +21,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { fetchUserInfoById } from '../../api/user';
 import { fetchTimeline, fetchGlobal } from '../../api/feed';
 import { followUser, unfollowUser, checkInterFollow, getFollowings, getFollowers } from '../../api/follow';
+import { likeFeed, isLiked, getListOfLike } from '../../api/like';
 import type { FeedItemDto } from '../../api/types/feed';
 import { BASE_URL } from '../../api/baseUrl';
 // ✅ 댓글 API 연결 (복수형 파일명)
@@ -107,6 +108,23 @@ export default function CommunityScreen({ navigation }: any) {
     }, [])
   );
 
+  // 각 피드의 좋아요 상태 및 개수를 API로 가져오는 함수
+  const loadLikeStatus = useCallback(async (feedId: number) => {
+    try {
+      const [likedStatus, likeList] = await Promise.all([
+        isLiked(feedId),
+        getListOfLike(feedId)
+      ]);
+      
+      const likeCount = Array.isArray(likeList) ? likeList.length : 0;
+      
+      return { isLiked: likedStatus, likeCount };
+    } catch (e: any) {
+      console.error(`[loadLikeStatus] feedId=${feedId} 실패:`, e?.message);
+      return null;
+    }
+  }, []);
+
   // 타임라인 로드
   const load = useCallback(
     async (reset = false) => {
@@ -124,10 +142,27 @@ export default function CommunityScreen({ navigation }: any) {
             JSON.stringify(resp.items[0], null, 2)
           );
         }
-        console.log('[COMM]', tab, 'FIRST RAW ITEM =', JSON.stringify(resp.items[0], null, 2));
+        
         const filtered = resp.items.filter((it) => !blockedRef.current.has((it as any).userId));
 
-        setItems((prev) => (reset ? filtered : [...prev, ...filtered]));
+        // ✅ 각 피드의 좋아요 상태를 API로 가져오기
+        const itemsWithLikeStatus = await Promise.all(
+          filtered.map(async (item) => {
+            const feedId = (item as any).id;
+            const likeStatus = await loadLikeStatus(feedId);
+            
+            if (likeStatus) {
+              return {
+                ...(item as any),
+                isLiked: likeStatus.isLiked,
+                likeCount: likeStatus.likeCount
+              };
+            }
+            return item;
+          })
+        );
+
+        setItems((prev) => (reset ? itemsWithLikeStatus : [...prev, ...itemsWithLikeStatus]));
         setCursor(resp.nextCursor);
         setHasMore(Boolean(resp.nextCursor));
       } catch (e: any) {
@@ -140,7 +175,7 @@ export default function CommunityScreen({ navigation }: any) {
         setLoading(false);
       }
     },
-    [cursor, loading, tab] // ✅ tab 의존성 추가
+    [cursor, loading, tab, loadLikeStatus]
   );
 
   useEffect(() => {
@@ -295,19 +330,39 @@ export default function CommunityScreen({ navigation }: any) {
     ]);
   }, [selectedId, loadComments]);
 
-  // 액션 (좋아요는 기존 로컬 토글)
-  const toggleLike = (id: number) => {
-    setItems((prev) =>
-      prev.map((it) =>
-        (it as any).id === id
-          ? {
-              ...(it as any),
-              likeCount: Math.max(0, Number((it as any).likeCount ?? 0)) + (((it as any).isLiked ? -1 : 1) as number),
-              isLiked: !(it as any).isLiked,
-            }
-          : it
-      )
-    );
+  // ✅ 좋아요 토글 - API 상태를 기준으로 하트 변경
+  const toggleLike = async (id: number) => {
+    try {
+      // 1. 좋아요 토글 API 호출
+      await likeFeed(id);
+      console.log('[toggleLike] 좋아요 API 호출 성공');
+
+      // 2. 좋아요 상태 확인 (true/false)
+      const checkIsLiked = await isLiked(id);
+
+      // 3. 좋아요 목록 가져오기 (개수 확인)
+      const likeList = await getListOfLike(id);
+      const likeCount = Array.isArray(likeList) ? likeList.length : 0;
+
+      // 4. UI 업데이트
+      setItems((prev) =>
+        prev.map((it) =>
+          (it as any).id === id
+            ? {
+                ...(it as any),
+                likeCount: likeCount,      // ✅ 실제 좋아요 개수
+                isLiked: checkIsLiked,     // ✅ 실제 좋아요 상태 (true/false)
+              }
+            : it
+        )
+      );
+
+      console.log(`[toggleLike] feedId=${id}, isLiked=${checkIsLiked}, likeCount=${likeCount}`);
+
+    } catch (e: any) {
+      console.error('[toggleLike] 좋아요 실패:', e?.message);
+      Alert.alert('알림', e?.message ?? '좋아요에 실패했어요.');
+    }
   };
 
   // Empty State 렌더링 함수
@@ -352,12 +407,14 @@ export default function CommunityScreen({ navigation }: any) {
 
 
   const toggleFollow = async (username: string) => {
-    if (!username) Alert.alert('팔로우', 'username을 전송할 수 없습니다.');
+    if (!username) {
+      Alert.alert('팔로우', 'username을 전송할 수 없습니다.');
+      return;
+    }
     try {
       const resp = await followUser(username);
-    
       Alert.alert('성공', '팔로우 했습니다!');
-    }catch (e: any) {
+    } catch (e: any) {
       Alert.alert('알림', e?.message ?? '불러오기 실패');
     }
   };
@@ -396,17 +453,16 @@ export default function CommunityScreen({ navigation }: any) {
       (item as any)?.author_id ??
       (item as any)?.creator_id ??
       (item as any)?.creatorId;
-    
 
     const userId = Number(rawUserId);
 
-    setUsername(
+    const uname = 
       (item as any).username ||
       (item as any).userName ||
       (item as any).author ||
       (item as any).creator ||
       (Number.isFinite(userId) && userId > 0 ? idNameMap.get(userId) : null) ||
-      (Number.isFinite(userId) && userId > 0 ? `user${userId}` : 'unknown'));
+      (Number.isFinite(userId) && userId > 0 ? `user${userId}` : 'unknown');
 
     return (
       <View style={styles.page}>
@@ -432,6 +488,7 @@ export default function CommunityScreen({ navigation }: any) {
         {/* 우측 액션 */}
         <View style={styles.actions}>
           <TouchableOpacity onPress={() => toggleLike((item as any).id)} style={styles.actionBtn} activeOpacity={0.8}>
+            {/* ✅ isLiked가 true면 채워진 하트, false면 빈 하트 */}
             <Image
               source={(item as any).isLiked ? HeartOutline : Heart}
               style={styles.icon}
@@ -469,9 +526,9 @@ export default function CommunityScreen({ navigation }: any) {
         {/* 좌하단 유저/콘텐츠 */}
         <View style={styles.bottomText}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={styles.title}>@{username}</Text>
+            <Text style={styles.title}>@{uname}</Text>
             <TouchableOpacity
-              onPress={() => Number.isFinite(userId) && userId > 0 && toggleFollow(username)}
+              onPress={() => Number.isFinite(userId) && userId > 0 && toggleFollow(uname)}
               style={styles.followBtn}
               activeOpacity={0.85}
             >
@@ -615,6 +672,7 @@ export default function CommunityScreen({ navigation }: any) {
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
 

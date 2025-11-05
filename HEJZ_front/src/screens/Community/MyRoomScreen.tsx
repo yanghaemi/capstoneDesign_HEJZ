@@ -224,36 +224,47 @@ export default function MyProfileScreen({navigation, route}:any) {
 
   // ===== 피드 로드 =====
   const load = useCallback(async (reset = false) => {
-    if (loadingRef.current) return;
-    loadingRef.current = true;
-    setIsLoading(true);
-    try {
-      if (!fetchMyFeedsSafe) throw new Error('fetchMyFeeds API 없음');
+  if (loadingRef.current) return;
+  loadingRef.current = true;
+  setIsLoading(true);
+  try {
+    if (!fetchMyFeedsSafe) throw new Error('fetchMyFeeds API 없음');
 
-      const cur = reset ? null : cursor;
-      if (!reset && lastCursorRef.current === cur) return;
+    const cur = reset ? null : cursor;
+    if (!reset && lastCursorRef.current === cur) return;
 
-      const data = await fetchMyFeedsSafe({ limit: 24, cursor: cur });
-      const safe: FeedItemDto[] = (data?.items ?? []).map((it: any) => ({
+    const data = await fetchMyFeedsSafe({ limit: 24, cursor: cur });
+    
+    // ✅ 원본 데이터 확인
+    console.log('[MyProfile] API 응답 원본:', JSON.stringify(data, null, 2));
+    
+    const safe: FeedItemDto[] = (data?.items ?? []).map((it: any) => {
+      // ✅ 각 아이템의 id 확인
+      console.log('[MyProfile] 아이템 id:', it?.feedId, it);
+      
+      return {
         ...it,
         images: Array.isArray(it?.images) ? it.images : [],
-      }));
+      };
+    });
 
-      if (reset) setItems(safe);
-      else setItems(prev => [...prev, ...safe]);
+    console.log('[MyProfile] 변환된 데이터:', safe);
+    
+    if (reset) setItems(safe);
+    else setItems(prev => [...prev, ...safe]);
 
-      const nextCur = data?.nextCursor ?? null;
-      setCursor(nextCur);
-      setHasMore(Boolean(nextCur));
-      lastCursorRef.current = nextCur;
-    } catch (e: any) {
-      Alert.alert('알림', e?.message ?? '요청 실패');
-      setHasMore(false);
-    } finally {
-      loadingRef.current = false;
-      setIsLoading(false);
-    }
-  }, [cursor]);
+    const nextCur = data?.nextCursor ?? null;
+    setCursor(nextCur);
+    setHasMore(Boolean(nextCur));
+    lastCursorRef.current = nextCur;
+  } catch (e: any) {
+    Alert.alert('알림', e?.message ?? '요청 실패');
+    setHasMore(false);
+  } finally {
+    loadingRef.current = false;
+    setIsLoading(false);
+  }
+}, [cursor]);
 
   const onRefresh = useCallback(async () => {
     if (loadingRef.current) return;
@@ -320,17 +331,28 @@ export default function MyProfileScreen({navigation, route}:any) {
     const video = isVideoUrl(raw);
     const duration = fmtDur(item.videoDurationSec ?? item.durationSec ?? item.duration);
 
+    const feedId = item.id ?? (item as any).feedId ?? (item as any).feed_id;
+  
+    // ✅ id 확인 로그
+    console.log('[MyProfile renderItem] feedId:', feedId, 'item:', item);
+    
+    if (!feedId) {
+      console.error('[MyProfile] feedId가 없는 아이템:', item);
+      return null; // id가 없으면 렌더링 안 함
+    }
+
     return (
       <TouchableOpacity
         style={s.gridItem}
         activeOpacity={0.9}
-        onPress={() =>
+        onPress={() => {
+          console.log('[MyProfile] 네비게이션 - feedId:', feedId);
           (navigation as any).navigate('FeedDetail', {
-            feedId: item.id,
+            feedId: item.id ?? (item as any).feedId ?? (item as any).feed_id,
             content: item.content,
             images: item.images,
-          })
-        }
+          });
+        }}
         onLongPress={() => handleLongPressDelete(item.id)}
       >
         {uri ? (

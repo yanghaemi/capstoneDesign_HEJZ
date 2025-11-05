@@ -17,8 +17,6 @@ import com.HEJZ.HEJZ_back.domain.community.feed.repository.FeedRepository;
 import com.HEJZ.HEJZ_back.domain.community.recommendation.service.PrefStoreService;
 import com.HEJZ.HEJZ_back.domain.community.user.entity.UserEntity;
 import com.HEJZ.HEJZ_back.domain.community.user.repository.UserRepository;
-import com.HEJZ.HEJZ_back.domain.music.dto.SavedSongDTO;
-import com.HEJZ.HEJZ_back.domain.music.entity.SavedSong;
 import com.HEJZ.HEJZ_back.global.response.ApiResponse;
 
 import jakarta.persistence.EntityManager;
@@ -143,28 +141,11 @@ public class LikeService {
                                     m.getMimeType()))
                             .toList();
 
-                    SavedSongDTO songDto = null;
-                    if (f.getSong() != null) {
-                        SavedSong song = f.getSong();
-                        songDto = new SavedSongDTO(
-                                song.getTitle(),
-                                song.getTaskId(),
-                                song.getAudioId(),
-                                song.getAudioUrl(),
-                                song.getSourceAudioUrl(),
-                                song.getStreamAudioUrl(),
-                                song.getSourceStreamAudioUrl(),
-                                song.getPrompt(),
-                                song.getLyricsJson(),
-                                song.getPlainLyrics());
-                    }
-
                     return new FeedItemDto(
                             f.getId(),
                             f.getUser().getId(),
                             f.getContent(),
                             media,
-                            songDto,
                             f.getEmotion(),
                             f.getGenre(),
                             f.getCreatedAt());
@@ -202,6 +183,17 @@ public class LikeService {
         } catch (Exception e) {
             return new ApiResponse<>(500, null, "내 좋아요 리스트 조회 실패");
 
+        }
+    }
+
+    public ApiResponse<Object> isLiked(Long feedId, String username) {
+        try {
+            Long userId = userRepository.findIdByUsername(username);
+            boolean like = feedLikeRepository.existsByFeedIdAndUserId(feedId, userId);
+
+            return new ApiResponse<Object>(200, like, "좋아요 조회 성공");
+        } catch (Exception e) {
+            return new ApiResponse<Object>(500, null, "좋아요 조회 실패");
         }
     }
 
