@@ -1,6 +1,7 @@
 package com.HEJZ.HEJZ_back.domain.community.feed.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,6 +13,7 @@ import lombok.Getter;
 public class FeedScoreDebugDto {
     private Long feedId;
     private String content;
+    private List<MediaDto> media;
     private Long authorId;
     private String authorName;
     private String genre;

@@ -165,6 +165,41 @@ export async function fetchUserFeeds(username: string, limit: number = 20, curso
   return { feeds: items as any, nextCursor } as any;
 }
 
+export async function getFeed(feedId: number): Promise<FeedItemDto> {
+  const keys = ['auth.token', 'token', 'accessToken', 'jwt'];
+  const pairs = await AsyncStorage.multiGet(keys);
+  const token = pairs.find(([, v]) => !!v)?.[1] ?? null;
+
+  const url = `${BASE_URL}/api/feeds/${feedId}`;
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  const json = await res.json();
+  console.log('[getFeed] 응답:', json);
+
+  const code = json?.code ?? res.status;
+
+  if (code !== 200) {
+      throw new Error(json?.msg ?? json?.message ?? '피드 조회 실패');
+  }
+
+  console.log('[getFeed] 전체 응답:', {
+  status: res.status,
+  json: json,
+  code: json?.code,
+  data: json?.data
+  });
+
+  console.log('[getFeed] 성공!');
+  return json?.data ?? json;
+}
+
+
 // ========== 타임라인 & 글로벌 ==========
 
 export async function fetchTimeline(p: { limit?: number; cursor?: string | null } = {}) {
@@ -194,9 +229,10 @@ export async function fetchTimeline(p: { limit?: number; cursor?: string | null 
 
   return { items, nextCursor };
 }
-// src/api/feed.ts (맨 아래 쪽 적당한 위치)
+
 export async function fetchFeedDetail(feedId: number) {
   const token = await getToken();
+  console.log(feedId);
   const res = await fetch(`${BASE_URL}/api/feeds/${encodeURIComponent(feedId)}`, {
     headers: {
       Accept: 'application/json',
@@ -208,6 +244,7 @@ export async function fetchFeedDetail(feedId: number) {
   const data = parseApiResponse(json, res.status); // 기존 함수 재사용
   return data; // 기대: { id, content, images: [{url, ord, ...}], ... }
 }
+
 
 // 전역 최신 피드(백엔드 /api/feeds/global)
 export async function fetchGlobal(p: { limit?: number; cursor?: string | null } = {}) {

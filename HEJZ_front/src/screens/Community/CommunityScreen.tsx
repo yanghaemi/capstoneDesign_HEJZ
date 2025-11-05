@@ -19,7 +19,9 @@ import LinearGradient from 'react-native-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { fetchUserInfoById } from '../../api/user';
-import { fetchTimeline,fetchGlobal } from '../../api/feed';
+import { fetchTimeline, fetchGlobal } from '../../api/feed';
+import { followUser, unfollowUser, checkInterFollow, getFollowings, getFollowers } from '../../api/follow';
+import { likeFeed, isLiked, getListOfLike } from '../../api/like';
 import type { FeedItemDto } from '../../api/types/feed';
 import { BASE_URL } from '../../api/baseUrl';
 // ✅ 댓글 API 연결 (복수형 파일명)
@@ -84,6 +86,8 @@ export default function CommunityScreen({ navigation }: any) {
   const [loadingComments, setLoadingComments] = useState(false);
   const [sending, setSending] = useState(false);
 
+  const [username, setUsername] = useState("");
+
   // 차단 목록
   const blockedRef = useRef<Set<number | string>>(new Set());
 
@@ -104,6 +108,23 @@ export default function CommunityScreen({ navigation }: any) {
     }, [])
   );
 
+  // 각 피드의 좋아요 상태 및 개수를 API로 가져오는 함수
+  const loadLikeStatus = useCallback(async (feedId: number) => {
+    try {
+      const [likedStatus, likeList] = await Promise.all([
+        isLiked(feedId),
+        getListOfLike(feedId)
+      ]);
+      
+      const likeCount = Array.isArray(likeList) ? likeList.length : 0;
+      
+      return { isLiked: likedStatus, likeCount };
+    } catch (e: any) {
+      console.error(`[loadLikeStatus] feedId=${feedId} 실패:`, e?.message);
+      return null;
+    }
+  }, []);
+
   // 타임라인 로드
   const load = useCallback(
     async (reset = false) => {
@@ -121,10 +142,27 @@ export default function CommunityScreen({ navigation }: any) {
             JSON.stringify(resp.items[0], null, 2)
           );
         }
-        console.log('[COMM]', tab, 'FIRST RAW ITEM =', JSON.stringify(resp.items[0], null, 2));
+        
         const filtered = resp.items.filter((it) => !blockedRef.current.has((it as any).userId));
 
-        setItems((prev) => (reset ? filtered : [...prev, ...filtered]));
+        // ✅ 각 피드의 좋아요 상태를 API로 가져오기
+        const itemsWithLikeStatus = await Promise.all(
+          filtered.map(async (item) => {
+            const feedId = (item as any).id;
+            const likeStatus = await loadLikeStatus(feedId);
+            
+            if (likeStatus) {
+              return {
+                ...(item as any),
+                isLiked: likeStatus.isLiked,
+                likeCount: likeStatus.likeCount
+              };
+            }
+            return item;
+          })
+        );
+
+        setItems((prev) => (reset ? itemsWithLikeStatus : [...prev, ...itemsWithLikeStatus]));
         setCursor(resp.nextCursor);
         setHasMore(Boolean(resp.nextCursor));
       } catch (e: any) {
@@ -137,7 +175,7 @@ export default function CommunityScreen({ navigation }: any) {
         setLoading(false);
       }
     },
-    [cursor, loading, tab] // ✅ tab 의존성 추가
+    [cursor, loading, tab, loadLikeStatus]
   );
 
   useEffect(() => {
@@ -292,25 +330,95 @@ export default function CommunityScreen({ navigation }: any) {
     ]);
   }, [selectedId, loadComments]);
 
-  // 액션 (좋아요는 기존 로컬 토글)
-  const toggleLike = (id: number) => {
-    setItems((prev) =>
-      prev.map((it) =>
-        (it as any).id === id
-          ? {
-              ...(it as any),
-              likeCount: Math.max(0, Number((it as any).likeCount ?? 0)) + (((it as any).isLiked ? -1 : 1) as number),
-              isLiked: !(it as any).isLiked,
-            }
-          : it
-      )
+  // ✅ 좋아요 토글 - API 상태를 기준으로 하트 변경
+  const toggleLike = async (id: number) => {
+    try {
+      // 1. 좋아요 토글 API 호출
+      await likeFeed(id);
+      console.log('[toggleLike] 좋아요 API 호출 성공');
+
+      // 2. 좋아요 상태 확인 (true/false)
+      const checkIsLiked = await isLiked(id);
+
+      // 3. 좋아요 목록 가져오기 (개수 확인)
+      const likeList = await getListOfLike(id);
+      const likeCount = Array.isArray(likeList) ? likeList.length : 0;
+
+      // 4. UI 업데이트
+      setItems((prev) =>
+        prev.map((it) =>
+          (it as any).id === id
+            ? {
+                ...(it as any),
+                likeCount: likeCount,      // ✅ 실제 좋아요 개수
+                isLiked: checkIsLiked,     // ✅ 실제 좋아요 상태 (true/false)
+              }
+            : it
+        )
+      );
+
+      console.log(`[toggleLike] feedId=${id}, isLiked=${checkIsLiked}, likeCount=${likeCount}`);
+
+    } catch (e: any) {
+      console.error('[toggleLike] 좋아요 실패:', e?.message);
+      Alert.alert('알림', e?.message ?? '좋아요에 실패했어요.');
+    }
+  };
+
+  // Empty State 렌더링 함수
+  const renderEmptyState = () => {
+    if (loading) {
+      return (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyTitle}>로딩 중...</Text>
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.emptyContainer}>
+        {tab === 'FOLLOWING' ? (
+          <>
+            <Text style={styles.emptyIcon}>👥</Text>
+            <Text style={styles.emptyTitle}>팔로우한 사람이 없어요</Text>
+            <Text style={styles.emptySubtitle}>
+              다른 사용자들을 팔로우하고{'\n'}재미있는 콘텐츠를 만나보세요!
+            </Text>
+            <TouchableOpacity
+              style={styles.emptyButton}
+              onPress={() => setTab('EXPLORE')}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.emptyButtonText}>추천 콘텐츠 보기</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <>
+            <Text style={styles.emptyIcon}>📭</Text>
+            <Text style={styles.emptyTitle}>아직 콘텐츠가 없어요</Text>
+            <Text style={styles.emptySubtitle}>
+              첫 번째 게시물을 작성해보세요!
+            </Text>
+          </>
+        )}
+      </View>
     );
   };
 
-  const toggleFollow = (userId?: number) => {
-    if (!userId) return;
-    Alert.alert('팔로우', '나중에 API 연결!');
+
+  const toggleFollow = async (username: string) => {
+    if (!username) {
+      Alert.alert('팔로우', 'username을 전송할 수 없습니다.');
+      return;
+    }
+    try {
+      const resp = await followUser(username);
+      Alert.alert('성공', '팔로우 했습니다!');
+    } catch (e: any) {
+      Alert.alert('알림', e?.message ?? '불러오기 실패');
+    }
   };
+  
 
   const handleBlockUser = async (userId?: number) => {
     if (!userId) return;
@@ -348,7 +456,7 @@ export default function CommunityScreen({ navigation }: any) {
 
     const userId = Number(rawUserId);
 
-    const uname =
+    const uname = 
       (item as any).username ||
       (item as any).userName ||
       (item as any).author ||
@@ -380,6 +488,7 @@ export default function CommunityScreen({ navigation }: any) {
         {/* 우측 액션 */}
         <View style={styles.actions}>
           <TouchableOpacity onPress={() => toggleLike((item as any).id)} style={styles.actionBtn} activeOpacity={0.8}>
+            {/* ✅ isLiked가 true면 채워진 하트, false면 빈 하트 */}
             <Image
               source={(item as any).isLiked ? HeartOutline : Heart}
               style={styles.icon}
@@ -419,7 +528,7 @@ export default function CommunityScreen({ navigation }: any) {
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <Text style={styles.title}>@{uname}</Text>
             <TouchableOpacity
-              onPress={() => Number.isFinite(userId) && userId > 0 && toggleFollow(userId)}
+              onPress={() => Number.isFinite(userId) && userId > 0 && toggleFollow(uname)}
               style={styles.followBtn}
               activeOpacity={0.85}
             >
@@ -471,25 +580,31 @@ export default function CommunityScreen({ navigation }: any) {
             style={[styles.tab, tab === k && styles.tabOn]}
             activeOpacity={0.9}
           >
-            <Text style={[styles.tabTxt, tab === k && styles.tabTxtOn]}>{k === 'FOLLOWING' ? '팔로잉' : '익스플로어'}</Text>
+            <Text style={[styles.tabTxt, tab === k && styles.tabTxtOn]}>{k === 'FOLLOWING' ? '팔로잉' : '전체 추천'}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
       {/* 틱톡형 세로 스와이프 */}
-      <FlatList
-        data={items}
-        keyExtractor={(it: any) => String((it as any).id)}
-        renderItem={renderItem}
-        pagingEnabled
-        showsVerticalScrollIndicator={false}
-        onEndReachedThreshold={0.85}
-        onEndReached={onEndReached}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" />}
-        getItemLayout={(_, index) => ({ length: SCREEN_H, offset: SCREEN_H * index, index })}
-        onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={viewabilityConfig}
-      />
+      {items.length > 0 ? (
+        <FlatList
+          data={items}
+          keyExtractor={(it: any) => String((it as any).id)}
+          renderItem={renderItem}
+          pagingEnabled
+          showsVerticalScrollIndicator={false}
+          onEndReachedThreshold={0.85}
+          onEndReached={onEndReached}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" />}
+          getItemLayout={(_, index) => ({ length: SCREEN_H, offset: SCREEN_H * index, index })}
+          onViewableItemsChanged={onViewableItemsChanged}
+          viewabilityConfig={viewabilityConfig}
+        />
+      ) : (
+        renderEmptyState()
+      )}
+
+
 
       {/* 댓글 모달 */}
       <Modal
@@ -558,7 +673,45 @@ export default function CommunityScreen({ navigation }: any) {
   );
 }
 
+
 const styles = StyleSheet.create({
+
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#000',
+    paddingHorizontal: 32,
+  },
+  emptyIcon: {
+    fontSize: 64,
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#fff',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    fontSize: 15,
+    color: '#9CA3AF',
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 24,
+  },
+  emptyButton: {
+    backgroundColor: '#587dc4',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  emptyButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
   tabs: {
     position: 'absolute',
     top: Platform.OS === 'ios' ? 60 : 20,

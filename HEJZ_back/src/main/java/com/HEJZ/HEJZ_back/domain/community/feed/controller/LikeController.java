@@ -5,6 +5,8 @@ import com.HEJZ.HEJZ_back.domain.community.feed.dto.FeedLikeRequest;
 import com.HEJZ.HEJZ_back.domain.community.feed.service.LikeService;
 import com.HEJZ.HEJZ_back.global.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import software.amazon.awssdk.regions.servicemetadata.ApiEcrPublicServiceMetadata;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -76,6 +78,21 @@ public class LikeController {
         String username = authentication.getName();
 
         ApiResponse<Object> result = likeService.getMyListOfLike(username);
+
+        return ResponseEntity.ok(result);
+    }
+
+    /*
+     * 호출 url: http://localhost:8080/api/feeds/like/isliked
+     * 설명: 좋아요 눌렀는지 확인
+     * 메소드: post
+     */
+    @PostMapping("/isliked")
+    public ResponseEntity<ApiResponse<Object>> isLiked(@RequestBody FeedLikeRequest req) {
+        Authentication authentication = SecurityContextHolder.getContext()
+                .getAuthentication();
+        String username = authentication.getName();
+        ApiResponse<Object> result = likeService.isLiked(req.feedId(), username);
 
         return ResponseEntity.ok(result);
     }

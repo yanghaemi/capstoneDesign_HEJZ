@@ -55,9 +55,9 @@ public class FeedEntity {
     @JsonManagedReference
     private List<CommentEntity> comments;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
-    private SavedSong song;
+    // @ManyToOne(fetch = FetchType.LAZY)
+    // @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
+    // private SavedSong song;
 
     @Column(name = "emotion")
     private String emotion;
