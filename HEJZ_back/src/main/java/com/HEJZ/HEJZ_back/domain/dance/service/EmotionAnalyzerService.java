@@ -20,12 +20,54 @@ public class EmotionAnalyzerService {
     @Value("${openai.api.model}")  // application.yml에 정의
     private String openaiModel;
 
-
     private static final String ENDPOINT = "https://api.openai.com/v1/chat/completions";
     private static final List<String> EMOTIONS = List.of(
             "사랑", "슬픔", "행복", "분노", "희망", "열정", "자신감", "혐오", "공포", "놀람", "즐거움", "차분함", "도전", "매혹"
     );
 
+    /**
+     * ✅ 안전 보완 래퍼
+     * - 모델이 enum 밖 감정을 내놔도 에러 없이 보정
+     *   우선순위: [모델 결과] → [사용자 선택 감정] → [장르 매핑 중 1개] → [행복]
+     */
+    public EmotionEnum analyzeEmotionSafe(String lyricsChunk, String selectedEmotion, String selectedGenre) {
+        // 1) 모델 시도
+        try {
+            return analyzeEmotion(lyricsChunk);
+        } catch (Exception ignore) {}
+
+        // 2) 사용자 선택 감정 보완
+        EmotionEnum byUser = tryToEnum(selectedEmotion);
+        if (byUser != null) return byUser;
+
+        // 3) 장르 기반 보완 (GENRE_EMOTION_MAPPING에서 1개 선택)
+        EmotionEnum byGenre = pickFromGenre(selectedGenre);
+        if (byGenre != null) return byGenre;
+
+        // 4) 최종 폴백
+        return EmotionEnum.행복;
+    }
+
+    private EmotionEnum tryToEnum(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        try {
+            return EmotionEnum.fromString(raw);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private EmotionEnum pickFromGenre(String genreName) {
+        if (genreName == null || genreName.isBlank()) return null;
+        var map = MotionRecommenderService.getGenreEmotionMapping();
+        var list = map.getOrDefault(genreName.trim(), java.util.Collections.emptyList());
+        if (list.isEmpty()) return null;
+        // 정책: 3개 중 랜덤 1개(필요하면 list.get(0)로 고정 선택해도 됨)
+        String chosen = list.get(new java.util.Random().nextInt(list.size()));
+        return tryToEnum(chosen);
+    }
+
+    // === 기존 모델 호출 ===
     public EmotionEnum analyzeEmotion(String lyricsChunk) {
         RestTemplate restTemplate = new RestTemplate();
 
@@ -41,7 +83,8 @@ public class EmotionAnalyzerService {
                         Map.of("role", "system", "content", "다음 가사 2줄을 읽고 아래 감정 키워드 중 가장 어울리는 하나만 정확히 골라줘."),
                         Map.of("role", "user", "content", prompt)
                 ),
-                "temperature", 0.3
+                // 🔻 변동성 최소화
+                "temperature", 0.0
         );
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
@@ -50,16 +93,18 @@ public class EmotionAnalyzerService {
         String reply = extractReply(response);
         return EmotionEnum.fromString(reply);
     }
-    /*public EmotionEnum analyzeEmotion(String lyricsChunk) {
-        System.out.println("▶ 테스트용 가사: " + lyricsChunk);
-        return EmotionEnum.행복;  // 테스트용으로 무조건 행복 반환
-    }*/
 
+    /* 테스트용 강제 반환
+    public EmotionEnum analyzeEmotion(String lyricsChunk) {
+        System.out.println("▶ 테스트용 가사: " + lyricsChunk);
+        return EmotionEnum.행복;
+    }
+    */
 
     private String buildPrompt(String lyricsChunk) {
         return String.format("""
-            다음 감정 키워드 중 하나만 골라서 출력해줘.  
-            🚫 아래 키워드 외의 단어는 절대 사용하지 마!
+            다음 감정 키워드 중 하나만 골라서 출력해줘.
+            🚫 아래 키워드 외의 단어는 절대 사용하지 마! 오직 키워드 1개만!
 
             감정 키워드 목록: [%s]
 
@@ -68,10 +113,7 @@ public class EmotionAnalyzerService {
 
             응답 형식 예시:
             열정
-
-            위 목록 중에서 하나만 골라서 정확히 감정 키워드만 출력해줘. 다른 설명 없이 감정 하나만!
 """, String.join(", ", EMOTIONS), lyricsChunk);
-
     }
 
     private String extractReply(ResponseEntity<Map> response) {
@@ -111,5 +153,4 @@ public class EmotionAnalyzerService {
             throw new CustomException(ErrorCode.CHATGPT_API_FAILED);
         }
     }
-
 }

@@ -106,7 +106,11 @@ public class LyricsEmotionController {
             }
 
             // 로직 3, 4: 가사 분석 감정 기반 추천 (2개)
-            EmotionEnum analyzedEmotion = emotionAnalyzerService.analyzeEmotion(chunk);
+            // ✅ 변경: 안전 보완 메서드 사용
+            EmotionEnum analyzedEmotion = emotionAnalyzerService.analyzeEmotionSafe(
+                    chunk, request.getSelectedEmotion(), selectedGenre
+            );
+
             List<String> analyzedMotions = motionRecommenderService.recommendTopMotionsByEmotionExcluding(
                     analyzedEmotion, 2, usedMotions);
 

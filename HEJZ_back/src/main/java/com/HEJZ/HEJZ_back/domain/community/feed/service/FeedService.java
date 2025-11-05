@@ -280,9 +280,14 @@ public class FeedService {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        SavedSong song = songRepository.findById(request.songId())
-                .orElseThrow(() -> new RuntimeException("노래를 찾지 못했습니다."));
-
+        // SavedSong song = songRepository.findById(request.songId())
+                // .orElseThrow(() -> new RuntimeException("노래를 찾지 못했습니다."));
+        // 🔧 songId가 있을 때만 조회, 없으면 null
+        SavedSong song = null;
+        if (request.songId() != null) {
+            song = songRepository.findById(request.songId())
+                .orElse(null);  // 못 찾으면 null (에러 안 냄)
+        }
         FeedEntity feed = FeedEntity.builder()
                 .user(user)
                 .content(request.content())
