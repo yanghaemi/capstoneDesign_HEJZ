@@ -1,5 +1,5 @@
-// src/screens/DanceRecommendScreen.tsx
-// Lyrics.txt(문자열) → 2줄씩 분석 POST / 구간 반복 재생은 lyricsTiming.json으로
+// src/screens/Dance/DanceRecommendScreen.tsx
+// DB lyrics_json 기반: 마지막 글자가 \n 인 토큰을 2번 만나면 2줄 블록으로 루프
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
@@ -11,265 +11,197 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import Video from 'react-native-video';
-import RNCSlider from '@react-native-community/slider';
+import Slider from '@react-native-community/slider';
 import RNSoundPlayer from 'react-native-sound-player';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import RNFS from 'react-native-fs';
 
-// ★ 파일 위치
-// - Android: android/app/src/main/assets/Lyrics.txt  (없으면 assets 폴더 만들기)
-// - 타이밍 JSON은 프로젝트 자산으로 import (아래 경로를 네 프로젝트에 맞게 조정)
-import timingWords from '../../../src/assets/Document/lyricsTiming.json'; // [{word,startS,endS},...]
+import { BASE_URL } from '../../api/baseUrl';
+import {
+  analyzeLyricsByTwoLines,
+  getMotionUrl,
+  saveEmotionSelections,
+  type LyricsGroupRecommendation,
+  type SelectionGroupDto,
+} from '../../api/dance';
 
-// ================== 유틸: 텍스트 → 2줄 블록 ==================
-type TextBlock = { lines: [string, string] };
+// ====== 타입 ======
+type LWord = { word: string; startS: number; endS: number };
+type TimingBlock = { start: number; end: number };
 
-// 섹션 태그([Verse] 등) 제거하고 2줄씩 묶기
-function splitLyricsToBlocks(lyricsText: string): TextBlock[] {
-  const cleaned = (lyricsText || '').replace(/\[(.*?)\]/g, '').trim();
-  const lines = cleaned
-    .split(/\r?\n/)
-    .map(s => s.trim())
-    .filter(s => s.length > 0);
-
-  const out: TextBlock[] = [];
-  for (let i = 0; i < lines.length; i += 2) {
-    out.push({ lines: [lines[i] ?? '', lines[i + 1] ?? ' '] });
-  }
-  return out;
-}
-
-// ================== 유틸: 타이밍 → 2줄 블록 ==================
-type AlignedWord = { word: string; startS: number; endS: number };
-type TimingBlock = { lines: [string, string]; start: number; end: number };
-
-function timingToBlocks(words: AlignedWord[]): TimingBlock[] {
-  const lines: { text: string; start: number; end: number }[] = [];
-  let cur = '';
-  let lineStart: number | null = null;
-  let lastEnd: number | null = null;
-
-  const flush = () => {
-    const t = cur.replace(/\[(.*?)\]/g, '').trim();
-    if (t && lineStart != null && lastEnd != null) {
-      lines.push({ text: t, start: lineStart, end: lastEnd });
-    }
-    cur = '';
-    lineStart = null;
-    lastEnd = null;
-  };
-
-  for (const w of (words || []) as AlignedWord[]) {
-    const parts = String(w.word ?? '').split('\n'); // 같은 토큰 내 \n 처리
-    for (let i = 0; i < parts.length; i++) {
-      if (cur === '') lineStart = w.startS;
-      cur += parts[i];
-      lastEnd = w.endS;
-      if (i < parts.length - 1) flush(); // 개행이 있었음 → 라인 종료
-      else cur += ' '; // 단어 간 공백
-    }
-  }
-  flush();
-
-  const blocks: TimingBlock[] = [];
-  for (let i = 0; i < lines.length; i += 2) {
-    const l1 = lines[i];
-    const l2 = lines[i + 1];
-    if (l2) blocks.push({ lines: [l1.text, l2.text], start: l1.start, end: l2.end });
-    else blocks.push({ lines: [l1.text, ' '], start: l1.start, end: l1.end });
-  }
-  return blocks;
-}
-
-// ================== 유틸: 블록 정렬(길이가 다르면 최소 길이 기준) ==================
-type AlignedBlock = { lines: [string, string]; start: number; end: number };
-
-function alignBlocksSimple(textBlocks: TextBlock[], timingBlocks: TimingBlock[]): AlignedBlock[] {
-  const n = Math.min(textBlocks.length, timingBlocks.length);
-  const out: AlignedBlock[] = [];
-  for (let i = 0; i < n; i++) {
-    out.push({
-      lines: textBlocks[i].lines,
-      start: timingBlocks[i].start,
-      end: timingBlocks[i].end,
-    });
-  }
-  return out;
-}
-
-// ================== API 공통 ==================
-const API_BASE = 'http://52.78.174.239:8080';
-
-async function authHeaders() {
-  const token = await AsyncStorage.getItem('token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
-async function getText(url: string): Promise<string> {
-  const headers = await authHeaders();
-  const res = await fetch(url, { headers });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.text();
-}
-
-// 블록(2줄) 단위 분석 요청
-async function analyzeTwoLines(pair: string, emotion?: string, genre?: string) {
-  const headers = await authHeaders();
-  const body: any = { lyrics: pair };
-  if (emotion) body.selectedEmotion = emotion;
-  if (genre) body.selectedGenre = genre;
-
-  const res = await fetch(`${API_BASE}/api/emotion/analyze`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json; charset=UTF-8', ...headers },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) {
-    const raw = await res.text().catch(() => '');
-    throw new Error(raw || `HTTP ${res.status}`);
-  }
-  const json = await res.json().catch(() => ({}));
-  const r = Array.isArray(json?.lyricsRecommendations) ? json.lyricsRecommendations[0] : json;
-  const candidates = [
-    r?.selectedEmotionMotion,
-    r?.selectedGenreMotion,
-    r?.analyzedMotion1,
-    r?.analyzedMotion2,
-  ].filter(Boolean) as string[];
-  return candidates;
-}
-
-// 동시성 제한 병렬 분석(기본 3)
-async function analyzeBlocks(textBlocks: TextBlock[], concurrency = 3) {
-  const n = textBlocks.length;
-  const out: string[][] = Array.from({ length: n }, () => []);
-  let inFlight = 0;
-  let idx = 0;
-
-  return new Promise<string[][]>((resolve) => {
-    const spawn = () => {
-      while (inFlight < concurrency && idx < n) {
-        const i = idx++;
-        inFlight++;
-        const pair = `${textBlocks[i].lines[0]}\n${textBlocks[i].lines[1]}`;
-        analyzeTwoLines(pair)
-          .then((cands) => { out[i] = cands; })
-          .catch((e) => { console.log('analyze fail', i, e); out[i] = []; })
-          .finally(() => {
-            inFlight--;
-            if (idx < n) spawn();
-            else if (inFlight === 0) resolve(out);
-          });
-      }
-    };
-    spawn();
-  });
-}
-
-// ================== 화면 ==================
 type Props = {
-  route: { params: { p_title: string; p_filepath: string } };
+  route: {
+    params: {
+      p_id: string;
+      p_title: string;
+      p_filepath: string;
+      p_emotion: string;
+      p_genre: string;
+      p_plainLyrics?: string;
+      p_lyricsJsonRaw?: string;
+    };
+  };
   navigation: any;
 };
 
+// ====== 유틸 ======
+const endsWithNewline = (s: string) => /\n$/.test(s);
+
+// lyrics_json → 2줄 블록(마지막 글자가 \n 인 토큰을 2번 만나면 한 블록)
+function buildTimingBlocksFromLyricsJson(words: LWord[]): TimingBlock[] {
+  const blocks: TimingBlock[] = [];
+  if (!Array.isArray(words) || words.length === 0) return blocks;
+
+  let blockStart: number | null = null;
+  let newlineCount = 0;
+
+  for (const w of words) {
+    if (blockStart == null) blockStart = w.startS;
+
+    if (endsWithNewline(w.word || '')) {
+      newlineCount += 1;
+      if (newlineCount === 2) {
+        blocks.push({ start: blockStart, end: w.endS });
+        blockStart = null;
+        newlineCount = 0;
+      }
+    }
+  }
+
+  // 남은 꼬리(줄 1개만 끝났거나 \n이 안 나온 경우)
+  if (blockStart != null) {
+    const lastEnd = words[words.length - 1]?.endS ?? blockStart;
+    blocks.push({ start: blockStart, end: lastEnd });
+  }
+
+  return blocks;
+}
+
+// lyricsRecommendations 항목에서 후보 모션 4개 추출(중복 제거)
+function extractCandidates(r: LyricsGroupRecommendation): string[] {
+  const list = [
+    r.selectedEmotionMotion,
+    r.selectedGenreMotion,
+    r.analyzedMotion1,
+    r.analyzedMotion2,
+  ].filter(Boolean) as string[];
+  // 중복 제거, 최대 4개
+  return Array.from(new Set(list)).slice(0, 4);
+}
+
+// 가사/타이밍 소스 확보
+function fromPassedParams(plain?: string, jsonRaw?: string) {
+  const plainLyrics = plain ?? '';
+  let arr: any[] = [];
+  try { arr = jsonRaw ? JSON.parse(jsonRaw) : []; } catch { arr = []; }
+  const lyricsWords = (arr || []).map(x => ({
+    word: String(x?.word ?? ''),
+    startS: Number(x?.startS ?? 0),
+    endS: Number(x?.endS ?? 0),
+  }));
+  return { plainLyrics, lyricsWords };
+}
+
+
 export default function DanceRecommendScreen({ route, navigation }: Props) {
-  const { p_title, p_filepath } = route.params;
+  const { p_id, p_title, p_filepath, p_emotion, p_genre } = route.params;
 
-  // 오디오 상태
-  const [duration, setDuration] = useState(0);
-  const [currentTime, setCurrentTime] = useState(0);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  // 전체 상태
+  const [loading, setLoading] = useState(true);
+  const [analyzeErr, setAnalyzeErr] = useState<string | null>(null);
 
-  // 블록/루프/추천
-  const [blocks, setBlocks] = useState<AlignedBlock[]>([]);
+  // 분석 & 타이밍
+  const [recs, setRecs] = useState<LyricsGroupRecommendation[]>([]);
+  const [timing, setTiming] = useState<TimingBlock[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [loopStart, setLoopStart] = useState<number | null>(null);
-  const [loopEnd, setLoopEnd] = useState<number | null>(null);
 
-  const [recsByBlock, setRecsByBlock] = useState<string[][]>([]);
+  // 후보 포인터(블록마다 현재 후보 idx)
   const [ptrByBlock, setPtrByBlock] = useState<number[]>([]);
   const [currentMotionUrl, setCurrentMotionUrl] = useState<string | null>(null);
   const [loadingMotion, setLoadingMotion] = useState(false);
-  const [loading, setLoading] = useState(true);
 
-  // 선택 누적
-  const [selections, setSelections] = useState<{ lyricsGroup: string; selectedMotionIds: string[] }[]>([]);
+  // 오디오 루프 상태
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [loopStart, setLoopStart] = useState<number | null>(null);
+  const [loopEnd, setLoopEnd] = useState<number | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const isFinished = useMemo(() => currentIndex >= blocks.length, [currentIndex, blocks.length]);
+  // 선택 누적(블록별 1개씩)
+  const [selections, setSelections] = useState<SelectionGroupDto[]>([]);
 
-  // 1) 초기: Lyrics.txt 읽기 → 2줄 블록 / timingWords → 2줄 타이밍 → 정렬 → 블록 배열 구성
+  const isFinished = useMemo(() => currentIndex >= recs.length, [currentIndex, recs.length]);
+
+  // ========== 1) 초기: 곡 상세 → 분석 → 타이밍 ==========
   useEffect(() => {
     (async () => {
       try {
-        // 텍스트(분석용)
-        const lyricsText = await RNFS.readFileAssets('Lyrics.txt', 'utf8'); // Android assets
-        const textBlocks = splitLyricsToBlocks(lyricsText);
+        setLoading(true);
+        const { p_emotion, p_genre, p_plainLyrics, p_lyricsJsonRaw } = route.params;
 
-        // 타이밍(루프용)
-        const timingBlocks = timingToBlocks(timingWords as AlignedWord[]);
+        // 상세 API 호출 없이, 네비로 받은 값만 사용
+        const { plainLyrics, lyricsWords } = fromPassedParams(p_plainLyrics, p_lyricsJsonRaw);
+        if (!plainLyrics?.trim()) throw new Error('plain_lyrics가 없습니다.');
+        if (!lyricsWords.length)   throw new Error('lyrics_json(타이밍)이 없습니다.');
 
-        // 정렬(길이 다르면 최소값 기준)
-        const aligned = alignBlocksSimple(textBlocks, timingBlocks);
-        if (!aligned.length) throw new Error('블록이 없습니다.');
-        setBlocks(aligned);
+        const analysis = await analyzeLyricsByTwoLines(plainLyrics, p_emotion, p_genre);
+        const timingBlocks = buildTimingBlocksFromLyricsJson(lyricsWords);
 
-        // 2) 블록별 2줄만 body에 넣어 분석 (동시성 3)
-        const recs = await analyzeBlocks(textBlocks, 3);
-        setRecsByBlock(recs);
-        setPtrByBlock(new Array(recs.length).fill(0));
+        const n = Math.min(analysis.length, timingBlocks.length);
+        setRecs(analysis.slice(0, n));
+        setTiming(timingBlocks.slice(0, n));
+        setPtrByBlock(new Array(n).fill(0));
 
-        // 첫 루프 구간
-        setLoopStart(aligned[0].start);
-        setLoopEnd(aligned[0].end);
-      } catch (e: any) {
-        Alert.alert('오류', e?.message ?? '가사/타이밍 로드 실패');
+        if (n > 0) {
+          setCurrentIndex(0);
+          setLoopStart(timingBlocks[0].start);
+          setLoopEnd(timingBlocks[0].end);
+          try { RNSoundPlayer.seek(timingBlocks[0].start + 0.01); } catch {}
+          setCurrentTime(timingBlocks[0].start);
+        }
+      } catch (e:any) {
+        Alert.alert('오류', e?.message ?? '초기 로드 실패');
       } finally {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [route.params]);
 
-  // 2) 현재 블록/포인터 변경 시 presigned URL 로드
+  // ========== 2) 현재 블록/포인터가 바뀌면 후보 모션 URL 로드 ==========
   useEffect(() => {
     if (loading || isFinished) { setCurrentMotionUrl(null); return; }
-    const recs = recsByBlock[currentIndex] || [];
+    const rec = recs[currentIndex];
+    if (!rec) { setCurrentMotionUrl(null); return; }
+    const candidates = extractCandidates(rec);
     const ptr = ptrByBlock[currentIndex] ?? 0;
-    const motionId = recs[ptr];
+    const motionId = candidates[ptr];
     if (!motionId) { setCurrentMotionUrl(null); return; }
 
     (async () => {
       try {
         setLoadingMotion(true);
-        const url = await getText(`${API_BASE}/api/motion/${encodeURIComponent(motionId)}`);
-        setCurrentMotionUrl(url);
+        const url = await getMotionUrl(motionId);
+        setCurrentMotionUrl(url || null);
       } catch {
         setCurrentMotionUrl(null);
       } finally {
         setLoadingMotion(false);
       }
     })();
-  }, [currentIndex, ptrByBlock, recsByBlock, loading, isFinished]);
+  }, [currentIndex, ptrByBlock, recs, loading, isFinished]);
 
-  // 3) 블록 바뀌면 루프 구간 갱신
+  // ========== 3) 블록 바뀌면 루프 갱신 ==========
   useEffect(() => {
     if (isFinished) { setLoopStart(null); setLoopEnd(null); return; }
-    const blk = blocks[currentIndex];
+    const blk = timing[currentIndex];
     if (blk) {
       setLoopStart(blk.start);
       setLoopEnd(blk.end);
       try { RNSoundPlayer.seek(blk.start + 0.01); } catch {}
       setCurrentTime(blk.start);
     }
-  }, [currentIndex, blocks, isFinished]);
+  }, [currentIndex, timing, isFinished]);
 
-  // 4) 후보 없으면 자동 스킵
-  useEffect(() => {
-    if (loading || isFinished) return;
-    const total = recsByBlock[currentIndex]?.length ?? 0;
-    if (total === 0) setCurrentIndex(i => i + 1);
-  }, [currentIndex, recsByBlock, loading, isFinished]);
-
-  // 5) 플레이/정지/탐색(+루프)
+  // ========== 4) 오디오 재생 컨트롤(루프) ==========
   const audioUrl = p_filepath;
   const handlePlay = async () => {
     try {
@@ -277,7 +209,8 @@ export default function DanceRecommendScreen({ route, navigation }: Props) {
       if (audioUrl?.startsWith('http') || audioUrl?.startsWith('file')) {
         await RNSoundPlayer.playUrl(audioUrl);
       } else {
-        RNSoundPlayer.playSoundFile('song1', 'mp3'); // 앱 번들 mp3 사용시
+        Alert.alert('재생 오류', '유효한 오디오 URL이 아닙니다.');
+        return;
       }
       if (loopStart != null) {
         setTimeout(() => { try { RNSoundPlayer.seek(loopStart + 0.01); } catch {} }, 250);
@@ -322,9 +255,11 @@ export default function DanceRecommendScreen({ route, navigation }: Props) {
     };
   }, []);
 
-  // 6) 후보 순환/선택/저장
+  // ========== 5) 후보 변경/선택 ==========
   const cycleCandidate = () => {
-    const total = recsByBlock[currentIndex]?.length ?? 0;
+    const rec = recs[currentIndex];
+    if (!rec) return;
+    const total = extractCandidates(rec).length;
     if (total <= 1) return;
     setPtrByBlock(prev => {
       const next = [...prev];
@@ -332,60 +267,44 @@ export default function DanceRecommendScreen({ route, navigation }: Props) {
       return next;
     });
   };
-  const selectCurrent = async () => {
-    if (isFinished) return;
-    const recs = recsByBlock[currentIndex] || [];
-    const ptr = ptrByBlock[currentIndex] ?? 0;
-    const motionId = recs[ptr];
-    if (!motionId) return Alert.alert('알림', '선택할 후보가 없어요.');
 
-    const lyr = blocks[currentIndex]?.lines ?? ['', ''];
-    const lyricsGroup = `${lyr[0]}\n${lyr[1]}`;
+  const selectCurrent = () => {
+    if (isFinished) return;
+    const rec = recs[currentIndex];
+    const cands = extractCandidates(rec);
+    const ptr = ptrByBlock[currentIndex] ?? 0;
+    const motionId = cands[ptr];
+    if (!motionId) {
+      Alert.alert('알림', '선택할 후보가 없어요.');
+      return;
+    }
+
+    // 블록의 2줄 텍스트는 분석 응답의 lyricsGroup 사용
+    const lyricsGroup = rec.lyricsGroup || '';
+
     setSelections(prev => {
-      const x = [...prev];
-      const idx = x.findIndex(s => s.lyricsGroup === lyricsGroup);
-      if (idx >= 0) x[idx] = { lyricsGroup, selectedMotionIds: [motionId] };
-      else x.push({ lyricsGroup, selectedMotionIds: [motionId] });
-      return x;
+      const list = [...prev];
+      const idx = list.findIndex(x => x.lyricsGroup === lyricsGroup);
+      if (idx >= 0) list[idx] = { lyricsGroup, selectedMotionIds: [motionId] };
+      else list.push({ lyricsGroup, selectedMotionIds: [motionId] });
+      return list;
     });
+
     setCurrentIndex(i => i + 1);
   };
 
-  // 7) 마지막에 bulk 저장 + 최종 확정
+  // ========== 6) 마지막에 bulk 저장 ==========
   useEffect(() => {
-    if (!isFinished || !selections.length) return;
     (async () => {
+      if (!isFinished || selections.length === 0) return;
       try {
-        const headers = await authHeaders();
-        // bulk 저장
-        await fetch(`${API_BASE}/api/emotion/selection/bulk`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json; charset=UTF-8', ...headers },
-          body: JSON.stringify(selections),
-        }).then(r => { if (!r.ok) throw new Error('bulk 실패'); });
-
-        // 최종 확정
-        const ids = selections.map(s => s.selectedMotionIds[0]).filter(Boolean);
-        const res = await fetch(`${API_BASE}/api/emotion/selections/save`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json; charset=UTF-8', ...headers },
-          body: JSON.stringify(ids),
-        });
-        if (!res.ok) throw new Error('확정 실패');
-        const j = await res.json().catch(() => ({}));
-        await AsyncStorage.setItem('selectedMotionIds', JSON.stringify(ids));
-        Alert.alert('완료', j?.message || '선택한 안무가 저장되었습니다.');
+        const msg = await saveEmotionSelections(selections);
+        Alert.alert('완료', msg || '선택한 안무가 저장되었습니다.');
       } catch (e: any) {
         Alert.alert('오류', e?.message ?? '저장 중 오류가 발생했어요.');
       }
     })();
   }, [isFinished, selections]);
-
-  // 8) 녹화 화면 이동
-  const goToRecordScreen = () => {
-    handleStop();
-    navigation.navigate('RecordScreen');
-  };
 
   // ========== 렌더 ==========
   if (loading) {
@@ -396,15 +315,23 @@ export default function DanceRecommendScreen({ route, navigation }: Props) {
       </View>
     );
   }
+  if (analyzeErr) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={{ color: '#fff' }}>{analyzeErr}</Text>
+      </View>
+    );
+  }
 
-  const blkCnt = blocks.length;
-  const cur = blocks[currentIndex];
-  const currentCandidates = recsByBlock[currentIndex] || [];
+  const blkCnt = recs.length;
+  const rec = recs[currentIndex];
+  const lyricsLines = (rec?.lyricsGroup || '').split('\n').slice(0, 2);
+  const cands = rec ? extractCandidates(rec) : [];
   const ptr = ptrByBlock[currentIndex] ?? 0;
 
   return (
     <ImageBackground
-      source={require('../../../src/assets/background/DanceRecommendBackground.png')}
+      source={require('../../assets/background/DanceRecommendBackground.png')}
       style={styles.background}
       resizeMode="cover"
     >
@@ -415,14 +342,14 @@ export default function DanceRecommendScreen({ route, navigation }: Props) {
 
         {!isFinished ? (
           <>
+            {/* 분석 응답에서 온 2줄 가사 표시 */}
             <View style={styles.lyricsBox}>
-              {cur?.lines?.map((ln, i) => (
-                <Text key={i} style={styles.lyricLine}>{ln}</Text>
-              ))}
+              <Text style={styles.lyricLine}>{lyricsLines[0] || ''}</Text>
+              <Text style={styles.lyricLine}>{lyricsLines[1] || ''}</Text>
             </View>
 
             <Text style={styles.candidateBadgeText}>
-              {currentCandidates.length ? `후보 ${ptr + 1}/${currentCandidates.length}` : '후보 없음'}
+              {cands.length ? `후보 ${ptr + 1}/${cands.length}` : '후보 없음'}
             </Text>
 
             {loadingMotion ? (
@@ -445,25 +372,28 @@ export default function DanceRecommendScreen({ route, navigation }: Props) {
             )}
 
             <View style={styles.controls}>
+              {/* reset = 다음 후보 보기 */}
               <TouchableOpacity onPress={cycleCandidate} style={[styles.controlButton, styles.resetButton]}>
-                <Text style={styles.controlText}>⏹ 후보변경</Text>
+                <Text style={styles.controlText}>⏭ 후보 변경</Text>
               </TouchableOpacity>
+
+              {/* check = 현재 후보로 선택 후 다음 블록 */}
               <TouchableOpacity onPress={selectCurrent} style={[styles.controlButton, styles.playButton]}>
                 <Text style={styles.controlText}>✔ 선택</Text>
               </TouchableOpacity>
             </View>
 
-            {currentCandidates.length === 0 && (
+            {cands.length === 0 && (
               <TouchableOpacity
                 onPress={() => setCurrentIndex(i => i + 1)}
-                style={[styles.controlButton, styles.resetButton]}
+                style={[styles.controlButton, styles.resetButton, { alignSelf: 'center' }]}
               >
                 <Text style={styles.controlText}>다음 블록으로</Text>
               </TouchableOpacity>
             )}
           </>
         ) : (
-          <TouchableOpacity onPress={goToRecordScreen} style={[styles.controlButton, styles.playButton]}>
+          <TouchableOpacity onPress={() => navigation.navigate('RecordScreen')} style={[styles.controlButton, styles.playButton]}>
             <Text style={styles.controlText}>녹화하러 가기</Text>
           </TouchableOpacity>
         )}
@@ -482,7 +412,7 @@ export default function DanceRecommendScreen({ route, navigation }: Props) {
           </TouchableOpacity>
         </View>
 
-        <RNCSlider
+        <Slider
           value={currentTime}
           minimumValue={0}
           maximumValue={Math.max(duration, 0)}
@@ -501,7 +431,7 @@ export default function DanceRecommendScreen({ route, navigation }: Props) {
   );
 }
 
-// ================== 스타일 ==================
+// ====== 스타일 ======
 const styles = StyleSheet.create({
   background: { flex: 1 },
   motionCard: {
@@ -513,7 +443,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
   },
   motionTitle: { fontSize: 18, fontWeight: '800', color: '#111' },
+
   lyricsBox: { marginTop: 8, marginBottom: 6 },
+  lyricLine: { fontSize: 16, color: '#333', textAlign: 'center', marginVertical: 2 },
+
   candidateBadgeText: {
     alignSelf: 'flex-start',
     paddingHorizontal: 10,
@@ -524,6 +457,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     fontWeight: '600',
   },
+
   video: { width: '100%', height: 220, backgroundColor: '#000', borderRadius: 12 },
 
   playerCard: {
@@ -554,8 +488,6 @@ const styles = StyleSheet.create({
   resetButton: { backgroundColor: '#81C147' },
   stopButton: { backgroundColor: '#FE4B4B' },
   controlText: { color: '#fff', fontWeight: 'bold' },
-
-  lyricLine: { fontSize: 16, color: '#333', textAlign: 'center', marginVertical: 2 },
 
   slider: { width: '100%', height: 40, marginBottom: 6 },
   timeText: { fontSize: 13, color: '#666' },

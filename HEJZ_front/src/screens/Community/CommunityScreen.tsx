@@ -19,11 +19,14 @@ import LinearGradient from 'react-native-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { fetchUserInfoById } from '../../api/user';
-import { fetchTimeline } from '../../api/feed';
+import { fetchTimeline,fetchGlobal } from '../../api/feed';
 import type { FeedItemDto } from '../../api/types/feed';
 import { BASE_URL } from '../../api/baseUrl';
-import { getAuthToken } from '../../api/auth';
-
+// ✅ 댓글 API 연결 (복수형 파일명)
+import { createComment, getCommentsByFeed, deleteComment, type CommentDto } from '../../api/comment';
+import Heart from '../../assets/icon/heart.png';
+import HeartOutline from '../../assets/icon/heart-outline.png';
+import CommentIcon from '../../assets/icon/comments.png';
 const { height: SCREEN_H, width: SCREEN_W } = Dimensions.get('window');
 
 // ---------- utils ----------
@@ -48,30 +51,6 @@ function pickFirstMediaUrlLocal(item: any): string | null {
   return normalizeAbsUrl(first?.url ?? null);
 }
 
-// 🔹 userId → username 조회 (POST /api/user/info { userId })
-async function fetchUsernameById(userId: number): Promise<string | null> {
-  try {
-    const token = await getAuthToken();
-    const res = await fetch(`${BASE_URL}/api/user/info`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify({ userId }),
-    });
-    const text = await res.text();
-    const json = text ? JSON.parse(text) : {};
-    const code = json?.code ?? res.status;
-    if (code !== 200) return null;
-    // 백엔드 data에 username 포함된다고 가정
-    return json?.data?.username ?? null;
-  } catch {
-    return null;
-  }
-}
-
 // =============================================================
 export default function CommunityScreen({ navigation }: any) {
   const [tab, setTab] = useState<'FOLLOWING' | 'EXPLORE'>('FOLLOWING');
@@ -83,7 +62,7 @@ export default function CommunityScreen({ navigation }: any) {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  // userId -> username 캐시
+  // userId -> username 캐시 (숫자 key로 통일)
   const [idNameMap, setIdNameMap] = useState<Map<number, string>>(new Map());
 
   // 재생 제어
@@ -95,11 +74,15 @@ export default function CommunityScreen({ navigation }: any) {
     }
   }).current;
 
-  // 모달/입력
+  // 모달/입력/댓글
   const [modalVisible, setModalVisible] = useState(false);
   const [commentModalVisible, setCommentModalVisible] = useState(false);
   const [commentInput, setCommentInput] = useState('');
   const [selectedId, setSelectedId] = useState<number | null>(null);
+
+  const [commentList, setCommentList] = useState<CommentDto[]>([]);
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [sending, setSending] = useState(false);
 
   // 차단 목록
   const blockedRef = useRef<Set<number | string>>(new Set());
@@ -127,8 +110,20 @@ export default function CommunityScreen({ navigation }: any) {
       if (loading) return;
       setLoading(true);
       try {
-        const resp = await fetchTimeline({ limit: 10, cursor: reset ? null : cursor });
-        const filtered = resp.items.filter((it) => !blockedRef.current.has(it.userId));
+        // ✅ 탭에 따라 타임라인/전역 선택
+        const fetcher = tab === 'EXPLORE' ? fetchGlobal : fetchTimeline;
+
+        const resp = await fetcher({ limit: 10, cursor: reset ? null : cursor });
+
+        if (resp.items.length > 0) {
+          console.log(
+            `[CommunityScreen/${tab}] First item:`,
+            JSON.stringify(resp.items[0], null, 2)
+          );
+        }
+        console.log('[COMM]', tab, 'FIRST RAW ITEM =', JSON.stringify(resp.items[0], null, 2));
+        const filtered = resp.items.filter((it) => !blockedRef.current.has((it as any).userId));
+
         setItems((prev) => (reset ? filtered : [...prev, ...filtered]));
         setCursor(resp.nextCursor);
         setHasMore(Boolean(resp.nextCursor));
@@ -142,8 +137,18 @@ export default function CommunityScreen({ navigation }: any) {
         setLoading(false);
       }
     },
-    [cursor, loading]
+    [cursor, loading, tab] // ✅ tab 의존성 추가
   );
+
+  useEffect(() => {
+    // 탭 바꾸면 리스트/커서/hasMore 초기화하고 새로 로드
+    setItems([]);
+    setCursor(null);
+    setHasMore(true);
+    // 탭 변경 직후 첫 페이지 로드
+    load(true);
+  }, [tab]);
+
 
   const onRefresh = useCallback(async () => {
     if (loading) return;
@@ -160,31 +165,43 @@ export default function CommunityScreen({ navigation }: any) {
     load(false);
   }, [hasMore, loading, load]);
 
-  // ---------- NEW: items 변할 때 모르는 userId만 골라 username 캐싱 ----------
+  // ---------- items 변할 때 모르는 userId만 골라 username 캐싱 ----------
   useEffect(() => {
     if (!items.length) return;
 
-    // userId를 number로 정규화해서 수집
-    const ids = Array.from(
+    const unknownIds = Array.from(
       new Set(
         items
-          .map(i => Number((i as any)?.userId))
-          .filter(n => Number.isFinite(n))
-      )
-    ).filter(id => !idNameMap.has(id));
+          .map(i => {
+            const rawUserId =
+              (i as any)?.userId ??
+              (i as any)?.user_id ??
+              (i as any)?.authorId ??
+              (i as any)?.author_id ??
+              (i as any)?.creator_id ??
+              (i as any)?.creatorId;
 
-    if (ids.length === 0) return;
+            const numUserId = Number(rawUserId);
+            return numUserId;
+          })
+          .filter(n => Number.isFinite(n) && n > 0 && !idNameMap.has(n))
+      )
+    );
+
+    if (unknownIds.length === 0) return;
 
     (async () => {
       const entries: [number, string][] = [];
-      for (const uid of ids) {
+      for (const uid of unknownIds) {
         try {
-          const u = await fetchUserInfoById(uid); // <- user.ts에 있는 함수 사용
-          if (u?.username) entries.push([uid, u.username]);
-        } catch (e) {
-          // 무시 (네트워크/429 등)
+          const u = await fetchUserInfoById(uid);
+          const username = (u as any)?.username || (u as any)?.userName || (u as any)?.name || `user${uid}`;
+          entries.push([uid, username]);
+        } catch {
+          entries.push([uid, `user${uid}`]);
         }
       }
+
       if (entries.length) {
         setIdNameMap(prev => {
           const next = new Map(prev);
@@ -193,18 +210,96 @@ export default function CommunityScreen({ navigation }: any) {
         });
       }
     })();
-  }, [items]); // ✅ items가 바뀔 때만
+  }, [items]);
 
-  // 액션 (API 연동은 이후)
+  // ====== 댓글 API 연동 ======
+  const loadComments = useCallback(async (feedId: number) => {
+    try {
+      setLoadingComments(true);
+      const list = await getCommentsByFeed(feedId);
+      setCommentList(list);
+    } catch (e: any) {
+      console.error('[comments] load fail:', e?.message ?? e);
+      Alert.alert('알림', e?.message ?? '댓글을 불러오지 못했어요.');
+    } finally {
+      setLoadingComments(false);
+    }
+  }, []);
+
+  // 모달 열릴 때 해당 피드 댓글 로드
+  useEffect(() => {
+    if (commentModalVisible && Number.isFinite(selectedId!)) {
+      loadComments(selectedId!);
+    } else {
+      setCommentList([]);
+      setCommentInput('');
+    }
+  }, [commentModalVisible, selectedId, loadComments]);
+
+  const handleCreateComment = useCallback(async () => {
+    const text = commentInput.trim();
+    if (!text) return;
+    if (!Number.isFinite(selectedId!)) {
+      Alert.alert('알림', '선택된 게시글이 없습니다.');
+      return;
+    }
+    try {
+      setSending(true);
+      await createComment(selectedId!, text);
+      setCommentInput('');
+      await loadComments(selectedId!);
+
+      // 목록의 commentCount도 +1 반영
+      setItems(prev =>
+        prev.map(it =>
+          (it as any).id === selectedId
+            ? { ...(it as any), commentCount: Math.max(0, Number((it as any).commentCount ?? 0)) + 1 }
+            : it
+        )
+      );
+    } catch (e: any) {
+      Alert.alert('실패', e?.message ?? '댓글 등록에 실패했어요.');
+    } finally {
+      setSending(false);
+    }
+  }, [commentInput, selectedId, loadComments]);
+
+  const handleDeleteComment = useCallback((commentId: number) => {
+    Alert.alert('삭제할까요?', '이 댓글을 삭제합니다.', [
+      { text: '취소', style: 'cancel' },
+      {
+        text: '삭제',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await deleteComment(commentId);
+            if (Number.isFinite(selectedId!)) {
+              await loadComments(selectedId!);
+              // 목록의 commentCount도 -1 반영
+              setItems(prev =>
+                prev.map(it =>
+                  (it as any).id === selectedId
+                    ? { ...(it as any), commentCount: Math.max(0, Number((it as any).commentCount ?? 1) - 1) }
+                    : it
+                )
+              );
+            }
+          } catch (e: any) {
+            Alert.alert('실패', e?.message ?? '댓글 삭제에 실패했어요.');
+          }
+        }
+      }
+    ]);
+  }, [selectedId, loadComments]);
+
+  // 액션 (좋아요는 기존 로컬 토글)
   const toggleLike = (id: number) => {
     setItems((prev) =>
       prev.map((it) =>
-        it.id === id
+        (it as any).id === id
           ? {
-              ...it,
-              // @ts-ignore
-              likeCount: Math.max(0, (it as any).likeCount ?? 0) + (((it as any).isLiked ? -1 : 1) as number),
-              // @ts-ignore
+              ...(it as any),
+              likeCount: Math.max(0, Number((it as any).likeCount ?? 0)) + (((it as any).isLiked ? -1 : 1) as number),
               isLiked: !(it as any).isLiked,
             }
           : it
@@ -230,19 +325,11 @@ export default function CommunityScreen({ navigation }: any) {
           const updated = [...new Set([...list, userId])];
           await AsyncStorage.setItem('blockedUsers', JSON.stringify(updated));
           blockedRef.current = new Set(updated);
-          setItems((prev) => prev.filter((it) => it.userId !== userId));
+          setItems((prev) => prev.filter((it: any) => (it as any).userId !== userId));
         },
       },
     ]);
   };
-
-  // 댓글 데모 데이터 (API 붙기 전)
-  const comments = useMemo(() => {
-    const it = items.find((i) => i.id === selectedId);
-    // @ts-ignore
-    const c = (it as any)?.commentCount ?? 0;
-    return new Array(Math.min(c, 30)).fill(0).map((_, i) => `댓글 ${i + 1}`);
-  }, [items, selectedId]);
 
   // 1장 렌더
   const renderItem = ({ item, index }: { item: FeedItemDto; index: number }) => {
@@ -250,8 +337,24 @@ export default function CommunityScreen({ navigation }: any) {
     const mediaUrl = pickFirstMediaUrlLocal(item);
     const isVideo = isVideoUrl(mediaUrl);
 
-    // 🔹 표시용 username (없으면 일단 userId)
-    const uname = typeof item.userId === 'number' ? (idNameMap.get(item.userId) ?? String(item.userId)) : 'user';
+    // 다양한 필드명에서 userId 추출
+    const rawUserId =
+      (item as any)?.userId ??
+      (item as any)?.user_id ??
+      (item as any)?.authorId ??
+      (item as any)?.author_id ??
+      (item as any)?.creator_id ??
+      (item as any)?.creatorId;
+
+    const userId = Number(rawUserId);
+
+    const uname =
+      (item as any).username ||
+      (item as any).userName ||
+      (item as any).author ||
+      (item as any).creator ||
+      (Number.isFinite(userId) && userId > 0 ? idNameMap.get(userId) : null) ||
+      (Number.isFinite(userId) && userId > 0 ? `user${userId}` : 'unknown');
 
     return (
       <View style={styles.page}>
@@ -267,7 +370,7 @@ export default function CommunityScreen({ navigation }: any) {
         ) : (
           <View style={[styles.video, styles.fallback]}>
             <Text style={styles.fallbackTxt} numberOfLines={3}>
-              {item.content || '(내용 없음)'}
+              {(item as any).content || '(내용 없음)'}
             </Text>
           </View>
         )}
@@ -276,39 +379,33 @@ export default function CommunityScreen({ navigation }: any) {
 
         {/* 우측 액션 */}
         <View style={styles.actions}>
-          <TouchableOpacity onPress={() => toggleLike(item.id)} style={styles.actionBtn} activeOpacity={0.8}>
+          <TouchableOpacity onPress={() => toggleLike((item as any).id)} style={styles.actionBtn} activeOpacity={0.8}>
             <Image
-              source={
-                // @ts-ignore
-                (item as any).isLiked
-                  ? require('../../assets/icon/star.png')
-                  : require('../../assets/icon/star-outline.png')
-              }
+              source={(item as any).isLiked ? HeartOutline : Heart}
               style={styles.icon}
               resizeMode="contain"
             />
             <Text style={styles.count}>
-              {
-                // @ts-ignore
-                (item as any).likeCount ?? 0
-              }
+              {Number((item as any).likeCount ?? 0)}
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             onPress={() => {
-              setSelectedId(item.id);
+              setSelectedId((item as any).id);
               setCommentModalVisible(true);
             }}
             style={styles.actionBtn}
             activeOpacity={0.8}
           >
-            <Image source={require('../../assets/icon/comments.png')} style={styles.icon} resizeMode="contain" />
+            <Image
+              source={CommentIcon}
+              style={styles.icon}
+              resizeMode="contain"
+            />
+
             <Text style={styles.count}>
-              {
-                // @ts-ignore
-                (item as any).commentCount ?? 0
-              }
+              {Number((item as any).commentCount ?? 0)}
             </Text>
           </TouchableOpacity>
 
@@ -321,12 +418,16 @@ export default function CommunityScreen({ navigation }: any) {
         <View style={styles.bottomText}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <Text style={styles.title}>@{uname}</Text>
-            <TouchableOpacity onPress={() => toggleFollow(item.userId)} style={styles.followBtn} activeOpacity={0.85}>
+            <TouchableOpacity
+              onPress={() => Number.isFinite(userId) && userId > 0 && toggleFollow(userId)}
+              style={styles.followBtn}
+              activeOpacity={0.85}
+            >
               <Text style={styles.followTxt}>팔로우</Text>
             </TouchableOpacity>
           </View>
           <Text style={styles.prompt} numberOfLines={2}>
-            {item.content ?? ' '}
+            {(item as any).content ?? ' '}
           </Text>
         </View>
 
@@ -336,7 +437,7 @@ export default function CommunityScreen({ navigation }: any) {
             <View style={styles.popup}>
               <TouchableOpacity
                 onPress={() => {
-                  handleBlockUser(item.userId);
+                  if (Number.isFinite(userId) && userId > 0) handleBlockUser(userId);
                   setModalVisible(false);
                 }}
                 style={styles.popupRow}
@@ -361,7 +462,7 @@ export default function CommunityScreen({ navigation }: any) {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#000' }}>
-      {/* 탭 (지금은 팔로잉만 동작) */}
+      {/* (기존) 탭 UI – 필요 없으면 제거해도 됨 */}
       <View style={styles.tabs}>
         {(['FOLLOWING', 'EXPLORE'] as const).map((k) => (
           <TouchableOpacity
@@ -378,7 +479,7 @@ export default function CommunityScreen({ navigation }: any) {
       {/* 틱톡형 세로 스와이프 */}
       <FlatList
         data={items}
-        keyExtractor={(it) => String(it.id)}
+        keyExtractor={(it: any) => String((it as any).id)}
         renderItem={renderItem}
         pagingEnabled
         showsVerticalScrollIndicator={false}
@@ -399,13 +500,36 @@ export default function CommunityScreen({ navigation }: any) {
       >
         <View style={styles.bottomSheet}>
           <View style={styles.sheetBar} />
-          <Text style={styles.commentHeader}>댓글</Text>
+          <Text style={styles.commentHeader}>
+            댓글 {loadingComments ? '불러오는 중…' : `${commentList.length}개`}
+          </Text>
+
           <FlatList
-            data={comments}
-            keyExtractor={(_, i) => String(i)}
-            renderItem={({ item }) => <Text style={styles.commentItem}>💬 {item}</Text>}
-            style={{ maxHeight: SCREEN_H * 0.4 }}
+            data={commentList}
+            keyExtractor={(it) => String(it.id)}
+            style={{ maxHeight: SCREEN_H * 0.45 }}
+            ListEmptyComponent={
+              <View style={{ paddingVertical: 24, alignItems: 'center' }}>
+                <Text style={{ color: '#6B7280' }}>첫 댓글을 남겨보세요!</Text>
+              </View>
+            }
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                onLongPress={() => handleDeleteComment(item.id)}
+                delayLongPress={400}
+                activeOpacity={0.8}
+                style={{ paddingVertical: 8 }}
+              >
+                <Text style={{ fontSize: 13, color: '#374151', marginBottom: 2 }}>
+                  @{item.username} · {new Date(item.createdAt).toLocaleDateString()}
+                </Text>
+                <Text style={{ fontSize: 15, color: '#111827' }}>{item.comment}</Text>
+              </TouchableOpacity>
+            )}
+            ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+            contentContainerStyle={{ paddingHorizontal: 4 }}
           />
+
           <View style={styles.commentRow}>
             <TextInput
               style={styles.commentInput}
@@ -413,17 +537,18 @@ export default function CommunityScreen({ navigation }: any) {
               onChangeText={setCommentInput}
               placeholder="댓글을 입력하세요"
               placeholderTextColor="#9CA3AF"
+              multiline
             />
             <TouchableOpacity
-              onPress={() => {
-                setCommentInput('');
-              }}
-              style={styles.sendBtn}
+              onPress={handleCreateComment}
+              disabled={sending || !commentInput.trim()}
+              style={[styles.sendBtn, (sending || !commentInput.trim()) && { opacity: 0.5 }]}
               activeOpacity={0.9}
             >
-              <Text style={styles.sendTxt}>등록</Text>
+              <Text style={styles.sendTxt}>{sending ? '전송중' : '등록'}</Text>
             </TouchableOpacity>
           </View>
+
           <TouchableOpacity onPress={() => setCommentModalVisible(false)} style={styles.closeBtn}>
             <Text style={styles.closeTxt}>닫기</Text>
           </TouchableOpacity>
