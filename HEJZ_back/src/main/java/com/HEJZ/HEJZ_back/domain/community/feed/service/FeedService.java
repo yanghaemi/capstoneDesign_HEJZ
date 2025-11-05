@@ -15,6 +15,7 @@ import com.HEJZ.HEJZ_back.domain.community.user.repository.UserRepository;
 import com.HEJZ.HEJZ_back.domain.music.dto.SavedSongDTO;
 import com.HEJZ.HEJZ_back.domain.music.entity.SavedSong;
 import com.HEJZ.HEJZ_back.domain.music.repository.SavedSongRepository;
+import com.HEJZ.HEJZ_back.global.response.ApiResponse;
 
 import lombok.RequiredArgsConstructor;
 
@@ -377,6 +378,36 @@ public class FeedService {
                 PageRequest.of(0, window));
 
         return reRankAndBuild(feeds, userId, clamp(limit, 1, 100));
+    }
+
+    public ApiResponse<Object> getFeed(Long feedId) {
+        try {
+            FeedEntity feed = feedRepository.findById(feedId).orElseThrow(() -> new RuntimeException("피드를 찾지 못함."));
+
+            List<MediaDto> mediaDtos = feed.getImages().stream()
+                    .sorted(Comparator.comparingInt(FeedMediaEntity::getOrd))
+                    .map(m -> new MediaDto(
+                            m.getUrl(),
+                            m.getOrd(),
+                            m.getType(),
+                            m.getThumbnailUrl(),
+                            m.getDurationMs(),
+                            m.getMimeType()))
+                    .toList();
+
+            FeedItemDto dto = new FeedItemDto(
+                    feed.getId(),
+                    feed.getUser().getId(),
+                    feed.getContent(),
+                    mediaDtos,
+                    feed.getEmotion(),
+                    feed.getGenre(),
+                    feed.getCreatedAt());
+
+            return new ApiResponse<Object>(200, dto, "게시글 조회 성공");
+        } catch (Exception e) {
+            return new ApiResponse<Object>(500, null, "게시글 조회 실패");
+        }
     }
 
     // =========================
