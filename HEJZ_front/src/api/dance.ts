@@ -60,7 +60,7 @@ export function normalizePlainLyrics(raw: string) {
 
 /* =========================
  * 1) 전체 가사 분석 API
- * - 서버 DTO 변화 대비: selectedEmotion/selectedGenre + emotion/genre 모두 전송
+ * - 서버 DTO 변화 대비: selectedEmotion/selectedGenre 전송
  * ========================= */
 export async function analyzeLyrics(
   lyrics: string,
@@ -73,7 +73,6 @@ export async function analyzeLyrics(
     lyrics,
     selectedEmotion,
     selectedGenre,
-
   };
 
   console.log('[analyzeLyrics] REQUEST =', JSON.stringify(body));
@@ -109,7 +108,6 @@ export async function analyzeLyricsByTwoLines(
     lyrics,
     selectedEmotion: emotion,
     selectedGenre: genre,
-
   };
 
   console.log('[analyzeLyricsByTwoLines] REQUEST =', JSON.stringify(payload));
@@ -181,6 +179,7 @@ export async function getAllEmotionSelections(): Promise<SelectionGroupResponseD
 
 /* =========================
  * 5) 모션 URL (presigned)
+ *    GET /api/motion/{motionId} → String(URL)
  * ========================= */
 export async function getMotionUrl(motionId: string): Promise<string> {
   const headers = await getAuthHeaders();
@@ -196,8 +195,33 @@ export async function getMotionUrl(motionId: string): Promise<string> {
   console.log('[getMotionUrl] STATUS =', res.status);
   console.log('[getMotionUrl] RESPONSE =', text);
 
-  if (!res.ok) throw new Error(`HTTP ${res.status}: ${text}`);
-  return text; // URL 문자열
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}: ${text}`);
+  }
+
+  // 응답이 http로 시작하면 순수 URL 문자열
+  const trimmedText = text.trim();
+  if (trimmedText.startsWith('http')) {
+    console.log('[getMotionUrl] ✅ URL =', trimmedText);
+    return trimmedText;
+  }
+
+  // JSON 파싱 시도
+  try {
+    const json = JSON.parse(text);
+    if (json.videoUrl?.startsWith('http')) {
+      console.log('[getMotionUrl] ✅ URL (JSON) =', json.videoUrl);
+      return json.videoUrl;
+    }
+    if (json.url?.startsWith('http')) {
+      console.log('[getMotionUrl] ✅ URL (JSON.url) =', json.url);
+      return json.url;
+    }
+  } catch (e) {
+    console.error('[getMotionUrl] JSON 파싱 실패:', e);
+  }
+
+  throw new Error('유효한 URL을 찾을 수 없습니다: ' + text);
 }
 
 /* =========================

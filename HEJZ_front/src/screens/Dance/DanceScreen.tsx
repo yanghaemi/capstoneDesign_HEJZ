@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   ScrollView,
   Modal,
+  Image,
 } from 'react-native';
 import { getSongList, type Song } from '../../api/song';
 import RNSoundPlayer from 'react-native-sound-player';
@@ -202,12 +203,18 @@ const DanceScreen = ({ navigation }: any) => {
 
       {/* 재생 버튼 */}
       <TouchableOpacity
-        style={styles.playButton}
+
         onPress={() => handlePlayPause(item)}
       >
-        <Text style={styles.playButtonText}>
-          {playingSongId === item.id ? '⏸' : '▶️'}
-        </Text>
+        <Image
+            source={
+              playingSongId === item.id
+                ? require('../../assets/icon/Pause.png')
+                : require('../../assets/icon/Play.png')
+            }
+            style={styles.playIcon}
+            resizeMode="contain"
+          />
       </TouchableOpacity>
     </View>
   );
@@ -510,5 +517,14 @@ const styles = StyleSheet.create({
   modalItemText: {
     fontSize: 16,
     color: '#333',
+  },
+  playBtn: {
+
+      alignItems: 'center',
+      justifyContent: 'center',
+  },
+  playIcon: {
+      width: 30,
+      height: 30,
   },
 });
