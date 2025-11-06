@@ -1,8 +1,8 @@
-// screens/FeedCreateScreen.tsx - 최종 버전 (songId 제거)
+// screens/FeedCreateScreen.tsx - 권한 문제 해결 버전
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, TextInput, Image,
-  Alert, ScrollView, PermissionsAndroid, Platform, Modal, FlatList
+  Alert, ScrollView, PermissionsAndroid, Platform, Modal, FlatList, Linking
 } from 'react-native';
 import { launchImageLibrary, Asset } from 'react-native-image-picker';
 import { uploadFile } from '../../api/files';
@@ -50,27 +50,159 @@ export default function FeedCreateScreen() {
 
   const askPerm = async () => {
     if (Platform.OS !== 'android') return true;
-    const perm =
-      Platform.Version >= 33
-        ? [PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES, PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO]
-        : [PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE];
 
-    const res = await PermissionsAndroid.requestMultiple(perm);
-    return Object.values(res).every(v => v === PermissionsAndroid.RESULTS.GRANTED);
+    try {
+      // Android 13 (API 33) 이상
+      if (Platform.Version >= 33) {
+        // 먼저 현재 권한 상태 확인
+        const checkImage = await PermissionsAndroid.check(
+          PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES
+        );
+        const checkVideo = await PermissionsAndroid.check(
+          PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO
+        );
+
+        console.log('[권한] 현재 상태 - 이미지:', checkImage, '비디오:', checkVideo);
+
+        // 이미 권한이 있으면 바로 통과
+        if (checkImage || checkVideo) {
+          return true;
+        }
+
+        // 권한 요청
+        const statuses = await PermissionsAndroid.requestMultiple([
+          PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
+          PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO,
+        ]);
+
+        console.log('[권한] 요청 결과:', statuses);
+
+        // 하나라도 granted면 OK
+        const granted = Object.values(statuses).some(
+          v => v === PermissionsAndroid.RESULTS.GRANTED
+        );
+
+        if (!granted) {
+          Alert.alert(
+            '권한 필요',
+            '갤러리 접근을 위해 설정에서 사진 및 동영상 권한을 허용해주세요.',
+            [
+              { text: '취소', style: 'cancel' },
+              { text: '설정 열기', onPress: () => Linking.openSettings() }
+            ]
+          );
+        }
+
+        return granted;
+      }
+
+      // Android 10-12 (API 29-32)
+      if (Platform.Version >= 29) {
+        // Scoped Storage: 권한 체크
+        const hasPermission = await PermissionsAndroid.check(
+          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE
+        );
+
+        console.log('[권한] Android 10-12 상태:', hasPermission);
+
+        if (hasPermission) return true;
+
+        const status = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE
+        );
+
+        if (status !== PermissionsAndroid.RESULTS.GRANTED) {
+          Alert.alert(
+            '권한 필요',
+            '갤러리 접근을 위해 저장소 권한을 허용해주세요.',
+            [
+              { text: '취소', style: 'cancel' },
+              { text: '설정 열기', onPress: () => Linking.openSettings() }
+            ]
+          );
+          return false;
+        }
+
+        return true;
+      }
+
+      // Android 9 이하 (API 28 이하)
+      const hasPermission = await PermissionsAndroid.check(
+        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE
+      );
+
+      if (hasPermission) return true;
+
+      const status = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE
+      );
+
+      console.log('[권한] Android 9 이하 상태:', status);
+
+      if (status !== PermissionsAndroid.RESULTS.GRANTED) {
+        Alert.alert(
+          '권한 필요',
+          '갤러리 접근을 위해 저장소 권한을 허용해주세요.',
+          [
+            { text: '취소', style: 'cancel' },
+            { text: '설정 열기', onPress: () => Linking.openSettings() }
+          ]
+        );
+        return false;
+      }
+
+      return true;
+
+    } catch (err) {
+      console.error('[권한] 요청 실패:', err);
+      Alert.alert('오류', '권한 확인 중 오류가 발생했습니다.');
+      return false;
+    }
   };
 
   const pick = async () => {
-    const ok = await askPerm();
-    if (!ok) return Alert.alert('권한 필요', '갤러리 접근 권한을 허용해주세요.');
+    console.log('[갤러리] 선택 시작');
 
-    const r = await launchImageLibrary({
-      mediaType: 'mixed',
-      selectionLimit: 5,
-      includeExtra: true,
-    });
-    if (r.didCancel) return;
-    if (r.errorMessage) return Alert.alert('선택 실패', r.errorMessage);
-    setAssets(r.assets ?? []);
+    const ok = await askPerm();
+    console.log('[갤러리] 권한 결과:', ok);
+
+    if (!ok) {
+      console.log('[갤러리] 권한 없음, 중단');
+      return;
+    }
+
+    try {
+      console.log('[갤러리] launchImageLibrary 호출');
+      const r = await launchImageLibrary({
+        mediaType: 'mixed',
+        selectionLimit: 5,
+        includeExtra: true,
+      });
+
+      console.log('[갤러리] 결과:', {
+        didCancel: r.didCancel,
+        errorCode: r.errorCode,
+        errorMessage: r.errorMessage,
+        assetsCount: r.assets?.length || 0
+      });
+
+      if (r.didCancel) {
+        console.log('[갤러리] 사용자 취소');
+        return;
+      }
+
+      if (r.errorMessage || r.errorCode) {
+        console.error('[갤러리] 에러:', r.errorMessage, r.errorCode);
+        Alert.alert('선택 실패', r.errorMessage || `에러 코드: ${r.errorCode}`);
+        return;
+      }
+
+      setAssets(r.assets ?? []);
+      console.log('[갤러리] 선택 완료:', r.assets?.length || 0, '개');
+    } catch (err) {
+      console.error('[갤러리] 예외 발생:', err);
+      Alert.alert('오류', '갤러리를 열 수 없습니다.');
+    }
   };
 
   const submit = async () => {
@@ -100,13 +232,12 @@ export default function FeedCreateScreen() {
         urls.push(url);
       }
 
-      // 2) 피드 생성 — 🔧 songId를 아예 보내지 않음
+      // 2) 피드 생성
       const payload: any = {
         content,
         imageUrls: urls,
         emotion: emotion.lower,
         genre:   genre.lower,
-        // songId: 제거 (백엔드에서 optional로 처리하도록)
       };
 
       console.log('[FeedCreate] createFeed 요청 payload:', JSON.stringify(payload, null, 2));
