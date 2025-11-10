@@ -19,16 +19,14 @@ import LinearGradient from 'react-native-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { fetchUserInfoById } from '../../api/user';
-import { fetchTimeline, fetchGlobal } from '../../api/feed';
-import { followUser, unfollowUser, checkInterFollow, getFollowings, getFollowers } from '../../api/follow';
-import { likeFeed, isLiked, getListOfLike } from '../../api/like';
+import { fetchTimeline, fetchGlobal, getFeed } from '../../api/feed'; // ✅ getFeed 추가
 import type { FeedItemDto } from '../../api/types/feed';
 import { BASE_URL } from '../../api/baseUrl';
-// ✅ 댓글 API 연결 (복수형 파일명)
 import { createComment, getCommentsByFeed, deleteComment, type CommentDto } from '../../api/comment';
 import Heart from '../../assets/icon/heart.png';
 import HeartOutline from '../../assets/icon/heart-outline.png';
 import CommentIcon from '../../assets/icon/comments.png';
+
 const { height: SCREEN_H, width: SCREEN_W } = Dimensions.get('window');
 
 // ---------- utils ----------
@@ -43,31 +41,47 @@ function normalizeAbsUrl(u?: string | null) {
   return /^https?:\/\//i.test(t) ? t : `${BASE_URL}${t.startsWith('/') ? '' : '/'}${t}`;
 }
 function pickFirstMediaUrlLocal(item: any): string | null {
-  const arr = Array.isArray(item?.images)
-    ? item.images
-    : Array.isArray(item?.media)
+  // media 우선, 없으면 images 확인
+  const arr = Array.isArray(item?.media)
     ? item.media
+    : Array.isArray(item?.images)
+    ? item.images
     : [];
-  if (arr.length === 0) return null;
+
+  if (arr.length === 0) {
+    console.log('[pickFirstMediaUrlLocal] 미디어 없음:', {
+      hasMedia: !!item?.media,
+      hasImages: !!item?.images,
+      media: item?.media,
+      images: item?.images
+    });
+    return null;
+  }
+
   const first = arr.slice().sort((a: any, b: any) => (a?.ord ?? 0) - (b?.ord ?? 0))[0];
-  return normalizeAbsUrl(first?.url ?? null);
+  const url = normalizeAbsUrl(first?.url ?? null);
+
+  console.log('[pickFirstMediaUrlLocal] URL 생성:', {
+    originalUrl: first?.url,
+    normalizedUrl: url,
+    BASE_URL
+  });
+
+  return url;
 }
 
 // =============================================================
 export default function CommunityScreen({ navigation }: any) {
   const [tab, setTab] = useState<'FOLLOWING' | 'EXPLORE'>('FOLLOWING');
 
-  // 데이터
   const [items, setItems] = useState<FeedItemDto[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  // userId -> username 캐시 (숫자 key로 통일)
   const [idNameMap, setIdNameMap] = useState<Map<number, string>>(new Map());
 
-  // 재생 제어
   const [activeIndex, setActiveIndex] = useState(0);
   const viewabilityConfig = useRef({ viewAreaCoveragePercentThreshold: 80 }).current;
   const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
@@ -76,7 +90,6 @@ export default function CommunityScreen({ navigation }: any) {
     }
   }).current;
 
-  // 모달/입력/댓글
   const [modalVisible, setModalVisible] = useState(false);
   const [commentModalVisible, setCommentModalVisible] = useState(false);
   const [commentInput, setCommentInput] = useState('');
@@ -86,12 +99,8 @@ export default function CommunityScreen({ navigation }: any) {
   const [loadingComments, setLoadingComments] = useState(false);
   const [sending, setSending] = useState(false);
 
-  const [username, setUsername] = useState("");
-
-  // 차단 목록
   const blockedRef = useRef<Set<number | string>>(new Set());
 
-  // 최초 로드
   useFocusEffect(
     useCallback(() => {
       let mounted = true;
@@ -108,61 +117,54 @@ export default function CommunityScreen({ navigation }: any) {
     }, [])
   );
 
-  // 각 피드의 좋아요 상태 및 개수를 API로 가져오는 함수
-  const loadLikeStatus = useCallback(async (feedId: number) => {
-    try {
-      const [likedStatus, likeList] = await Promise.all([
-        isLiked(feedId),
-        getListOfLike(feedId)
-      ]);
-      
-      const likeCount = Array.isArray(likeList) ? likeList.length : 0;
-      
-      return { isLiked: likedStatus, likeCount };
-    } catch (e: any) {
-      console.error(`[loadLikeStatus] feedId=${feedId} 실패:`, e?.message);
-      return null;
-    }
-  }, []);
-
-  // 타임라인 로드
   const load = useCallback(
     async (reset = false) => {
       if (loading) return;
       setLoading(true);
       try {
-        // ✅ 탭에 따라 타임라인/전역 선택
         const fetcher = tab === 'EXPLORE' ? fetchGlobal : fetchTimeline;
-
         const resp = await fetcher({ limit: 10, cursor: reset ? null : cursor });
 
         if (resp.items.length > 0) {
           console.log(
-            `[CommunityScreen/${tab}] First item:`,
+            `[CommunityScreen/${tab}] First item (BEFORE getFeed):`,
             JSON.stringify(resp.items[0], null, 2)
           );
         }
-        
-        const filtered = resp.items.filter((it) => !blockedRef.current.has((it as any).userId));
 
-        // ✅ 각 피드의 좋아요 상태를 API로 가져오기
-        const itemsWithLikeStatus = await Promise.all(
-          filtered.map(async (item) => {
-            const feedId = (item as any).id;
-            const likeStatus = await loadLikeStatus(feedId);
-            
-            if (likeStatus) {
-              return {
-                ...(item as any),
-                isLiked: likeStatus.isLiked,
-                likeCount: likeStatus.likeCount
-              };
+        // ✅ 각 피드의 상세 정보를 가져와서 미디어 정보 추가
+        const enrichedItems = await Promise.all(
+          resp.items.map(async (item: any) => {
+            // feedId 유효성 검사
+            const feedId = Number(item.id);
+
+            if (!Number.isFinite(feedId) || feedId <= 0) {
+              console.warn(`[CommunityScreen] 유효하지 않은 feedId:`, item);
+              return item; // 유효하지 않으면 원본 그대로 반환
             }
-            return item;
+
+            try {
+              const feedDetail = await getFeed(feedId);
+              console.log(`[CommunityScreen] getFeed(${feedId}) 성공:`, feedDetail);
+
+              // 상세 정보의 images/media를 원본 아이템에 추가
+              return {
+                ...item,
+                images: (feedDetail as any).images || (feedDetail as any).media || item.images || [],
+                media: (feedDetail as any).media || (feedDetail as any).images || item.media || null,
+              };
+            } catch (e: any) {
+              console.error(`[CommunityScreen] getFeed(${feedId}) 실패:`, e?.message);
+              return item; // 실패하면 원본 아이템 그대로 사용
+            }
           })
         );
 
-        setItems((prev) => (reset ? itemsWithLikeStatus : [...prev, ...itemsWithLikeStatus]));
+        console.log('[CommunityScreen] Enriched first item:', enrichedItems[0]);
+
+        const filtered = enrichedItems.filter((it) => !blockedRef.current.has((it as any).userId));
+
+        setItems((prev) => (reset ? filtered : [...prev, ...filtered]));
         setCursor(resp.nextCursor);
         setHasMore(Boolean(resp.nextCursor));
       } catch (e: any) {
@@ -175,18 +177,15 @@ export default function CommunityScreen({ navigation }: any) {
         setLoading(false);
       }
     },
-    [cursor, loading, tab, loadLikeStatus]
+    [cursor, loading, tab]
   );
 
   useEffect(() => {
-    // 탭 바꾸면 리스트/커서/hasMore 초기화하고 새로 로드
     setItems([]);
     setCursor(null);
     setHasMore(true);
-    // 탭 변경 직후 첫 페이지 로드
     load(true);
   }, [tab]);
-
 
   const onRefresh = useCallback(async () => {
     if (loading) return;
@@ -203,7 +202,6 @@ export default function CommunityScreen({ navigation }: any) {
     load(false);
   }, [hasMore, loading, load]);
 
-  // ---------- items 변할 때 모르는 userId만 골라 username 캐싱 ----------
   useEffect(() => {
     if (!items.length) return;
 
@@ -250,7 +248,6 @@ export default function CommunityScreen({ navigation }: any) {
     })();
   }, [items]);
 
-  // ====== 댓글 API 연동 ======
   const loadComments = useCallback(async (feedId: number) => {
     try {
       setLoadingComments(true);
@@ -264,7 +261,6 @@ export default function CommunityScreen({ navigation }: any) {
     }
   }, []);
 
-  // 모달 열릴 때 해당 피드 댓글 로드
   useEffect(() => {
     if (commentModalVisible && Number.isFinite(selectedId!)) {
       loadComments(selectedId!);
@@ -287,7 +283,6 @@ export default function CommunityScreen({ navigation }: any) {
       setCommentInput('');
       await loadComments(selectedId!);
 
-      // 목록의 commentCount도 +1 반영
       setItems(prev =>
         prev.map(it =>
           (it as any).id === selectedId
@@ -313,7 +308,6 @@ export default function CommunityScreen({ navigation }: any) {
             await deleteComment(commentId);
             if (Number.isFinite(selectedId!)) {
               await loadComments(selectedId!);
-              // 목록의 commentCount도 -1 반영
               setItems(prev =>
                 prev.map(it =>
                   (it as any).id === selectedId
@@ -330,95 +324,24 @@ export default function CommunityScreen({ navigation }: any) {
     ]);
   }, [selectedId, loadComments]);
 
-  // ✅ 좋아요 토글 - API 상태를 기준으로 하트 변경
-  const toggleLike = async (id: number) => {
-    try {
-      // 1. 좋아요 토글 API 호출
-      await likeFeed(id);
-      console.log('[toggleLike] 좋아요 API 호출 성공');
-
-      // 2. 좋아요 상태 확인 (true/false)
-      const checkIsLiked = await isLiked(id);
-
-      // 3. 좋아요 목록 가져오기 (개수 확인)
-      const likeList = await getListOfLike(id);
-      const likeCount = Array.isArray(likeList) ? likeList.length : 0;
-
-      // 4. UI 업데이트
-      setItems((prev) =>
-        prev.map((it) =>
-          (it as any).id === id
-            ? {
-                ...(it as any),
-                likeCount: likeCount,      // ✅ 실제 좋아요 개수
-                isLiked: checkIsLiked,     // ✅ 실제 좋아요 상태 (true/false)
-              }
-            : it
-        )
-      );
-
-      console.log(`[toggleLike] feedId=${id}, isLiked=${checkIsLiked}, likeCount=${likeCount}`);
-
-    } catch (e: any) {
-      console.error('[toggleLike] 좋아요 실패:', e?.message);
-      Alert.alert('알림', e?.message ?? '좋아요에 실패했어요.');
-    }
-  };
-
-  // Empty State 렌더링 함수
-  const renderEmptyState = () => {
-    if (loading) {
-      return (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyTitle}>로딩 중...</Text>
-        </View>
-      );
-    }
-
-    return (
-      <View style={styles.emptyContainer}>
-        {tab === 'FOLLOWING' ? (
-          <>
-            <Text style={styles.emptyIcon}>👥</Text>
-            <Text style={styles.emptyTitle}>팔로우한 사람이 없어요</Text>
-            <Text style={styles.emptySubtitle}>
-              다른 사용자들을 팔로우하고{'\n'}재미있는 콘텐츠를 만나보세요!
-            </Text>
-            <TouchableOpacity
-              style={styles.emptyButton}
-              onPress={() => setTab('EXPLORE')}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.emptyButtonText}>추천 콘텐츠 보기</Text>
-            </TouchableOpacity>
-          </>
-        ) : (
-          <>
-            <Text style={styles.emptyIcon}>📭</Text>
-            <Text style={styles.emptyTitle}>아직 콘텐츠가 없어요</Text>
-            <Text style={styles.emptySubtitle}>
-              첫 번째 게시물을 작성해보세요!
-            </Text>
-          </>
-        )}
-      </View>
+  const toggleLike = (id: number) => {
+    setItems((prev) =>
+      prev.map((it) =>
+        (it as any).id === id
+          ? {
+              ...(it as any),
+              likeCount: Math.max(0, Number((it as any).likeCount ?? 0)) + (((it as any).isLiked ? -1 : 1) as number),
+              isLiked: !(it as any).isLiked,
+            }
+          : it
+      )
     );
   };
 
-
-  const toggleFollow = async (username: string) => {
-    if (!username) {
-      Alert.alert('팔로우', 'username을 전송할 수 없습니다.');
-      return;
-    }
-    try {
-      const resp = await followUser(username);
-      Alert.alert('성공', '팔로우 했습니다!');
-    } catch (e: any) {
-      Alert.alert('알림', e?.message ?? '불러오기 실패');
-    }
+  const toggleFollow = (userId?: number) => {
+    if (!userId) return;
+    Alert.alert('팔로우', '나중에 API 연결!');
   };
-  
 
   const handleBlockUser = async (userId?: number) => {
     if (!userId) return;
@@ -439,13 +362,24 @@ export default function CommunityScreen({ navigation }: any) {
     ]);
   };
 
-  // 1장 렌더
   const renderItem = ({ item, index }: { item: FeedItemDto; index: number }) => {
     const playing = index === activeIndex;
+
+    // ✅ 실제 피드 미디어 URL 가져오기
     const mediaUrl = pickFirstMediaUrlLocal(item);
     const isVideo = isVideoUrl(mediaUrl);
 
-    // 다양한 필드명에서 userId 추출
+    // 🔍 디버깅 로그
+    console.log('[CommunityScreen] renderItem:', {
+      index,
+      feedId: (item as any).id,
+      images: (item as any).images,
+      media: (item as any).media,
+      mediaUrl,
+      isVideo,
+      BASE_URL,
+    });
+
     const rawUserId =
       (item as any)?.userId ??
       (item as any)?.user_id ??
@@ -456,7 +390,7 @@ export default function CommunityScreen({ navigation }: any) {
 
     const userId = Number(rawUserId);
 
-    const uname = 
+    const uname =
       (item as any).username ||
       (item as any).userName ||
       (item as any).author ||
@@ -465,32 +399,64 @@ export default function CommunityScreen({ navigation }: any) {
       (Number.isFinite(userId) && userId > 0 ? `user${userId}` : 'unknown');
 
     return (
-      <View style={styles.page}>
-        {mediaUrl && isVideo ? (
-          <Video
-            source={{ uri: mediaUrl }}
-            style={styles.video}
-            resizeMode="cover"
-            repeat
-            paused={!playing}
-            muted={false}
-          />
+      <TouchableOpacity
+        style={styles.page}
+        activeOpacity={1}
+        onPress={() => {
+          // ✅ 피드 클릭시 FeedDetailScreen으로 이동
+          navigation.navigate('FeedDetail' as never, { feedId: (item as any).id } as never);
+        }}
+      >
+        {/* ✅ 실제 피드의 비디오/이미지 재생 */}
+        {mediaUrl ? (
+          isVideo ? (
+            <Video
+              source={{ uri: mediaUrl }}
+              style={styles.video}
+              resizeMode="cover"
+              repeat
+              paused={!playing}
+              muted={false}
+              onError={(error) => {
+                console.error('[CommunityScreen] Video 에러:', error);
+              }}
+              onLoad={() => console.log('[CommunityScreen] Video 로드 성공:', mediaUrl)}
+            />
+          ) : (
+            <Image
+              source={{ uri: mediaUrl }}
+              style={styles.video}
+              resizeMode="cover"
+              onError={(error) => {
+                console.error('[CommunityScreen] Image 에러:', error.nativeEvent.error);
+              }}
+              onLoad={() => console.log('[CommunityScreen] Image 로드 성공:', mediaUrl)}
+            />
+          )
         ) : (
-          <View style={[styles.video, styles.fallback]}>
-            <Text style={styles.fallbackTxt} numberOfLines={3}>
-              {(item as any).content || '(내용 없음)'}
+          <TouchableOpacity
+            style={styles.fallback}
+            onPress={() => {
+              // 미디어가 없어도 FeedDetail로 이동하면 상세 정보 로드됨
+              navigation.navigate('FeedDetail' as never, { feedId: (item as any).id } as never);
+            }}
+          >
+            <Text style={styles.fallbackTxt}>미디어를 불러올 수 없습니다</Text>
+            <Text style={[styles.fallbackTxt, { fontSize: 12, marginTop: 8 }]}>
+              Feed ID: {(item as any).id}
             </Text>
-          </View>
+            <Text style={[styles.fallbackTxt, { fontSize: 11, marginTop: 4, color: '#60A5FA' }]}>
+              탭하여 상세 보기
+            </Text>
+          </TouchableOpacity>
         )}
 
         <LinearGradient colors={['transparent', 'rgba(0,0,0,0.8)']} style={styles.gradient} />
 
-        {/* 우측 액션 */}
         <View style={styles.actions}>
           <TouchableOpacity onPress={() => toggleLike((item as any).id)} style={styles.actionBtn} activeOpacity={0.8}>
-            {/* ✅ isLiked가 true면 채워진 하트, false면 빈 하트 */}
             <Image
-              source={(item as any).isLiked ? HeartOutline : Heart}
+              source={(item as any).isLiked ? Heart : HeartOutline}
               style={styles.icon}
               resizeMode="contain"
             />
@@ -523,12 +489,11 @@ export default function CommunityScreen({ navigation }: any) {
           </TouchableOpacity>
         </View>
 
-        {/* 좌하단 유저/콘텐츠 */}
         <View style={styles.bottomText}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <Text style={styles.title}>@{uname}</Text>
             <TouchableOpacity
-              onPress={() => Number.isFinite(userId) && userId > 0 && toggleFollow(uname)}
+              onPress={() => Number.isFinite(userId) && userId > 0 && toggleFollow(userId)}
               style={styles.followBtn}
               activeOpacity={0.85}
             >
@@ -540,7 +505,6 @@ export default function CommunityScreen({ navigation }: any) {
           </Text>
         </View>
 
-        {/* 더보기 팝업(차단/신고) */}
         <Modal transparent visible={modalVisible} animationType="fade" onRequestClose={() => setModalVisible(false)}>
           <TouchableOpacity style={styles.modalOverlay} onPress={() => setModalVisible(false)} activeOpacity={1}>
             <View style={styles.popup}>
@@ -565,13 +529,12 @@ export default function CommunityScreen({ navigation }: any) {
             </View>
           </TouchableOpacity>
         </Modal>
-      </View>
+      </TouchableOpacity>
     );
   };
 
   return (
     <View style={{ flex: 1, backgroundColor: '#000' }}>
-      {/* (기존) 탭 UI – 필요 없으면 제거해도 됨 */}
       <View style={styles.tabs}>
         {(['FOLLOWING', 'EXPLORE'] as const).map((k) => (
           <TouchableOpacity
@@ -580,33 +543,25 @@ export default function CommunityScreen({ navigation }: any) {
             style={[styles.tab, tab === k && styles.tabOn]}
             activeOpacity={0.9}
           >
-            <Text style={[styles.tabTxt, tab === k && styles.tabTxtOn]}>{k === 'FOLLOWING' ? '팔로잉' : '전체 추천'}</Text>
+            <Text style={[styles.tabTxt, tab === k && styles.tabTxtOn]}>{k === 'FOLLOWING' ? '팔로잉' : '익스플로어'}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      {/* 틱톡형 세로 스와이프 */}
-      {items.length > 0 ? (
-        <FlatList
-          data={items}
-          keyExtractor={(it: any) => String((it as any).id)}
-          renderItem={renderItem}
-          pagingEnabled
-          showsVerticalScrollIndicator={false}
-          onEndReachedThreshold={0.85}
-          onEndReached={onEndReached}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" />}
-          getItemLayout={(_, index) => ({ length: SCREEN_H, offset: SCREEN_H * index, index })}
-          onViewableItemsChanged={onViewableItemsChanged}
-          viewabilityConfig={viewabilityConfig}
-        />
-      ) : (
-        renderEmptyState()
-      )}
+      <FlatList
+        data={items}
+        keyExtractor={(it: any) => String((it as any).id)}
+        renderItem={renderItem}
+        pagingEnabled
+        showsVerticalScrollIndicator={false}
+        onEndReachedThreshold={0.85}
+        onEndReached={onEndReached}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" />}
+        getItemLayout={(_, index) => ({ length: SCREEN_H, offset: SCREEN_H * index, index })}
+        onViewableItemsChanged={onViewableItemsChanged}
+        viewabilityConfig={viewabilityConfig}
+      />
 
-
-
-      {/* 댓글 모달 */}
       <Modal
         transparent
         visible={commentModalVisible}
@@ -673,45 +628,7 @@ export default function CommunityScreen({ navigation }: any) {
   );
 }
 
-
 const styles = StyleSheet.create({
-
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#000',
-    paddingHorizontal: 32,
-  },
-  emptyIcon: {
-    fontSize: 64,
-    marginBottom: 16,
-  },
-  emptyTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#fff',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  emptySubtitle: {
-    fontSize: 15,
-    color: '#9CA3AF',
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 24,
-  },
-  emptyButton: {
-    backgroundColor: '#587dc4',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  emptyButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
   tabs: {
     position: 'absolute',
     top: Platform.OS === 'ios' ? 60 : 20,
@@ -735,7 +652,7 @@ const styles = StyleSheet.create({
   count: { marginTop: 3, fontSize: 12, color: '#fff' },
   more: { fontSize: 22, color: '#fff' },
 
-  bottomText: { position: 'absolute', left: 12, right: 84, bottom: 30 },
+  bottomText: { position: 'absolute', left: 12, right: 84, bottom: 60 },
   title: { fontSize: 18, fontWeight: '800', color: '#fff', marginRight: 8 },
   followBtn: { borderWidth: 1, borderColor: '#fff', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 3, marginLeft: 8 },
   followTxt: { fontSize: 12, color: '#fff' },
@@ -766,6 +683,6 @@ const styles = StyleSheet.create({
   closeBtn: { alignSelf: 'center', marginTop: 10 },
   closeTxt: { color: '#587dc4', fontWeight: '700' },
 
-  fallback: { backgroundColor: '#0F172A', alignItems: 'center', justifyContent: 'center', padding: 16 },
+  fallback: { backgroundColor: '#0F172A', alignItems: 'center', justifyContent: 'center', padding: 16, width: '100%', height: '100%' },
   fallbackTxt: { color: '#E5E7EB', fontSize: 14, textAlign: 'center' },
 });

@@ -7,13 +7,15 @@ import {
 import Video from 'react-native-video';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
-import { deleteFeed, getFeed } from '../../api/feed'; // ✅ getFeed import 추가
+import { deleteFeed, getFeed } from '../../api/feed';
 import { likeFeed, isLiked, getListOfLike } from '../../api/like';
 import { BASE_URL } from '../../api/baseUrl';
 import { createComment, getCommentsByFeed, deleteComment, CommentDto } from '../../api/comment';
+import { fetchUserInfoById } from '../../api/user'; // ✅ username 가져오기 위해 추가
 import Heart from '../../assets/icon/heart.png';
 import HeartOutline from '../../assets/icon/heart-outline.png';
 import CommentIcon from '../../assets/icon/comments.png';
+
 const { height: SCREEN_H, width: SCREEN_W } = Dimensions.get('window');
 import type { FeedItemDto } from '../../api/types/feed';
 
@@ -70,12 +72,12 @@ export default function FeedDetailScreen() {
   // 상태
   const [feedData, setFeedData] = useState<FeedItemDto | null>(null);
   const [loading, setLoading] = useState(true);
-  const [index, setIndex] = useState(0);
-  const [showContent, setShowContent] = useState(true);
+  const [username, setUsername] = useState<string>(''); // ✅ username 상태 추가
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState<CommentDto[]>([]);
   const [commentText, setCommentText] = useState('');
   const [loadingComments, setLoadingComments] = useState(false);
+  const [sending, setSending] = useState(false);
 
   // ✅ 좋아요 상태 관리
   const [isLikedState, setIsLikedState] = useState(false);
@@ -84,45 +86,89 @@ export default function FeedDetailScreen() {
   // ✅ 피드 데이터 및 좋아요 상태 초기 로드
   useEffect(() => {
     const loadFeedData = async () => {
-    if (!feedId || isNaN(feedId)) {
-      console.error('[FeedDetail] 유효하지 않은 feedId:', feedId);
-      Alert.alert('오류', '잘못된 피드 ID입니다.');
-      (navigation as any).goBack();
-      return;
-    }
+      if (!feedId || isNaN(feedId)) {
+        console.error('[FeedDetail] 유효하지 않은 feedId:', feedId);
+        Alert.alert('오류', '잘못된 피드 ID입니다.');
+        (navigation as any).goBack();
+        return;
+      }
 
-    try {
-      setLoading(true);
-      console.log('[FeedDetail] feedId로 데이터 로드 시작:', feedId);
-      
-      // 1. 피드 데이터 가져오기
-      const feed = await getFeed(feedId);
-      console.log('[FeedDetail] 피드 데이터:', feed);
-      
-      setFeedData(feed);
-      // ... 나머지 코드
-    } catch (e: any) {
-      console.error('[FeedDetail] 데이터 로드 실패:', e?.message);
-      Alert.alert('오류', e?.message ?? '피드를 불러올 수 없습니다.');
-      (navigation as any).goBack();
-    } finally {
-      setLoading(false);
-    }
-  };
+      try {
+        setLoading(true);
+        console.log('[FeedDetail] feedId로 데이터 로드 시작:', feedId);
 
-  loadFeedData();
-}, [feedId, navigation]);
+        // 1. 피드 데이터 가져오기
+        const feed = await getFeed(feedId);
+        console.log('[FeedDetail] 피드 데이터:', feed);
+        setFeedData(feed);
+
+        // 2. ✅ userId 추출 및 username 가져오기
+        const rawUserId =
+          (feed as any)?.userId ??
+          (feed as any)?.user_id ??
+          (feed as any)?.authorId ??
+          (feed as any)?.author_id ??
+          (feed as any)?.creator_id ??
+          (feed as any)?.creatorId;
+
+        const userId = Number(rawUserId);
+
+        if (Number.isFinite(userId) && userId > 0) {
+          try {
+            const userInfo = await fetchUserInfoById(userId);
+            const fetchedUsername =
+              (userInfo as any)?.username ||
+              (userInfo as any)?.userName ||
+              (userInfo as any)?.name ||
+              `user${userId}`;
+            setUsername(fetchedUsername);
+            console.log('[FeedDetail] username 로드 성공:', fetchedUsername);
+          } catch (e) {
+            console.error('[FeedDetail] username 로드 실패:', e);
+            setUsername(`user${userId}`);
+          }
+        } else {
+          // fallback username from feed data
+          const fallbackUsername =
+            (feed as any).username ||
+            (feed as any).ownerUsername ||
+            'unknown';
+          setUsername(fallbackUsername);
+        }
+
+        // 3. 좋아요 상태 가져오기
+        const checkIsLiked = await isLiked(feedId);
+        setIsLikedState(checkIsLiked);
+
+        // 4. 좋아요 개수 가져오기
+        const likeList = await getListOfLike(feedId);
+        const count = Array.isArray(likeList) ? likeList.length : 0;
+        setLikeCount(count);
+
+        console.log('[FeedDetail] 좋아요 상태:', { isLiked: checkIsLiked, count });
+
+      } catch (e: any) {
+        console.error('[FeedDetail] 데이터 로드 실패:', e?.message);
+        Alert.alert('오류', e?.message ?? '피드를 불러올 수 없습니다.');
+        (navigation as any).goBack();
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadFeedData();
+  }, [feedId, navigation]);
 
   // media 리스트
   const media = useMemo(() => {
     if (!feedData) return [];
-    
+
     const rawImages = Array.isArray((feedData as any).images)
       ? (feedData as any).images
       : Array.isArray((feedData as any).media)
       ? (feedData as any).media
       : [];
-    
+
     const result = rawImages
       .slice()
       .sort((a: any, b: any) => (a.ord ?? 0) - (b.ord ?? 0))
@@ -137,7 +183,7 @@ export default function FeedDetailScreen() {
     return result;
   }, [feedData]);
 
-  const current = media[index];
+  const firstMedia = media[0];
 
   // 댓글 불러오기
   const loadComments = async () => {
@@ -163,12 +209,15 @@ export default function FeedDetailScreen() {
       return;
     }
     try {
+      setSending(true);
       await createComment(feedId, commentText.trim());
       setCommentText('');
       await loadComments();
       Alert.alert('완료', '댓글이 작성되었습니다.');
     } catch (e: any) {
       Alert.alert('실패', e?.message ?? '댓글 작성 중 오류가 발생했습니다.');
+    } finally {
+      setSending(false);
     }
   };
 
@@ -256,18 +305,17 @@ export default function FeedDetailScreen() {
     );
   }
 
-  const uname = (feedData as any).username || (feedData as any).ownerUsername || 'unknown';
   const content = (feedData as any).content || '';
 
   return (
     <View style={s.screen}>
-      {/* 풀스크린 미디어 */}
-      <View style={s.mediaWrap}>
-        {current ? (
-          current.isVideo ? (
+      {/* ✅ CommunityScreen 스타일 - 풀스크린 비디오 */}
+      <View style={s.page}>
+        {firstMedia ? (
+          firstMedia.isVideo ? (
             <Video
-              source={{ uri: current.url! }}
-              style={s.media}
+              source={{ uri: firstMedia.url! }}
+              style={s.video}
               resizeMode="cover"
               repeat
               paused={false}
@@ -280,228 +328,206 @@ export default function FeedDetailScreen() {
             />
           ) : (
             <Image
-              source={{ uri: current.url! }}
-              style={s.media}
+              source={{ uri: firstMedia.url! }}
+              style={s.video}
               resizeMode="cover"
               onError={(error) => {
                 console.error('[FeedDetail] Image 에러:', error.nativeEvent.error);
-                Alert.alert('이미지 로드 실패', '이미지를 불러올 수 없습니다.');
               }}
               onLoad={() => console.log('[FeedDetail] Image 로드 성공')}
             />
           )
         ) : (
-          <View style={s.placeholder}>
-            <Text style={{ color: '#9CA3AF' }}>미디어 없음</Text>
+          <View style={s.fallback}>
+            <Text style={s.fallbackTxt}>미디어 없음</Text>
           </View>
         )}
-      </View>
 
-      {/* 하단 그라디언트 */}
-      <LinearGradient colors={['transparent', 'rgba(0,0,0,0.9)']} style={s.gradient} />
+        {/* 그라디언트 */}
+        <LinearGradient colors={['transparent', 'rgba(0,0,0,0.8)']} style={s.gradient} />
 
-      {/* 상단 닫기/삭제 버튼 */}
-      <View style={s.topBar}>
-        <SafeAreaView />
-        <View style={s.topBarInner}>
-          <TouchableOpacity onPress={() => (navigation as any).goBack()} style={s.topBtn}>
-            <Text style={s.topBtnTxt}>←</Text>
+        {/* ✅ 상단 닫기 버튼 (CommunityScreen 스타일) */}
+        <SafeAreaView style={s.topBar}>
+          <View style={s.topBarInner}>
+            <TouchableOpacity onPress={() => (navigation as any).goBack()} style={s.topBtn}>
+              <Text style={s.topBtnTxt}>←</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={confirmDelete} style={s.topBtn}>
+              <Text style={s.topBtnTxt}>삭제</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+
+        {/* ✅ 오른쪽 액션 버튼 (CommunityScreen 스타일) */}
+        <View style={s.actions}>
+          <TouchableOpacity onPress={toggleLike} style={s.actionBtn} activeOpacity={0.8}>
+            <Image
+              source={isLikedState ? Heart : HeartOutline}
+              style={s.icon}
+              resizeMode="contain"
+            />
+            <Text style={s.count}>{likeCount}</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={confirmDelete} style={s.topBtn}>
-            <Text style={s.topBtnTxt}>삭제</Text>
+
+          <TouchableOpacity style={s.actionBtn} onPress={() => setShowComments(true)} activeOpacity={0.8}>
+            <Image source={CommentIcon} style={s.icon} resizeMode="contain" />
+            <Text style={s.count}>{comments.length || (feedData as any).commentCount || 0}</Text>
           </TouchableOpacity>
         </View>
-      </View>
 
-      {/* 오른쪽 아이콘 */}
-      <View style={s.rightIcons}>
-        {/* 좋아요 버튼 */}
-        <TouchableOpacity onPress={toggleLike} style={s.iconBtn} activeOpacity={0.85}>
-          <Image
-            source={isLikedState ? HeartOutline : Heart}
-            style={s.icon}
-            resizeMode="contain"
-          />
-          <Text style={s.iconCount}>{likeCount}</Text>
-        </TouchableOpacity>
-
-        {/* 댓글 버튼 */}
-        <TouchableOpacity style={s.iconBtn} onPress={() => setShowComments(true)} activeOpacity={0.85}>
-          <Image source={CommentIcon} style={s.icon} resizeMode="contain" />
-          <Text style={s.iconCount}>{comments.length || (feedData as any).commentCount || 0}</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* 하단 콘텐츠 */}
-      <View style={s.bottomContainer}>
+        {/* ✅ 하단 텍스트 (CommunityScreen 스타일) */}
         <View style={s.bottomText}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={s.username}>@{uname}</Text>
+            <Text style={s.title}>@{username || 'unknown'}</Text>
           </View>
-
           {!!content && (
-            <View style={s.contentWrapper}>
-              <TouchableOpacity onPress={() => setShowContent(!showContent)} style={s.contentToggle}>
-                <Text style={s.contentToggleTxt}>{showContent ? '▼' : '▲'}</Text>
-              </TouchableOpacity>
-              {showContent && (
-                <ScrollView
-                  style={s.contentScroll}
-                  contentContainerStyle={s.contentScrollInner}
-                  showsVerticalScrollIndicator={false}
-                >
-                  <Text style={s.contentTxt}>{content}</Text>
-                </ScrollView>
-              )}
-            </View>
+            <Text style={s.prompt} numberOfLines={2}>
+              {content}
+            </Text>
           )}
         </View>
-
-        {/* 썸네일 스트립 */}
-        {media.length > 1 && (
-          <FlatList
-            data={media}
-            keyExtractor={(_, i) => String(i)}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 8 }}
-            style={s.thumbStrip}
-            renderItem={({ item, index: i }) => (
-              <TouchableOpacity onPress={() => setIndex(i)} style={[s.thumbBox, i === index && s.thumbBoxActive]}>
-                {item.isVideo ? (
-                  <View style={[s.thumb, { backgroundColor: '#0F172A', alignItems: 'center', justifyContent: 'center' }]}>
-                    <Text style={{ color: '#fff', fontSize: 18 }}>▶</Text>
-                  </View>
-                ) : (
-                  <Image source={{ uri: item.url! }} style={s.thumb} />
-                )}
-              </TouchableOpacity>
-            )}
-          />
-        )}
       </View>
 
-      {/* 댓글 모달 */}
+      {/* ✅ 댓글 모달 (CommunityScreen 스타일) */}
       <Modal
         visible={showComments}
         animationType="slide"
         transparent
         onRequestClose={() => setShowComments(false)}
       >
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={s.modalContainer}>
-          <TouchableOpacity style={s.modalOverlay} activeOpacity={1} onPress={() => setShowComments(false)} />
-          <View style={s.commentsSheet}>
-            <View style={s.commentsHeader}>
-              <Text style={s.commentsTitle}>댓글 {comments.length}개</Text>
-              <TouchableOpacity onPress={() => setShowComments(false)}>
-                <Text style={s.closeBtn}>✕</Text>
+        <View style={s.bottomSheet}>
+          <View style={s.sheetBar} />
+          <Text style={s.commentHeader}>
+            댓글 {loadingComments ? '불러오는 중…' : `${comments.length}개`}
+          </Text>
+
+          <FlatList
+            data={comments}
+            keyExtractor={(item) => String(item.id)}
+            style={{ maxHeight: SCREEN_H * 0.45 }}
+            ListEmptyComponent={
+              <View style={{ paddingVertical: 24, alignItems: 'center' }}>
+                <Text style={{ color: '#6B7280' }}>첫 댓글을 남겨보세요!</Text>
+              </View>
+            }
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                onLongPress={() => handleDeleteComment(item.id)}
+                delayLongPress={400}
+                activeOpacity={0.8}
+                style={{ paddingVertical: 8 }}
+              >
+                <Text style={{ fontSize: 13, color: '#374151', marginBottom: 2 }}>
+                  @{item.username} · {new Date(item.createdAt).toLocaleDateString()}
+                </Text>
+                <Text style={{ fontSize: 15, color: '#111827' }}>{item.comment}</Text>
               </TouchableOpacity>
-            </View>
+            )}
+            ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+            contentContainerStyle={{ paddingHorizontal: 4 }}
+          />
 
-            <FlatList
-              data={comments}
-              keyExtractor={(item) => String(item.id)}
-              contentContainerStyle={{ paddingBottom: 16 }}
-              ListEmptyComponent={
-                <View style={s.emptyComments}>
-                  <Text style={s.emptyTxt}>{loadingComments ? '불러오는 중...' : '첫 댓글을 남겨보세요!'}</Text>
-                </View>
-              }
-              renderItem={({ item }) => (
-                <View style={s.commentItem}>
-                  <View style={s.commentHeaderRow}>
-                    <Text style={s.commentUsername}>@{item.username}</Text>
-                    <Text style={s.commentDate}>{new Date(item.createdAt).toLocaleDateString()}</Text>
-                  </View>
-                  <Text style={s.commentText}>{item.comment}</Text>
-
-                  <TouchableOpacity onPress={() => handleDeleteComment(item.id)} style={s.deleteCommentBtn}>
-                    <Text style={s.deleteCommentTxt}>삭제</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
+          <View style={s.commentRow}>
+            <TextInput
+              style={s.commentInput}
+              value={commentText}
+              onChangeText={setCommentText}
+              placeholder="댓글을 입력하세요"
+              placeholderTextColor="#9CA3AF"
+              multiline
             />
-
-            <View style={s.commentInputWrapper}>
-              <TextInput
-                style={s.commentInput}
-                placeholder="댓글을 입력하세요..."
-                placeholderTextColor="#9CA3AF"
-                value={commentText}
-                onChangeText={setCommentText}
-                multiline
-                maxLength={500}
-              />
-              <TouchableOpacity style={s.sendBtn} onPress={handleCreateComment} disabled={!commentText.trim()}>
-                <Text style={[s.sendBtnTxt, !commentText.trim() && s.sendBtnDisabled]}>전송</Text>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              onPress={handleCreateComment}
+              disabled={sending || !commentText.trim()}
+              style={[s.sendBtn, (sending || !commentText.trim()) && { opacity: 0.5 }]}
+              activeOpacity={0.9}
+            >
+              <Text style={s.sendTxt}>{sending ? '전송중' : '등록'}</Text>
+            </TouchableOpacity>
           </View>
-        </KeyboardAvoidingView>
+
+          <TouchableOpacity onPress={() => setShowComments(false)} style={s.closeBtn}>
+            <Text style={s.closeTxt}>닫기</Text>
+          </TouchableOpacity>
+        </View>
       </Modal>
     </View>
   );
 }
 
+// ✅ CommunityScreen과 동일한 스타일
 const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#000' },
-  mediaWrap: { position: 'absolute', top: 0, left: 0, width, height, alignItems: 'center', justifyContent: 'center' },
-  media: { width, height },
-  placeholder: { width, height, alignItems: 'center', justifyContent: 'center', padding: 20 },
-  gradient: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 260 },
+  page: { width: SCREEN_W, height: SCREEN_H, backgroundColor: '#000' },
+  video: { position: 'absolute', width: '100%', height: '100%' },
+  gradient: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 200 },
+  fallback: { backgroundColor: '#0F172A', alignItems: 'center', justifyContent: 'center', padding: 16 },
+  fallbackTxt: { color: '#E5E7EB', fontSize: 14, textAlign: 'center' },
 
-  topBar: { position: 'absolute', top: 0, left: 0, right: 0, backgroundColor: 'rgba(0, 0, 0, 0.25)', zIndex: 10 },
-  topBarInner: { height: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12 },
+  topBar: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 },
+  topBarInner: {
+    height: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    marginTop: Platform.OS === 'ios' ? 0 : 20,
+  },
   topBtn: { padding: 8, borderRadius: 8, backgroundColor: 'rgba(0, 0, 0, 0.5)' },
   topBtnTxt: { color: '#fff', fontSize: 16, fontWeight: '600' },
 
-  rightIcons: { position: 'absolute', right: 16, bottom: height * 0.25, zIndex: 10, gap: 18 },
-  iconBtn: { alignItems: 'center', padding: 10, borderRadius: 999, backgroundColor: 'rgba(0,0,0,0.5)' },
-  icon: { width: 32, height: 32, tintColor: '#fff' },
-  iconCount: { color: '#fff', fontSize: 13, fontWeight: '700', marginTop: 4 },
-
-  bottomContainer: { position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10 },
-  bottomText: { paddingHorizontal: 12, paddingBottom: 8 },
-  username: { fontSize: 18, fontWeight: '800', color: '#fff', marginRight: 8 },
-
-  contentWrapper: { maxHeight: height * 0.35 },
-  contentToggle: { alignItems: 'center', paddingVertical: 8, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.15)', marginTop: 6 },
-  contentToggleTxt: { color: '#fff', fontSize: 12 },
-  contentScroll: { maxHeight: height * 0.3 },
-  contentScrollInner: { paddingHorizontal: 2, paddingBottom: 12 },
-  contentTxt: { color: '#E5E7EB', fontSize: 15, lineHeight: 22 },
-
-  thumbStrip: { maxHeight: 86, backgroundColor: 'rgba(0,0,0,0.35)' },
-  thumbBox: { marginHorizontal: 4, borderRadius: 8, borderWidth: 2, borderColor: 'transparent' },
-  thumbBoxActive: { borderColor: '#fff' },
-  thumb: { width: 64, height: 64, borderRadius: 6, backgroundColor: '#222' },
-
-  modalContainer: { flex: 1 },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
-  commentsSheet: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: height * 0.7,
-    paddingBottom: Platform.OS === 'ios' ? 34 : 16,
+  actions: {
+    position: 'absolute',
+    right: 12,
+    bottom: 120,
+    alignItems: 'center',
+    gap: 14
   },
-  commentsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
-  commentsTitle: { fontSize: 18, fontWeight: '700', color: '#111827' },
-  closeBtn: { fontSize: 24, color: '#6B7280' },
+  actionBtn: { alignItems: 'center', justifyContent: 'center', minWidth: 36 },
+  icon: { width: 30, height: 30, tintColor: '#fff' },
+  count: { marginTop: 3, fontSize: 12, color: '#fff' },
 
-  commentItem: { paddingHorizontal: 20, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
-  commentHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
-  commentUsername: { fontSize: 14, fontWeight: '700', color: '#374151' },
-  commentDate: { fontSize: 12, color: '#9CA3AF' },
-  commentText: { fontSize: 14, color: '#111827', lineHeight: 20 },
-  deleteCommentBtn: { alignSelf: 'flex-end', marginTop: 4, paddingHorizontal: 8, paddingVertical: 4 },
-  deleteCommentTxt: { fontSize: 12, color: '#EF4444' },
-  emptyComments: { paddingVertical: 40, alignItems: 'center' },
-  emptyTxt: { fontSize: 14, color: '#9CA3AF' },
+  bottomText: { position: 'absolute', left: 12, right: 84, bottom: 60 },
+  title: { fontSize: 18, fontWeight: '800', color: '#fff', marginRight: 8 },
+  prompt: { marginTop: 6, fontSize: 14, color: '#E5E7EB' },
 
-  commentInputWrapper: { flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8, borderTopWidth: 1, borderTopColor: '#E5E7EB', backgroundColor: '#fff' },
-  commentInput: { flex: 1, maxHeight: 100, paddingHorizontal: 16, paddingVertical: 10, backgroundColor: '#F3F4F6', borderRadius: 20, fontSize: 14, color: '#111827' },
-  sendBtn: { marginLeft: 8, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, backgroundColor: '#587dc4' },
-  sendBtnTxt: { fontSize: 14, fontWeight: '700', color: '#fff' },
-  sendBtnDisabled: { opacity: 0.5 },
+  bottomSheet: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    padding: 16,
+  },
+  sheetBar: {
+    width: 42,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: '#E5E7EB',
+    alignSelf: 'center',
+    marginBottom: 10
+  },
+  commentHeader: { fontSize: 18, fontWeight: '800', color: '#111827', marginBottom: 8 },
+  commentRow: { flexDirection: 'row', alignItems: 'center', marginTop: 10 },
+  commentInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    color: '#111827'
+  },
+  sendBtn: {
+    marginLeft: 8,
+    backgroundColor: '#587dc4',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 10
+  },
+  sendTxt: { color: '#fff', fontWeight: '700' },
+  closeBtn: { alignSelf: 'center', marginTop: 10 },
+  closeTxt: { color: '#587dc4', fontWeight: '700' },
 });
