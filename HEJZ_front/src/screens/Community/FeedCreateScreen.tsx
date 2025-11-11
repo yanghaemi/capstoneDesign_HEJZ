@@ -288,18 +288,7 @@ export default function FeedCreateScreen() {
         ))}
       </View>
 
-      <Text style={s.label}>노래 (선택 안 함)</Text>
-      <TouchableOpacity
-        onPress={() => setSongModal(true)}
-        style={s.selector}
-        activeOpacity={0.9}
-      >
-        <Text style={s.selectorTxt}>
-          {selectedSongId !== null
-            ? (songs.find(s => s.id === selectedSongId)?.title ?? `song_${selectedSongId}`)
-            : '노래 선택 (표시만, 전송 안 함)'}
-        </Text>
-      </TouchableOpacity>
+
 
       <Text style={s.label}>내용</Text>
       <TextInput

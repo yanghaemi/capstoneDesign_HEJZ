@@ -309,6 +309,7 @@ const DanceScreen = ({ navigation }: any) => {
             title="안무 추천받기"
             onPress={handleNavigate}
             disabled={!selectedSongId || !selectedEmotion || !selectedGenre}
+            color="#587dc4"
           />
         </View>
       </ScrollView>
